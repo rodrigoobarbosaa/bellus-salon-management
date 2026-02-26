@@ -56,11 +56,11 @@
 
 :root {
   /* Bellus brand palette */
-  --bellus-gold: #C9A96E;
-  --bellus-gold-light: #E8D5B0;
-  --bellus-dark: #1A1A1A;
-  --bellus-cream: #F5F0E8;
-  --bellus-gray: #6B7280;
+  --bellus-gold: #c9a96e;
+  --bellus-gold-light: #e8d5b0;
+  --bellus-dark: #1a1a1a;
+  --bellus-cream: #f5f0e8;
+  --bellus-gray: #6b7280;
 
   --radius: 0.625rem;
   --background: oklch(1 0 0);
