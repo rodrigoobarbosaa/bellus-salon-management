@@ -115,7 +115,6 @@ bellus/
 │   ├── hooks/                  # Custom React hooks
 │   ├── lib/
 │   │   ├── supabase/           # Supabase clients (client, server, middleware)
-│   │   ├── auth/               # Funções de controle de roles
 │   │   ├── env.ts              # Validação de variáveis de ambiente
 │   │   └── query-client.ts     # Configuração React Query
 │   ├── locales/                # Arquivos de tradução (PT/ES/EN/RU)
@@ -133,7 +132,7 @@ bellus/
 
 | Código | Idioma | Padrão |
 |--------|--------|--------|
-| `es` | Español | ✅ |
-| `pt` | Português | |
+| `pt` | Português | ✅ |
+| `es` | Español | |
 | `en` | English | |
 | `ru` | Русский | |
