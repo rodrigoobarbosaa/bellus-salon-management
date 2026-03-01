@@ -1,11 +1,12 @@
-# PRD — Bellus v1.1
+# PRD — Bellus v1.2
 ## Product Requirements Document
 
 **Produto:** Bellus — Sistema de Gestão de Salão de Cabeleireiro
-**Versão:** 1.1
+**Versão:** 1.2
 **Data:** 2026-03-01
 **Autor:** Morgan (@pm)
 **Status:** Draft → Aguarda validação @po
+**Salão Piloto:** Tati & Rodri Hair Studio — Valencia, Espanha
 
 ---
 
@@ -47,6 +48,7 @@ Proprietários de salões de cabeleireiro em Espanha — especialmente autónomo
 - **Idioma:** Espanhol (principal), Português, Inglês, Russo
 - **Dor principal:** Tempo perdido com organização manual + medo de errar nos impostos + marketing feito às cegas
 - **Objetivo:** Ter mais tempo para atender clientes e menos para papelada e gestão de anúncios
+- **Referência:** Tati & Rodri Hair Studio (Valencia) — salão piloto desta plataforma
 
 ### 2.2 Usuário Secundário — Profissional do Salão
 
@@ -63,6 +65,18 @@ Proprietários de salões de cabeleireiro em Espanha — especialmente autónomo
 ---
 
 ## 3. Funcionalidades (MVP v1.0)
+
+### FR-00 — Configuração do Salão
+
+**Prioridade:** MUST HAVE
+
+- FR-00.1 Nome do salão configurável (ex: "Tati & Rodri Hair Studio")
+- FR-00.2 Upload de logótipo (exibido no portal público e nos relatórios)
+- FR-00.3 Endereço, telefone e horário de funcionamento
+- FR-00.4 Links para redes sociais (Instagram, Google Maps)
+- FR-00.5 Número de WhatsApp Business para envio de notificações
+- FR-00.6 Configuração de moeda (EUR padrão) e fuso horário (Europe/Madrid padrão)
+- FR-00.7 Branding: cor primária do salão usada no portal público
 
 ### FR-01 — Gestão de Agenda
 
@@ -184,7 +198,7 @@ Proprietários de salões de cabeleireiro em Espanha — especialmente autónomo
 
 ### FR-12 — Marketing IA
 
-**Prioridade:** SHOULD HAVE
+**Prioridade:** MUST HAVE
 
 O módulo de Marketing IA transforma os dados operacionais do salão (agenda, CRM, receita) em inteligência de marketing acionável. O proprietário conversa com o sistema em linguagem natural e recebe relatórios, sugestões e execução de campanhas — sem precisar entender de marketing digital.
 
@@ -204,7 +218,7 @@ O módulo de Marketing IA transforma os dados operacionais do salão (agenda, CR
 
 - FR-12.2.1 Conexão com conta Meta Business via OAuth
 - FR-12.2.2 Criação de campanhas de alcance local (raio configurável, padrão 5km de Valencia)
-- FR-12.2.3 Segmentação automática: mulheres 18-55, interesse em beleza e cabelo
+- FR-12.2.3 Segmentação automática: público 18-60, interesse em beleza, cuidados com cabelo e bem-estar (configurável por campanha)
 - FR-12.2.4 Geração de briefing de anúncio com copy sugerido e especificações de arte
 - FR-12.2.5 Monitoramento de métricas: impressões, cliques, custo por clique, alcance
 - FR-12.2.6 Pausar/retomar campanhas diretamente do dashboard
@@ -296,7 +310,7 @@ O módulo de Marketing IA transforma os dados operacionais do salão (agenda, CR
 - Mobile-first: interface responsiva em todos os dispositivos
 - Fluência em 4 idiomas: PT, ES, EN, RU
 - Onboarding guiado para novo usuário (menos de 10 min para primeira operação)
-- Interface conversacional: proprietário sem conhecimento técnico consegue criar campanha em menos de 5 minutos
+- Interface conversacional: proprietário sem conhecimento técnico de marketing consegue criar campanha em menos de 5 minutos
 
 ### NFR-05 — Conformidade Fiscal
 - Percentuais de IVA e IRPF editáveis para adaptação legal futura
@@ -375,20 +389,27 @@ O módulo de Marketing IA transforma os dados operacionais do salão (agenda, CR
 ## 9. Roadmap
 
 ### v1.0 (MVP) — Este documento
-Waves 1-6: fundação, agenda, portal, notificações, caixa, fiscal, lembretes, dashboard
+- Wave 1: Fundação (auth, configuração do salão, DB schema)
+- Wave 2: Agenda + catálogo de serviços
+- Wave 3: Portal público de reservas + notificações WhatsApp
+- Wave 4: CRM + lembretes de retorno
+- Wave 5: Caixa / PDV
+- Wave 6: Módulo fiscal (IVA, IRPF, Modelos 303/130)
+- Wave 7: Dashboard & KPIs
+- Wave 8: Marketing IA — FR-12 completo (interface conversacional, Meta Ads, Google Ads, relatórios WhatsApp, campanhas automáticas)
 
-### v1.1 — Marketing IA
-Wave 7-8: Módulo FR-12 completo (interface conversacional, Meta Ads, Google Ads, relatórios WhatsApp, campanhas automáticas)
-
-### v1.2 — App Mobile
+### v1.1 — App Mobile
 Wave 9: App React Native (iOS + Android)
+
+### v2.0 — Expansão
 
 ### v2.0 — Expansão
 - Pagamentos online (Stripe)
 - Gestão de estoque
-- Multi-salão
-- Integração contábil
+- Multi-salão / franquia
+- Integração contábil (Sage, ContaPlus)
 - Posts orgânicos automáticos (Instagram, TikTok)
+- TikTok Ads / Pinterest Ads
 
 ---
 
@@ -398,6 +419,7 @@ Wave 9: App React Native (iOS + Android)
 |------|-------|-----------|
 | 2026-02-25 | @pm (Morgan) | PRD v1.0 criado — 11 FRs, 5 NFRs, 4 idiomas |
 | 2026-03-01 | @pm (Morgan) | PRD v1.1 — FR-12 Marketing IA adicionado (9 sub-módulos), NFR-06, dependências técnicas de marketing, riscos atualizados, roadmap revisado |
+| 2026-03-01 | @pm (Morgan) | PRD v1.2 — FR-00 Configuração do Salão adicionado, FR-12 promovido para MUST HAVE, segmentação de anúncios corrigida, Roadmap com Waves detalhadas, salão piloto identificado |
 
 ---
 
