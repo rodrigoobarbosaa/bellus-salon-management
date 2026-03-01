@@ -402,8 +402,6 @@ O módulo de Marketing IA transforma os dados operacionais do salão (agenda, CR
 Wave 9: App React Native (iOS + Android)
 
 ### v2.0 — Expansão
-
-### v2.0 — Expansão
 - Pagamentos online (Stripe)
 - Gestão de estoque
 - Multi-salão / franquia
