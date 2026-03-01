@@ -1,0 +1,77 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "agenda": "Agenda",
+    "clientes": "Clientes",
+    "servicos": "Serviços",
+    "caixa": "Caixa",
+    "fiscal": "Fiscal",
+    "equipe": "Equipe",
+    "configuracoes": "Configurações",
+    "marketing": "Marketing",
+    "atendimentos": "Meus Atendimentos",
+    "minhaAgenda": "Minha Agenda"
+  },
+  "auth": {
+    "login": "Entrar",
+    "logout": "Sair",
+    "register": "Criar conta",
+    "email": "E-mail",
+    "password": "Senha",
+    "confirmPassword": "Confirmar senha",
+    "name": "Nome completo",
+    "forgotPassword": "Esqueceu a senha?",
+    "hasAccount": "Já tem conta? Entrar",
+    "noAccount": "Não tem conta? Criar conta",
+    "loading": "Entrando...",
+    "creating": "Criando conta...",
+    "invalidCredentials": "Credenciais inválidas. Tente novamente.",
+    "passwordMismatch": "As senhas não coincidem."
+  },
+  "dashboard": {
+    "welcome": "Bem-vindo ao {salonName}",
+    "welcomeDefault": "Bem-vindo ao Bellus",
+    "overview": "Resumo do dia",
+    "noData": "Sem dados disponíveis"
+  },
+  "settings": {
+    "title": "Configuração do Salão",
+    "logo": "Logo do Salão",
+    "uploadLogo": "Enviar logo",
+    "changeLogo": "Alterar logo",
+    "logoHint": "JPG ou PNG, máximo 2MB",
+    "general": "Informações Gerais",
+    "salonName": "Nome do salão",
+    "whatsapp": "WhatsApp Business",
+    "phone": "Telefone",
+    "address": "Endereço",
+    "primaryColor": "Cor primária do salão",
+    "instagram": "Instagram",
+    "googleMaps": "Google Maps",
+    "currency": "Moeda",
+    "timezone": "Fuso horário",
+    "save": "Salvar configurações",
+    "saving": "Salvando...",
+    "saved": "Configurações salvas com sucesso",
+    "required": "Nome e WhatsApp são obrigatórios"
+  },
+  "common": {
+    "loading": "Carregando...",
+    "save": "Salvar",
+    "cancel": "Cancelar",
+    "delete": "Excluir",
+    "edit": "Editar",
+    "back": "Voltar",
+    "search": "Buscar",
+    "noResults": "Sem resultados",
+    "error": "Erro",
+    "success": "Sucesso"
+  },
+  "language": {
+    "select": "Idioma",
+    "pt": "Português",
+    "es": "Español",
+    "en": "English",
+    "ru": "Русский"
+  }
+}

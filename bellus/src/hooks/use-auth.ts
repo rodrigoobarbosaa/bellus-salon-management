@@ -6,8 +6,7 @@ import { useAuthStore } from "@/stores/auth-store";
 import type { Profile } from "@/stores/auth-store";
 
 export function useAuth() {
-  const { user, profile, role, isLoading, setUser, setProfile, clearUser } =
-    useAuthStore();
+  const { user, profile, role, isLoading, setUser, setProfile, clearUser } = useAuthStore();
 
   useEffect(() => {
     const supabase = createClient();

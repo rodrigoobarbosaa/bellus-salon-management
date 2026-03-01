@@ -18,12 +18,9 @@ export function Sidebar({ userName, userRole }: SidebarProps) {
   const items: NavItem[] = menuItems[userRole] ?? menuItems.profissional;
 
   return (
-    <aside className="hidden h-screen w-60 flex-col border-r border-stone-800 bg-bellus-dark md:flex">
+    <aside className="bg-bellus-dark hidden h-screen w-60 flex-col border-r border-stone-800 md:flex">
       <div className="flex h-16 items-center px-6">
-        <Link
-          href="/dashboard"
-          className="text-2xl font-bold tracking-tight text-white"
-        >
+        <Link href="/dashboard" className="text-2xl font-bold tracking-tight text-white">
           <span className="text-bellus-gold">B</span>ellus
         </Link>
       </div>
@@ -31,9 +28,7 @@ export function Sidebar({ userName, userRole }: SidebarProps) {
       <nav className="flex-1 space-y-1 px-3 py-4" aria-label="Menu principal">
         {items.map((item) => {
           const isActive =
-            item.href === "/dashboard"
-              ? pathname === "/dashboard"
-              : pathname.startsWith(item.href);
+            item.href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(item.href);
 
           return (
             <Link
@@ -44,7 +39,7 @@ export function Sidebar({ userName, userRole }: SidebarProps) {
                 "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                 isActive
                   ? "bg-bellus-gold/15 text-bellus-gold"
-                  : "text-stone-400 hover:bg-stone-800 hover:text-white",
+                  : "text-stone-400 hover:bg-stone-800 hover:text-white"
               )}
             >
               <item.icon className="size-5 shrink-0" />
@@ -56,13 +51,11 @@ export function Sidebar({ userName, userRole }: SidebarProps) {
 
       <div className="border-t border-stone-800 p-4">
         <div className="mb-3 flex items-center gap-3">
-          <div className="flex size-9 items-center justify-center rounded-full bg-bellus-gold/20 text-sm font-semibold text-bellus-gold">
+          <div className="bg-bellus-gold/20 text-bellus-gold flex size-9 items-center justify-center rounded-full text-sm font-semibold">
             {userName.charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-medium text-white">
-              {userName}
-            </p>
+            <p className="truncate text-sm font-medium text-white">{userName}</p>
             <p className="text-xs text-stone-500">
               {userRole === "proprietario" ? "Propietario" : "Profesional"}
             </p>

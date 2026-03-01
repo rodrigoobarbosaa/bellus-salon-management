@@ -55,14 +55,9 @@ export default function ForgotPasswordPage() {
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
-          {error && (
-            <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">
-              {error}
-            </div>
-          )}
+          {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">{error}</div>}
           <p className="text-sm text-stone-600">
-            Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu
-            contraseña.
+            Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
           </p>
           <div className="space-y-2">
             <label htmlFor="email" className="text-sm font-medium text-stone-700">

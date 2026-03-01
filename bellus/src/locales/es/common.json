@@ -1,0 +1,77 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "agenda": "Agenda",
+    "clientes": "Clientes",
+    "servicos": "Servicios",
+    "caixa": "Caja",
+    "fiscal": "Fiscal",
+    "equipe": "Equipo",
+    "configuracoes": "Ajustes",
+    "marketing": "Marketing",
+    "atendimentos": "Mis Citas",
+    "minhaAgenda": "Mi Agenda"
+  },
+  "auth": {
+    "login": "Iniciar sesión",
+    "logout": "Cerrar sesión",
+    "register": "Crear cuenta",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "name": "Nombre completo",
+    "forgotPassword": "¿Olvidaste tu contraseña?",
+    "hasAccount": "¿Ya tienes cuenta? Iniciar sesión",
+    "noAccount": "¿No tienes cuenta? Crear cuenta",
+    "loading": "Entrando...",
+    "creating": "Creando cuenta...",
+    "invalidCredentials": "Credenciales incorrectas. Intenta de nuevo.",
+    "passwordMismatch": "Las contraseñas no coinciden."
+  },
+  "dashboard": {
+    "welcome": "Bienvenido a {salonName}",
+    "welcomeDefault": "Bienvenido a Bellus",
+    "overview": "Resumen del día",
+    "noData": "No hay datos disponibles"
+  },
+  "settings": {
+    "title": "Configuración del Salón",
+    "logo": "Logo del Salón",
+    "uploadLogo": "Subir logo",
+    "changeLogo": "Cambiar logo",
+    "logoHint": "JPG o PNG, máximo 2MB",
+    "general": "Información General",
+    "salonName": "Nombre del salón",
+    "whatsapp": "WhatsApp Business",
+    "phone": "Teléfono",
+    "address": "Dirección",
+    "primaryColor": "Color primario del salón",
+    "instagram": "Instagram",
+    "googleMaps": "Google Maps",
+    "currency": "Moneda",
+    "timezone": "Zona horaria",
+    "save": "Guardar configuraciones",
+    "saving": "Guardando...",
+    "saved": "Configuraciones guardadas correctamente",
+    "required": "Nombre y WhatsApp son obligatorios"
+  },
+  "common": {
+    "loading": "Cargando...",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "delete": "Eliminar",
+    "edit": "Editar",
+    "back": "Volver",
+    "search": "Buscar",
+    "noResults": "Sin resultados",
+    "error": "Error",
+    "success": "Éxito"
+  },
+  "language": {
+    "select": "Idioma",
+    "pt": "Português",
+    "es": "Español",
+    "en": "English",
+    "ru": "Русский"
+  }
+}

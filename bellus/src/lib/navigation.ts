@@ -34,10 +34,7 @@ export const menuItems: Record<"proprietario" | "profissional", NavItem[]> = {
   ],
 };
 
-export const mobileNavItems: Record<
-  "proprietario" | "profissional",
-  NavItem[]
-> = {
+export const mobileNavItems: Record<"proprietario" | "profissional", NavItem[]> = {
   proprietario: [
     { href: "/dashboard", label: "Inicio", icon: LayoutDashboard },
     { href: "/dashboard/agenda", label: "Agenda", icon: Calendar },

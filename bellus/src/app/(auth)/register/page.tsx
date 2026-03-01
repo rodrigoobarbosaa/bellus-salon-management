@@ -1,30 +1,33 @@
 "use client";
 
 import { useState } from "react";
-import { updatePassword } from "@/app/actions/auth";
+import Link from "next/link";
+import { signUp } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 
-export default function ResetPasswordPage() {
+export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
     setError(null);
+    setIsLoading(true);
 
     const formData = new FormData(event.currentTarget);
+
     const password = formData.get("password") as string;
     const confirmPassword = formData.get("confirmPassword") as string;
 
     if (password !== confirmPassword) {
       setError("Las contraseñas no coinciden.");
+      setIsLoading(false);
       return;
     }
 
-    setIsLoading(true);
-    const result = await updatePassword(formData);
+    const result = await signUp(formData);
 
     if (result?.error) {
       setError(result.error);
@@ -35,14 +38,55 @@ export default function ResetPasswordPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-center text-xl">Nueva contraseña</CardTitle>
+        <CardTitle className="text-center text-xl">Crear cuenta</CardTitle>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">{error}</div>}
           <div className="space-y-2">
+            <label htmlFor="nome" className="text-sm font-medium text-stone-700">
+              Nombre completo
+            </label>
+            <Input
+              id="nome"
+              name="nome"
+              type="text"
+              placeholder="Tu nombre"
+              required
+              autoComplete="name"
+              disabled={isLoading}
+            />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="salonName" className="text-sm font-medium text-stone-700">
+              Nombre del salón
+            </label>
+            <Input
+              id="salonName"
+              name="salonName"
+              type="text"
+              placeholder="Mi Salón de Belleza"
+              required
+              disabled={isLoading}
+            />
+          </div>
+          <div className="space-y-2">
+            <label htmlFor="email" className="text-sm font-medium text-stone-700">
+              Correo electrónico
+            </label>
+            <Input
+              id="email"
+              name="email"
+              type="email"
+              placeholder="tu@email.com"
+              required
+              autoComplete="email"
+              disabled={isLoading}
+            />
+          </div>
+          <div className="space-y-2">
             <label htmlFor="password" className="text-sm font-medium text-stone-700">
-              Nueva contraseña
+              Contraseña
             </label>
             <Input
               id="password"
@@ -71,10 +115,13 @@ export default function ResetPasswordPage() {
             />
           </div>
         </CardContent>
-        <CardFooter>
+        <CardFooter className="flex flex-col gap-3">
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Actualizando..." : "Actualizar contraseña"}
+            {isLoading ? "Creando cuenta..." : "Crear cuenta"}
           </Button>
+          <Link href="/login" className="text-sm text-stone-500 hover:text-stone-700">
+            ¿Ya tienes cuenta? Iniciar sesión
+          </Link>
         </CardFooter>
       </form>
     </Card>

@@ -1,6 +1,7 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { LanguageSwitcher } from "@/components/shared/language-switcher";
 
 interface DashboardHeaderProps {
   userName: string;
@@ -22,14 +23,12 @@ export function DashboardHeader({ userName }: DashboardHeaderProps) {
   const pathname = usePathname();
 
   const currentLabel =
-    routeLabels[pathname] ??
-    pathname.split("/").pop()?.replace(/-/g, " ") ??
-    "Dashboard";
+    routeLabels[pathname] ?? pathname.split("/").pop()?.replace(/-/g, " ") ?? "Dashboard";
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-stone-200 bg-white px-4 md:px-6">
       <div className="flex items-center gap-4">
-        <h1 className="text-lg font-semibold text-bellus-dark md:hidden">
+        <h1 className="text-bellus-dark text-lg font-semibold md:hidden">
           <span className="text-bellus-gold">B</span>ellus
         </h1>
         <div className="hidden items-center gap-2 text-sm text-stone-500 md:flex">
@@ -40,17 +39,9 @@ export function DashboardHeader({ userName }: DashboardHeaderProps) {
       </div>
 
       <div className="flex items-center gap-3">
-        <button
-          type="button"
-          className="rounded-md px-2 py-1 text-xs text-stone-500 transition-colors hover:bg-stone-100 hover:text-stone-700"
-          aria-label="Cambiar idioma"
-          title="Idioma (Story 1.5)"
-          disabled
-        >
-          ES
-        </button>
+        <LanguageSwitcher />
         <div
-          className="flex size-8 items-center justify-center rounded-full bg-bellus-gold/20 text-sm font-semibold text-bellus-gold"
+          className="bg-bellus-gold/20 text-bellus-gold flex size-8 items-center justify-center rounded-full text-sm font-semibold"
           aria-label={`Perfil de ${userName}`}
         >
           {userName.charAt(0).toUpperCase()}

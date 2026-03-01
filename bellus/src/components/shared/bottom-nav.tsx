@@ -12,8 +12,7 @@ interface BottomNavProps {
 
 export function BottomNav({ userRole }: BottomNavProps) {
   const pathname = usePathname();
-  const items: NavItem[] =
-    mobileNavItems[userRole] ?? mobileNavItems.profissional;
+  const items: NavItem[] = mobileNavItems[userRole] ?? mobileNavItems.profissional;
 
   return (
     <nav
@@ -23,9 +22,7 @@ export function BottomNav({ userRole }: BottomNavProps) {
       <div className="flex h-16 items-center justify-around">
         {items.map((item) => {
           const isActive =
-            item.href === "/dashboard"
-              ? pathname === "/dashboard"
-              : pathname.startsWith(item.href);
+            item.href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(item.href);
 
           return (
             <Link
@@ -34,9 +31,7 @@ export function BottomNav({ userRole }: BottomNavProps) {
               aria-current={isActive ? "page" : undefined}
               className={cn(
                 "flex flex-col items-center gap-1 px-3 py-1 text-xs transition-colors",
-                isActive
-                  ? "text-bellus-gold"
-                  : "text-stone-400 hover:text-stone-600",
+                isActive ? "text-bellus-gold" : "text-stone-400 hover:text-stone-600"
               )}
             >
               <item.icon className="size-5" />

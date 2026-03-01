@@ -5,11 +5,7 @@ import { BottomNav } from "@/components/shared/bottom-nav";
 import { DashboardHeader } from "@/components/shared/dashboard-header";
 import type { RoleProfissional } from "@/stores/auth-store";
 
-export default async function DashboardLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
+export default async function DashboardLayout({ children }: { children: React.ReactNode }) {
   const supabase = await createClient();
   const {
     data: { user },
@@ -19,15 +15,31 @@ export default async function DashboardLayout({
     redirect("/login");
   }
 
-  const { data } = await supabase
-    .from("profissionais" as string)
+  // Buscar perfil: primeiro usuarios (bridge), fallback profissionais
+  const { data: usuario } = await supabase
+    .from("usuarios" as string)
     .select("nome, role")
-    .eq("user_id", user.id)
+    .eq("id", user.id)
     .single();
 
-  const profile = data as { nome: string; role: string } | null;
-  const userName = profile?.nome ?? user.email ?? "Usuario";
-  const userRole = (profile?.role as RoleProfissional) ?? "profissional";
+  let userName = (usuario as { nome: string } | null)?.nome
+    ?? user.user_metadata?.nome
+    ?? user.email
+    ?? "Usuario";
+  let userRole: RoleProfissional = ((usuario as { role: string } | null)?.role as RoleProfissional)
+    ?? "profissional";
+
+  if (!usuario) {
+    const { data: prof } = await supabase
+      .from("profissionais" as string)
+      .select("nome, role")
+      .eq("user_id", user.id)
+      .single();
+    if (prof) {
+      userName = (prof as { nome: string }).nome;
+      userRole = (prof as { role: string }).role as RoleProfissional;
+    }
+  }
 
   return (
     <div className="grid min-h-screen grid-cols-1 md:grid-cols-[240px_1fr]">

@@ -1,0 +1,77 @@
+{
+  "nav": {
+    "dashboard": "Панель",
+    "agenda": "Расписание",
+    "clientes": "Клиенты",
+    "servicos": "Услуги",
+    "caixa": "Касса",
+    "fiscal": "Налоги",
+    "equipe": "Команда",
+    "configuracoes": "Настройки",
+    "marketing": "Маркетинг",
+    "atendimentos": "Мои записи",
+    "minhaAgenda": "Моё расписание"
+  },
+  "auth": {
+    "login": "Войти",
+    "logout": "Выйти",
+    "register": "Создать аккаунт",
+    "email": "Электронная почта",
+    "password": "Пароль",
+    "confirmPassword": "Подтвердить пароль",
+    "name": "Полное имя",
+    "forgotPassword": "Забыли пароль?",
+    "hasAccount": "Уже есть аккаунт? Войти",
+    "noAccount": "Нет аккаунта? Создать",
+    "loading": "Вход...",
+    "creating": "Создание аккаунта...",
+    "invalidCredentials": "Неверные данные. Попробуйте снова.",
+    "passwordMismatch": "Пароли не совпадают."
+  },
+  "dashboard": {
+    "welcome": "Добро пожаловать в {salonName}",
+    "welcomeDefault": "Добро пожаловать в Bellus",
+    "overview": "Обзор дня",
+    "noData": "Нет данных"
+  },
+  "settings": {
+    "title": "Настройки салона",
+    "logo": "Логотип салона",
+    "uploadLogo": "Загрузить логотип",
+    "changeLogo": "Изменить логотип",
+    "logoHint": "JPG или PNG, максимум 2МБ",
+    "general": "Общая информация",
+    "salonName": "Название салона",
+    "whatsapp": "WhatsApp Business",
+    "phone": "Телефон",
+    "address": "Адрес",
+    "primaryColor": "Основной цвет салона",
+    "instagram": "Instagram",
+    "googleMaps": "Google Maps",
+    "currency": "Валюта",
+    "timezone": "Часовой пояс",
+    "save": "Сохранить настройки",
+    "saving": "Сохранение...",
+    "saved": "Настройки сохранены",
+    "required": "Название и WhatsApp обязательны"
+  },
+  "common": {
+    "loading": "Загрузка...",
+    "save": "Сохранить",
+    "cancel": "Отмена",
+    "delete": "Удалить",
+    "edit": "Редактировать",
+    "back": "Назад",
+    "search": "Поиск",
+    "noResults": "Нет результатов",
+    "error": "Ошибка",
+    "success": "Успех"
+  },
+  "language": {
+    "select": "Язык",
+    "pt": "Português",
+    "es": "Español",
+    "en": "English",
+    "ru": "Русский"
+  }
+}

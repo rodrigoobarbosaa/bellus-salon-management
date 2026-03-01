@@ -7,9 +7,7 @@ export async function middleware(request: NextRequest) {
 
   // Redirecionar / para /dashboard (autenticado) ou /login (não autenticado)
   if (pathname === "/") {
-    const redirectUrl = user
-      ? new URL("/dashboard", request.url)
-      : new URL("/login", request.url);
+    const redirectUrl = user ? new URL("/dashboard", request.url) : new URL("/login", request.url);
     return NextResponse.redirect(redirectUrl);
   }
 

@@ -1,5 +1,7 @@
 import type { Metadata } from "next";
 import { Inter } from "next/font/google";
+import { NextIntlClientProvider } from "next-intl";
+import { getLocale, getMessages } from "next-intl/server";
 import { AppProviders } from "@/providers/app-providers";
 import { Toaster } from "@/components/ui/sonner";
 import "./globals.css";
@@ -14,18 +16,23 @@ export const metadata: Metadata = {
   description: "Sistema de gestão para salão de beleza",
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  const locale = await getLocale();
+  const messages = await getMessages();
+
   return (
-    <html lang="pt-BR">
+    <html lang={locale}>
       <body className={`${inter.variable} font-sans antialiased`}>
-        <AppProviders>
-          {children}
-          <Toaster position="top-right" richColors />
-        </AppProviders>
+        <NextIntlClientProvider messages={messages}>
+          <AppProviders>
+            {children}
+            <Toaster position="top-right" richColors />
+          </AppProviders>
+        </NextIntlClientProvider>
       </body>
     </html>
   );

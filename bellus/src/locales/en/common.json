@@ -1,0 +1,77 @@
+{
+  "nav": {
+    "dashboard": "Dashboard",
+    "agenda": "Schedule",
+    "clientes": "Clients",
+    "servicos": "Services",
+    "caixa": "Cash Register",
+    "fiscal": "Tax",
+    "equipe": "Team",
+    "configuracoes": "Settings",
+    "marketing": "Marketing",
+    "atendimentos": "My Appointments",
+    "minhaAgenda": "My Schedule"
+  },
+  "auth": {
+    "login": "Sign in",
+    "logout": "Sign out",
+    "register": "Create account",
+    "email": "Email address",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "name": "Full name",
+    "forgotPassword": "Forgot your password?",
+    "hasAccount": "Already have an account? Sign in",
+    "noAccount": "Don't have an account? Create one",
+    "loading": "Signing in...",
+    "creating": "Creating account...",
+    "invalidCredentials": "Invalid credentials. Please try again.",
+    "passwordMismatch": "Passwords do not match."
+  },
+  "dashboard": {
+    "welcome": "Welcome to {salonName}",
+    "welcomeDefault": "Welcome to Bellus",
+    "overview": "Today's overview",
+    "noData": "No data available"
+  },
+  "settings": {
+    "title": "Salon Settings",
+    "logo": "Salon Logo",
+    "uploadLogo": "Upload logo",
+    "changeLogo": "Change logo",
+    "logoHint": "JPG or PNG, max 2MB",
+    "general": "General Information",
+    "salonName": "Salon name",
+    "whatsapp": "WhatsApp Business",
+    "phone": "Phone",
+    "address": "Address",
+    "primaryColor": "Primary color",
+    "instagram": "Instagram",
+    "googleMaps": "Google Maps",
+    "currency": "Currency",
+    "timezone": "Timezone",
+    "save": "Save settings",
+    "saving": "Saving...",
+    "saved": "Settings saved successfully",
+    "required": "Name and WhatsApp are required"
+  },
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "delete": "Delete",
+    "edit": "Edit",
+    "back": "Back",
+    "search": "Search",
+    "noResults": "No results",
+    "error": "Error",
+    "success": "Success"
+  },
+  "language": {
+    "select": "Language",
+    "pt": "Português",
+    "es": "Español",
+    "en": "English",
+    "ru": "Русский"
+  }
+}

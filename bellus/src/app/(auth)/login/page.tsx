@@ -32,11 +32,7 @@ export default function LoginPage() {
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
-          {error && (
-            <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">
-              {error}
-            </div>
-          )}
+          {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">{error}</div>}
           <div className="space-y-2">
             <label htmlFor="email" className="text-sm font-medium text-stone-700">
               Correo electrónico
@@ -71,12 +67,14 @@ export default function LoginPage() {
           <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? "Entrando..." : "Iniciar sesión"}
           </Button>
-          <Link
-            href="/forgot-password"
-            className="text-sm text-stone-500 hover:text-stone-700"
-          >
-            ¿Olvidaste tu contraseña?
-          </Link>
+          <div className="flex flex-col items-center gap-2">
+            <Link href="/register" className="text-sm text-bellus-gold hover:text-bellus-gold/80 font-medium">
+              ¿No tienes cuenta? Regístrate
+            </Link>
+            <Link href="/forgot-password" className="text-sm text-stone-500 hover:text-stone-700">
+              ¿Olvidaste tu contraseña?
+            </Link>
+          </div>
         </CardFooter>
       </form>
     </Card>
