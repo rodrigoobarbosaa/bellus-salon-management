@@ -419,6 +419,39 @@ export type Database = {
         };
         Relationships: [];
       };
+      bloqueios: {
+        Row: {
+          id: string;
+          profissional_id: string;
+          salao_id: string;
+          data_hora_inicio: string;
+          data_hora_fim: string;
+          dia_inteiro: boolean;
+          motivo: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          profissional_id: string;
+          salao_id: string;
+          data_hora_inicio: string;
+          data_hora_fim: string;
+          dia_inteiro?: boolean;
+          motivo?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          profissional_id?: string;
+          salao_id?: string;
+          data_hora_inicio?: string;
+          data_hora_fim?: string;
+          dia_inteiro?: boolean;
+          motivo?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {

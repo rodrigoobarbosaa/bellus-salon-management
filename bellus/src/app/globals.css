@@ -138,3 +138,68 @@
     @apply bg-background text-foreground;
   }
 }
+
+/* FullCalendar custom styles */
+.fc {
+  --fc-border-color: #e7e5e4;
+  --fc-today-bg-color: #faf5eb;
+  --fc-now-indicator-color: #c9a96e;
+  --fc-button-bg-color: #1a1a1a;
+  --fc-button-border-color: #1a1a1a;
+  --fc-button-hover-bg-color: #333;
+  --fc-button-hover-border-color: #333;
+  --fc-button-active-bg-color: #c9a96e;
+  --fc-button-active-border-color: #c9a96e;
+  font-size: 0.875rem;
+}
+
+.fc .fc-toolbar-title {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #1c1917;
+  text-transform: capitalize;
+}
+
+.fc .fc-button {
+  font-size: 0.75rem;
+  padding: 0.375rem 0.75rem;
+  border-radius: 0.375rem;
+  font-weight: 500;
+}
+
+.fc .fc-timegrid-slot {
+  height: 2.5rem;
+}
+
+.fc .fc-event {
+  border-radius: 0.25rem;
+  font-size: 0.75rem;
+  padding: 2px 4px;
+  cursor: pointer;
+}
+
+.fc .fc-event .fc-event-title {
+  font-weight: 500;
+}
+
+.fc .fc-col-header-cell {
+  padding: 0.5rem 0;
+  font-weight: 600;
+  color: #57534e;
+  text-transform: capitalize;
+}
+
+.fc .fc-timegrid-now-indicator-line {
+  border-width: 2px;
+}
+
+/* Responsivo: mobile */
+@media (max-width: 640px) {
+  .fc .fc-toolbar {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+  .fc .fc-toolbar-title {
+    font-size: 1rem;
+  }
+}

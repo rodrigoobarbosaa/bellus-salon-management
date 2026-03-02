@@ -1,0 +1,477 @@
+"use client";
+
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import FullCalendar from "@fullcalendar/react";
+import dayGridPlugin from "@fullcalendar/daygrid";
+import timeGridPlugin from "@fullcalendar/timegrid";
+import interactionPlugin from "@fullcalendar/interaction";
+import type { EventClickArg, DateSelectArg, DatesSetArg } from "@fullcalendar/core";
+import { createClient } from "@/lib/supabase/client";
+import { Button } from "@/components/ui/button";
+import { Plus, Ban } from "lucide-react";
+import { AgendamentoForm } from "./agendamento-form";
+import { AgendamentoDetail } from "./agendamento-detail";
+import { BloqueioForm } from "./bloqueio-form";
+import { deleteBloqueio } from "@/app/actions/bloqueios";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogFooter,
+} from "@/components/ui/dialog";
+
+interface Profissional {
+  id: string;
+  nome: string;
+  cor_agenda: string;
+  user_id: string;
+}
+
+interface Servico {
+  id: string;
+  nome: string;
+  duracao_minutos: number;
+}
+
+interface Agendamento {
+  id: string;
+  cliente_id: string;
+  profissional_id: string;
+  servico_id: string;
+  data_hora_inicio: string;
+  data_hora_fim: string;
+  status: string;
+  notas: string | null;
+  cliente_nome?: string;
+  servico_nome?: string;
+  profissional_nome?: string;
+}
+
+interface Bloqueio {
+  id: string;
+  profissional_id: string;
+  data_hora_inicio: string;
+  data_hora_fim: string;
+  dia_inteiro: boolean;
+  motivo: string | null;
+}
+
+interface AgendaViewProps {
+  profissionais: Profissional[];
+  servicos: Servico[];
+  salaoId: string;
+  userRole: string;
+  currentProfissionalId: string | null;
+}
+
+const STATUS_COLORS: Record<string, { bg: string; border: string; text: string }> = {
+  pendente: { bg: "#fef3c7", border: "#f59e0b", text: "#92400e" },
+  confirmado: { bg: "#dbeafe", border: "#3b82f6", text: "#1e40af" },
+  concluido: { bg: "#dcfce7", border: "#22c55e", text: "#166534" },
+  cancelado: { bg: "#f3f4f6", border: "#9ca3af", text: "#6b7280" },
+};
+
+export function AgendaView({
+  profissionais,
+  servicos,
+  salaoId,
+  userRole,
+  currentProfissionalId,
+}: AgendaViewProps) {
+  const calendarRef = useRef<FullCalendar>(null);
+  const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
+  const [bloqueios, setBloqueios] = useState<Bloqueio[]>([]);
+  const [createOpen, setCreateOpen] = useState(false);
+  const [bloqueioOpen, setBloqueioOpen] = useState(false);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  const [selectedAgendamento, setSelectedAgendamento] = useState<Agendamento | null>(null);
+  const [selectedBloqueio, setSelectedBloqueio] = useState<Bloqueio | null>(null);
+  const [filteredProfIds, setFilteredProfIds] = useState<Set<string> | null>(null);
+  const [currentRange, setCurrentRange] = useState<{ start: string; end: string } | null>(null);
+
+  const supabase = useMemo(() => createClient(), []);
+
+  const profMap = useMemo(() => {
+    const m = new Map<string, Profissional>();
+    profissionais.forEach((p) => m.set(p.id, p));
+    return m;
+  }, [profissionais]);
+
+  const servicoMap = useMemo(() => {
+    const m = new Map<string, Servico>();
+    servicos.forEach((s) => m.set(s.id, s));
+    return m;
+  }, [servicos]);
+
+  // Fetch agendamentos + bloqueios
+  const fetchData = useCallback(
+    async (start: string, end: string) => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const sb = supabase as any;
+
+      // Agendamentos
+      let agQuery = sb
+        .from("agendamentos")
+        .select("*, clientes!inner(nome)")
+        .gte("data_hora_inicio", start)
+        .lte("data_hora_inicio", end);
+
+      if (userRole === "profissional" && currentProfissionalId) {
+        agQuery = agQuery.eq("profissional_id", currentProfissionalId);
+      }
+
+      // Bloqueios
+      let blQuery = sb
+        .from("bloqueios")
+        .select("*")
+        .gte("data_hora_inicio", start)
+        .lte("data_hora_inicio", end);
+
+      if (userRole === "profissional" && currentProfissionalId) {
+        blQuery = blQuery.eq("profissional_id", currentProfissionalId);
+      }
+
+      const [agResult, blResult] = await Promise.all([agQuery, blQuery]);
+
+      if (agResult.data) {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const mapped = (agResult.data as any[]).map((a) => ({
+          id: a.id,
+          cliente_id: a.cliente_id,
+          profissional_id: a.profissional_id,
+          servico_id: a.servico_id,
+          data_hora_inicio: a.data_hora_inicio,
+          data_hora_fim: a.data_hora_fim,
+          status: a.status,
+          notas: a.notas,
+          cliente_nome: a.clientes?.nome ?? "Cliente",
+          servico_nome: servicoMap.get(a.servico_id)?.nome ?? "Servicio",
+          profissional_nome: profMap.get(a.profissional_id)?.nome ?? "Profesional",
+        }));
+        setAgendamentos(mapped);
+      }
+
+      if (blResult.data) {
+        setBloqueios(blResult.data as Bloqueio[]);
+      }
+    },
+    [supabase, userRole, currentProfissionalId, servicoMap, profMap]
+  );
+
+  // Refetch quando range muda
+  useEffect(() => {
+    if (currentRange) {
+      fetchData(currentRange.start, currentRange.end);
+    }
+  }, [currentRange, fetchData]);
+
+  // Supabase Realtime
+  useEffect(() => {
+    if (!salaoId) return;
+
+    const channel = supabase
+      .channel("agenda-realtime")
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "agendamentos", filter: `salao_id=eq.${salaoId}` },
+        () => {
+          if (currentRange) fetchData(currentRange.start, currentRange.end);
+        }
+      )
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "bloqueios", filter: `salao_id=eq.${salaoId}` },
+        () => {
+          if (currentRange) fetchData(currentRange.start, currentRange.end);
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [supabase, salaoId, currentRange, fetchData]);
+
+  // FullCalendar events (agendamentos + bloqueios)
+  const calendarEvents = useMemo(() => {
+    const agEvents = agendamentos
+      .filter((a) => {
+        if (!filteredProfIds) return true;
+        return filteredProfIds.has(a.profissional_id);
+      })
+      .map((a) => {
+        const prof = profMap.get(a.profissional_id);
+        const statusColor = STATUS_COLORS[a.status] ?? STATUS_COLORS.pendente;
+
+        return {
+          id: a.id,
+          title: `${a.cliente_nome} — ${a.servico_nome}`,
+          start: a.data_hora_inicio,
+          end: a.data_hora_fim,
+          backgroundColor: a.status === "cancelado" ? statusColor.bg : (prof?.cor_agenda ?? "#C9A96E"),
+          borderColor: a.status === "cancelado" ? statusColor.border : (prof?.cor_agenda ?? "#C9A96E"),
+          textColor: a.status === "cancelado" ? statusColor.text : "#fff",
+          extendedProps: { agendamento: a, type: "agendamento" },
+          classNames: a.status === "cancelado" ? ["opacity-50", "line-through"] : [],
+        };
+      });
+
+    const blEvents = bloqueios
+      .filter((b) => {
+        if (!filteredProfIds) return true;
+        return filteredProfIds.has(b.profissional_id);
+      })
+      .map((b) => {
+        const prof = profMap.get(b.profissional_id);
+        const profNome = prof?.nome.split(" ")[0] ?? "";
+        return {
+          id: `bloqueio-${b.id}`,
+          title: b.motivo ? `🚫 ${b.motivo} (${profNome})` : `🚫 Bloqueado (${profNome})`,
+          start: b.data_hora_inicio,
+          end: b.data_hora_fim,
+          display: "background" as const,
+          backgroundColor: "#e7e5e4",
+          borderColor: "#a8a29e",
+          textColor: "#78716c",
+          extendedProps: { bloqueio: b, type: "bloqueio" },
+        };
+      });
+
+    return [...agEvents, ...blEvents];
+  }, [agendamentos, bloqueios, filteredProfIds, profMap]);
+
+  function handleDatesSet(arg: DatesSetArg) {
+    setCurrentRange({ start: arg.startStr, end: arg.endStr });
+  }
+
+  function handleDateSelect(arg: DateSelectArg) {
+    setSelectedDate(new Date(arg.startStr));
+    setCreateOpen(true);
+  }
+
+  function handleEventClick(arg: EventClickArg) {
+    const type = arg.event.extendedProps.type;
+    if (type === "agendamento") {
+      setSelectedAgendamento(arg.event.extendedProps.agendamento as Agendamento);
+    } else if (type === "bloqueio") {
+      setSelectedBloqueio(arg.event.extendedProps.bloqueio as Bloqueio);
+    }
+  }
+
+  function handleRefresh() {
+    if (currentRange) fetchData(currentRange.start, currentRange.end);
+  }
+
+  function toggleProfFilter(profId: string) {
+    setFilteredProfIds((prev) => {
+      if (!prev) return new Set([profId]);
+      const next = new Set(prev);
+      if (next.has(profId)) {
+        next.delete(profId);
+        if (next.size === 0) return null;
+      } else {
+        next.add(profId);
+      }
+      return next;
+    });
+  }
+
+  async function handleDeleteBloqueio() {
+    if (!selectedBloqueio) return;
+    await deleteBloqueio(selectedBloqueio.id);
+    setSelectedBloqueio(null);
+    handleRefresh();
+  }
+
+  return (
+    <>
+      {/* Header */}
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <h2 className="text-2xl font-bold text-stone-900">Agenda</h2>
+        <div className="flex gap-2">
+          {userRole === "proprietario" && (
+            <Button
+              variant="outline"
+              onClick={() => { setSelectedDate(new Date()); setBloqueioOpen(true); }}
+              className="gap-2"
+            >
+              <Ban className="size-4" />
+              Bloquear
+            </Button>
+          )}
+          <Button onClick={() => { setSelectedDate(new Date()); setCreateOpen(true); }} className="gap-2">
+            <Plus className="size-4" />
+            Nuevo turno
+          </Button>
+        </div>
+      </div>
+
+      {/* Filtro de profissionais */}
+      {profissionais.length > 1 && userRole === "proprietario" && (
+        <div className="flex flex-wrap gap-2">
+          <button
+            onClick={() => setFilteredProfIds(null)}
+            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+              !filteredProfIds
+                ? "bg-stone-900 text-white"
+                : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+            }`}
+          >
+            Todos
+          </button>
+          {profissionais.map((prof) => (
+            <button
+              key={prof.id}
+              onClick={() => toggleProfFilter(prof.id)}
+              className="flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-medium transition-colors"
+              style={{
+                backgroundColor:
+                  filteredProfIds?.has(prof.id) || !filteredProfIds
+                    ? prof.cor_agenda + "20"
+                    : "#f5f5f4",
+                color: filteredProfIds?.has(prof.id) || !filteredProfIds
+                  ? prof.cor_agenda
+                  : "#a8a29e",
+                borderWidth: 1,
+                borderColor: filteredProfIds?.has(prof.id) ? prof.cor_agenda : "transparent",
+              }}
+            >
+              <span
+                className="inline-block size-2 rounded-full"
+                style={{ backgroundColor: prof.cor_agenda }}
+              />
+              {prof.nome.split(" ")[0]}
+            </button>
+          ))}
+        </div>
+      )}
+
+      {/* Calendário */}
+      <div className="rounded-lg border border-stone-200 bg-white p-2 sm:p-4">
+        <FullCalendar
+          ref={calendarRef}
+          plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
+          initialView="timeGridWeek"
+          headerToolbar={{
+            left: "prev,next today",
+            center: "title",
+            right: "timeGridWeek,timeGridDay",
+          }}
+          locale="es"
+          timeZone="Europe/Madrid"
+          slotMinTime="08:00:00"
+          slotMaxTime="21:00:00"
+          slotDuration="00:30:00"
+          allDaySlot={false}
+          selectable={true}
+          selectMirror={true}
+          nowIndicator={true}
+          weekends={true}
+          editable={false}
+          events={calendarEvents}
+          datesSet={handleDatesSet}
+          select={handleDateSelect}
+          eventClick={handleEventClick}
+          height="auto"
+          stickyHeaderDates={true}
+          dayHeaderFormat={{ weekday: "short", day: "numeric" }}
+          slotLabelFormat={{ hour: "2-digit", minute: "2-digit", hour12: false }}
+          eventTimeFormat={{ hour: "2-digit", minute: "2-digit", hour12: false }}
+          buttonText={{
+            today: "Hoy",
+            week: "Semana",
+            day: "Día",
+          }}
+        />
+      </div>
+
+      {/* Modal criar agendamento */}
+      <AgendamentoForm
+        open={createOpen}
+        onOpenChange={(open) => {
+          setCreateOpen(open);
+          if (!open) handleRefresh();
+        }}
+        profissionais={profissionais}
+        servicos={servicos}
+        defaultDate={selectedDate}
+        currentProfissionalId={currentProfissionalId}
+      />
+
+      {/* Modal criar bloqueio */}
+      <BloqueioForm
+        open={bloqueioOpen}
+        onOpenChange={(open) => {
+          setBloqueioOpen(open);
+          if (!open) handleRefresh();
+        }}
+        profissionais={profissionais}
+        defaultDate={selectedDate}
+        currentProfissionalId={currentProfissionalId}
+      />
+
+      {/* Modal detalhe agendamento */}
+      {selectedAgendamento && (
+        <AgendamentoDetail
+          open={!!selectedAgendamento}
+          onOpenChange={(open) => {
+            if (!open) {
+              setSelectedAgendamento(null);
+              handleRefresh();
+            }
+          }}
+          agendamento={selectedAgendamento}
+          profissionais={profissionais}
+          servicos={servicos}
+          userRole={userRole}
+          currentProfissionalId={currentProfissionalId}
+        />
+      )}
+
+      {/* Modal detalhe bloqueio */}
+      {selectedBloqueio && (
+        <Dialog
+          open={!!selectedBloqueio}
+          onOpenChange={(open) => { if (!open) setSelectedBloqueio(null); }}
+        >
+          <DialogContent className="sm:max-w-xs">
+            <DialogHeader>
+              <DialogTitle>Bloqueo de horario</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-2 text-sm">
+              <p>
+                <span className="font-medium">Profesional:</span>{" "}
+                {profMap.get(selectedBloqueio.profissional_id)?.nome ?? "—"}
+              </p>
+              <p>
+                <span className="font-medium">Motivo:</span>{" "}
+                {selectedBloqueio.motivo ?? "Sin motivo"}
+              </p>
+              <p>
+                <span className="font-medium">Periodo:</span>{" "}
+                {selectedBloqueio.dia_inteiro
+                  ? new Date(selectedBloqueio.data_hora_inicio).toLocaleDateString("es-ES")
+                  + " (día completo)"
+                  : `${new Date(selectedBloqueio.data_hora_inicio).toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" })} — ${new Date(selectedBloqueio.data_hora_fim).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}`}
+              </p>
+            </div>
+            {userRole === "proprietario" && (
+              <DialogFooter>
+                <Button variant="outline" onClick={() => setSelectedBloqueio(null)}>
+                  Cerrar
+                </Button>
+                <Button
+                  onClick={handleDeleteBloqueio}
+                  className="bg-red-600 hover:bg-red-700"
+                >
+                  Eliminar bloqueo
+                </Button>
+              </DialogFooter>
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
+    </>
+  );
+}
