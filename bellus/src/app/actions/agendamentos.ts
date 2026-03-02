@@ -177,7 +177,38 @@ export async function updateAgendamentoStatus(id: string, status: string) {
     return { error: "Error al actualizar el estado." };
   }
 
+  // When completing an appointment, calculate next return date
+  if (status === "concluido") {
+    const { data: agendamento } = await db(supabase)
+      .from("agendamentos")
+      .select("cliente_id")
+      .eq("id", id)
+      .single();
+
+    if (agendamento) {
+      const clienteId = (agendamento as { cliente_id: string }).cliente_id;
+      const { data: cliente } = await db(supabase)
+        .from("clientes")
+        .select("intervalo_retorno_dias")
+        .eq("id", clienteId)
+        .single();
+
+      const intervalo = (cliente as { intervalo_retorno_dias: number | null } | null)
+        ?.intervalo_retorno_dias;
+
+      if (intervalo && intervalo > 0) {
+        const proximoRetorno = new Date();
+        proximoRetorno.setDate(proximoRetorno.getDate() + intervalo);
+        await db(supabase)
+          .from("clientes")
+          .update({ proximo_retorno: proximoRetorno.toISOString().split("T")[0] })
+          .eq("id", clienteId);
+      }
+    }
+  }
+
   revalidatePath("/dashboard/agenda");
+  revalidatePath("/dashboard/clientes");
   return { success: true };
 }
 

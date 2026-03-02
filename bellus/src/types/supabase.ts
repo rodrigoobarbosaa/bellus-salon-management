@@ -136,6 +136,7 @@ export type Database = {
           notas: string | null;
           intervalo_retorno_dias: number | null;
           opt_out_notificacoes: boolean;
+          proximo_retorno: string | null;
           created_at: string;
           updated_at: string;
         };
@@ -149,6 +150,7 @@ export type Database = {
           notas?: string | null;
           intervalo_retorno_dias?: number | null;
           opt_out_notificacoes?: boolean;
+          proximo_retorno?: string | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -162,6 +164,7 @@ export type Database = {
           notas?: string | null;
           intervalo_retorno_dias?: number | null;
           opt_out_notificacoes?: boolean;
+          proximo_retorno?: string | null;
           created_at?: string;
           updated_at?: string;
         };

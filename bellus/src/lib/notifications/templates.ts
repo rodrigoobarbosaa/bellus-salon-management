@@ -103,6 +103,52 @@ See you there!`,
 Ждём вас!`,
 };
 
+export const RETURN_REMINDER_TEMPLATES: Record<string, string> = {
+  es: `Hola {nome_cliente} 👋
+
+¡Te echamos de menos en *{salao}*! 💇
+
+Ha pasado un tiempo desde tu última visita. ¿Quieres agendar tu próxima cita?
+
+📅 Reserva aquí: {link_booking}
+
+¡Te esperamos!
+— {salao}`,
+
+  pt: `Olá {nome_cliente} 👋
+
+Sentimos sua falta no *{salao}*! 💇
+
+Já faz um tempo desde sua última visita. Que tal agendar a próxima?
+
+📅 Reserve aqui: {link_booking}
+
+Te esperamos!
+— {salao}`,
+
+  en: `Hi {nome_cliente} 👋
+
+We miss you at *{salao}*! 💇
+
+It's been a while since your last visit. Ready to book your next appointment?
+
+📅 Book here: {link_booking}
+
+See you soon!
+— {salao}`,
+
+  ru: `Здравствуйте, {nome_cliente} 👋
+
+Мы скучаем по вам в *{salao}*! 💇
+
+Прошло время с вашего последнего визита. Хотите записаться снова?
+
+📅 Записаться: {link_booking}
+
+Ждём вас!
+— {salao}`,
+};
+
 /**
  * Render a template by replacing {variable} placeholders.
  */
@@ -131,4 +177,12 @@ export function getConfirmationTemplate(locale: string, customTemplate?: string 
 export function getReminderTemplate(locale: string, customTemplate?: string | null): string {
   if (customTemplate) return customTemplate;
   return REMINDER_24H_TEMPLATES[locale] ?? REMINDER_24H_TEMPLATES.es;
+}
+
+/**
+ * Get the return reminder template for a locale, with optional custom override.
+ */
+export function getReturnReminderTemplate(locale: string, customTemplate?: string | null): string {
+  if (customTemplate) return customTemplate;
+  return RETURN_REMINDER_TEMPLATES[locale] ?? RETURN_REMINDER_TEMPLATES.es;
 }
