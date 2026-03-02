@@ -135,6 +135,7 @@ export type Database = {
           idioma_preferido: "pt" | "es" | "en" | "ru";
           notas: string | null;
           intervalo_retorno_dias: number | null;
+          opt_out_notificacoes: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -147,6 +148,7 @@ export type Database = {
           idioma_preferido?: "pt" | "es" | "en" | "ru";
           notas?: string | null;
           intervalo_retorno_dias?: number | null;
+          opt_out_notificacoes?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -159,6 +161,7 @@ export type Database = {
           idioma_preferido?: "pt" | "es" | "en" | "ru";
           notas?: string | null;
           intervalo_retorno_dias?: number | null;
+          opt_out_notificacoes?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -416,6 +419,36 @@ export type Database = {
           status?: "pendente" | "enviado" | "falhou";
           enviado_em?: string | null;
           created_at?: string;
+        };
+        Relationships: [];
+      };
+      notification_templates: {
+        Row: {
+          id: string;
+          salao_id: string;
+          tipo: "confirmacao" | "lembrete_24h" | "lembrete_retorno";
+          idioma: "pt" | "es" | "en" | "ru";
+          template: string;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          salao_id: string;
+          tipo: "confirmacao" | "lembrete_24h" | "lembrete_retorno";
+          idioma: "pt" | "es" | "en" | "ru";
+          template: string;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          salao_id?: string;
+          tipo?: "confirmacao" | "lembrete_24h" | "lembrete_retorno";
+          idioma?: "pt" | "es" | "en" | "ru";
+          template?: string;
+          created_at?: string;
+          updated_at?: string;
         };
         Relationships: [];
       };

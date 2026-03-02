@@ -7,9 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Camera, Save } from "lucide-react";
 import Image from "next/image";
+import { BookingQrCode } from "./booking-qr-code";
 
 interface SalonSettings {
   nome: string;
+  slug: string;
   whatsapp: string;
   endereco: string;
   telefone: string;
@@ -23,6 +25,7 @@ interface SalonSettings {
 
 const defaultSettings: SalonSettings = {
   nome: "",
+  slug: "",
   whatsapp: "",
   endereco: "",
   telefone: "",
@@ -48,6 +51,7 @@ export default function ConfiguracoesPage() {
         const d = result.data;
         setSettings({
           nome: d.nome ?? "",
+          slug: d.slug ?? "",
           whatsapp: d.whatsapp ?? "",
           endereco: d.endereco ?? "",
           telefone: d.telefone ?? "",
@@ -310,6 +314,9 @@ export default function ConfiguracoesPage() {
           </form>
         </CardContent>
       </Card>
+
+      {/* Booking QR Code */}
+      <BookingQrCode slug={settings.slug} corPrimaria={settings.cor_primaria} />
     </div>
   );
 }
