@@ -503,6 +503,75 @@ export type Database = {
         };
         Relationships: [];
       };
+      despesas: {
+        Row: {
+          id: string;
+          salao_id: string;
+          descricao: string;
+          categoria: "produtos" | "aluguel" | "formacao" | "suprimentos" | "cuota_autonomos" | "outros";
+          valor: number;
+          data: string;
+          notas: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          salao_id: string;
+          descricao: string;
+          categoria: "produtos" | "aluguel" | "formacao" | "suprimentos" | "cuota_autonomos" | "outros";
+          valor: number;
+          data?: string;
+          notas?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          salao_id?: string;
+          descricao?: string;
+          categoria?: "produtos" | "aluguel" | "formacao" | "suprimentos" | "cuota_autonomos" | "outros";
+          valor?: number;
+          data?: string;
+          notas?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      configuracoes_fiscais: {
+        Row: {
+          id: string;
+          salao_id: string;
+          iva_pct: number;
+          irpf_pct: number;
+          cuota_autonomos_mensual: number;
+          nif: string | null;
+          nombre_fiscal: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          salao_id: string;
+          iva_pct?: number;
+          irpf_pct?: number;
+          cuota_autonomos_mensual?: number;
+          nif?: string | null;
+          nombre_fiscal?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          salao_id?: string;
+          iva_pct?: number;
+          irpf_pct?: number;
+          cuota_autonomos_mensual?: number;
+          nif?: string | null;
+          nombre_fiscal?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [];
+      };
       bloqueios: {
         Row: {
           id: string;
