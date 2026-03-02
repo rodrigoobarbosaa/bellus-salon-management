@@ -41,11 +41,11 @@ export default async function AgendaPage() {
   // Buscar serviços ativos
   const { data: rawServicos } = await supabase
     .from("servicos" as string)
-    .select("id, nome, duracao_minutos")
+    .select("id, nome, duracao_minutos, preco_base")
     .eq("ativo", true)
     .order("nome");
 
-  type Serv = { id: string; nome: string; duracao_minutos: number };
+  type Serv = { id: string; nome: string; duracao_minutos: number; preco_base: number };
   const servicos = (rawServicos as Serv[] | null) ?? [];
 
   // Determinar profissional_id do user logado (para profissional ver só a sua agenda)

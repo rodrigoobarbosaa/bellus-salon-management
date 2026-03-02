@@ -455,6 +455,54 @@ export type Database = {
         };
         Relationships: [];
       };
+      transacoes: {
+        Row: {
+          id: string;
+          salao_id: string;
+          agendamento_id: string | null;
+          cliente_id: string | null;
+          profissional_id: string | null;
+          servico_id: string | null;
+          valor: number;
+          tipo_desconto: "percentual" | "fixo" | null;
+          valor_desconto: number;
+          valor_final: number;
+          forma_pagamento: "efectivo" | "tarjeta" | "bizum" | "transferencia";
+          notas: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          salao_id: string;
+          agendamento_id?: string | null;
+          cliente_id?: string | null;
+          profissional_id?: string | null;
+          servico_id?: string | null;
+          valor: number;
+          tipo_desconto?: "percentual" | "fixo" | null;
+          valor_desconto?: number;
+          valor_final: number;
+          forma_pagamento: "efectivo" | "tarjeta" | "bizum" | "transferencia";
+          notas?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          salao_id?: string;
+          agendamento_id?: string | null;
+          cliente_id?: string | null;
+          profissional_id?: string | null;
+          servico_id?: string | null;
+          valor?: number;
+          tipo_desconto?: "percentual" | "fixo" | null;
+          valor_desconto?: number;
+          valor_final?: number;
+          forma_pagamento?: "efectivo" | "tarjeta" | "bizum" | "transferencia";
+          notas?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
       bloqueios: {
         Row: {
           id: string;

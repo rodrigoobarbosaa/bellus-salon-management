@@ -14,6 +14,7 @@ import {
   cancelAgendamento,
 } from "@/app/actions/agendamentos";
 import { Clock, User, Scissors, Calendar, FileText } from "lucide-react";
+import { PaymentModal } from "./payment-modal";
 
 interface Agendamento {
   id: string;
@@ -26,6 +27,7 @@ interface Agendamento {
   notas: string | null;
   cliente_nome?: string;
   servico_nome?: string;
+  servico_preco?: number;
   profissional_nome?: string;
 }
 
@@ -39,6 +41,7 @@ interface Servico {
   id: string;
   nome: string;
   duracao_minutos: number;
+  preco_base: number;
 }
 
 interface AgendamentoDetailProps {
@@ -69,11 +72,13 @@ export function AgendamentoDetail({
   open,
   onOpenChange,
   agendamento,
+  servicos,
   userRole,
   currentProfissionalId,
 }: AgendamentoDetailProps) {
   const [isLoading, setIsLoading] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [showPayment, setShowPayment] = useState(false);
 
   const canEdit =
     userRole === "proprietario" ||
@@ -176,11 +181,11 @@ export function AgendamentoDetail({
               {agendamento.status === "confirmado" && (
                 <Button
                   size="sm"
-                  onClick={() => handleStatusChange("concluido")}
+                  onClick={() => setShowPayment(true)}
                   disabled={isLoading}
                   className="bg-green-600 hover:bg-green-700"
                 >
-                  Completar
+                  Completar y cobrar
                 </Button>
               )}
               <Button
@@ -229,6 +234,17 @@ export function AgendamentoDetail({
           </Button>
         </DialogFooter>
       </DialogContent>
+
+      {/* Payment Modal */}
+      <PaymentModal
+        open={showPayment}
+        onOpenChange={(open) => {
+          setShowPayment(open);
+          if (!open) onOpenChange(false);
+        }}
+        agendamento={agendamento}
+        servicos={servicos}
+      />
     </Dialog>
   );
 }
