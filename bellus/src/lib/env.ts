@@ -6,6 +6,11 @@ const envSchema = z.object({
   SUPABASE_SERVICE_ROLE_KEY: z.string().default(""),
   NEXT_PUBLIC_APP_URL: z.string().url().default("http://localhost:3000"),
   NEXT_PUBLIC_APP_NAME: z.string().default("Bellus"),
+  ANTHROPIC_API_KEY: z.string().default(""),
+  META_APP_ID: z.string().default(""),
+  META_APP_SECRET: z.string().default(""),
+  GOOGLE_CLIENT_ID: z.string().default(""),
+  GOOGLE_CLIENT_SECRET: z.string().default(""),
 });
 
 const _env = envSchema.safeParse({
@@ -14,10 +19,15 @@ const _env = envSchema.safeParse({
   SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY,
   NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL,
   NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME,
+  ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
+  META_APP_ID: process.env.META_APP_ID,
+  META_APP_SECRET: process.env.META_APP_SECRET,
+  GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
+  GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
 });
 
 if (!_env.success) {
-  console.error("❌ Variáveis de ambiente inválidas:");
+  console.error("Variaveis de ambiente invalidas:");
   console.error(_env.error.flatten().fieldErrors);
 }
 
@@ -33,4 +43,9 @@ export const env: Env = _env.success
       SUPABASE_SERVICE_ROLE_KEY: process.env.SUPABASE_SERVICE_ROLE_KEY ?? "",
       NEXT_PUBLIC_APP_URL: process.env.NEXT_PUBLIC_APP_URL ?? "http://localhost:3000",
       NEXT_PUBLIC_APP_NAME: process.env.NEXT_PUBLIC_APP_NAME ?? "Bellus",
+      ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY ?? "",
+      META_APP_ID: process.env.META_APP_ID ?? "",
+      META_APP_SECRET: process.env.META_APP_SECRET ?? "",
+      GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? "",
+      GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ?? "",
     };

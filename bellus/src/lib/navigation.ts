@@ -8,6 +8,7 @@ import {
   UserCog,
   Settings,
   Bell,
+  Megaphone,
   type LucideIcon,
 } from "lucide-react";
 
@@ -25,6 +26,7 @@ export const menuItems: Record<"proprietario" | "profissional", NavItem[]> = {
     { href: "/dashboard/servicos", label: "Servicios", icon: Scissors },
     { href: "/dashboard/caixa", label: "Caja", icon: CreditCard },
     { href: "/dashboard/fiscal", label: "Fiscal", icon: Receipt },
+    { href: "/dashboard/marketing", label: "Marketing", icon: Megaphone },
     { href: "/dashboard/notificacoes", label: "Notificaciones", icon: Bell },
     { href: "/dashboard/equipe", label: "Equipo", icon: UserCog },
     { href: "/dashboard/configuracoes", label: "Ajustes", icon: Settings },
