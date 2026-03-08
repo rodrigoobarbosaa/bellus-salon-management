@@ -1,0 +1,70 @@
+{
+  "app": { "name": "Bellus" },
+  "auth": {
+    "login": "Iniciar sesion",
+    "email": "Correo electronico",
+    "password": "Contrasena",
+    "forgotPassword": "Olvidaste tu contrasena?",
+    "loading": "Entrando...",
+    "invalidCredentials": "Credenciales incorrectas.",
+    "logout": "Cerrar sesion",
+    "register": "Crear Cuenta",
+    "name": "Nombre completo",
+    "phone": "Telefono",
+    "confirmPassword": "Confirmar contrasena",
+    "passwordMismatch": "Las contrasenas no coinciden.",
+    "passwordTooShort": "La contrasena debe tener al menos 6 caracteres.",
+    "registerSuccess": "Cuenta creada! Revisa tu correo para confirmar.",
+    "registerError": "Error al crear la cuenta.",
+    "noAccount": "No tienes cuenta? Registrate",
+    "hasAccount": "Ya tienes cuenta? Iniciar sesion"
+  },
+  "tabs": {
+    "book": "Reservar",
+    "appointments": "Mis Citas",
+    "profile": "Perfil"
+  },
+  "booking": {
+    "title": "Reservar Cita",
+    "selectService": "Selecciona el servicio",
+    "selectProfessional": "Selecciona el profesional",
+    "selectDate": "Selecciona la fecha",
+    "selectTime": "Selecciona la hora",
+    "confirm": "Confirmar Reserva",
+    "success": "Cita creada con exito!",
+    "error": "Error al crear la cita.",
+    "noSlots": "Sin horarios disponibles",
+    "any": "Cualquier profesional"
+  },
+  "appointments": {
+    "title": "Mis Citas",
+    "upcoming": "Proximas",
+    "past": "Anteriores",
+    "empty": "No se encontraron citas.",
+    "cancel": "Cancelar",
+    "reschedule": "Reagendar",
+    "cancelConfirm": "Estas seguro de que deseas cancelar?",
+    "cancelSuccess": "Cita cancelada.",
+    "yes": "Si",
+    "no": "No",
+    "status": {
+      "pendente": "Pendiente",
+      "confirmado": "Confirmada",
+      "concluido": "Completada",
+      "cancelado": "Cancelada"
+    }
+  },
+  "profile": {
+    "title": "Perfil",
+    "language": "Idioma",
+    "notifications": "Notificaciones push",
+    "version": "Version",
+    "pushError": "Error al activar notificaciones.",
+    "pushDenied": "Permiso de notificaciones denegado."
+  },
+  "common": {
+    "loading": "Cargando...",
+    "retry": "Reintentar",
+    "cancel": "Cancelar"
+  }
+}

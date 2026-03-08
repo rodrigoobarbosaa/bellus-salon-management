@@ -1,0 +1,70 @@
+{
+  "app": { "name": "Bellus" },
+  "auth": {
+    "login": "Sign In",
+    "email": "Email",
+    "password": "Password",
+    "forgotPassword": "Forgot your password?",
+    "loading": "Signing in...",
+    "invalidCredentials": "Invalid credentials.",
+    "logout": "Sign Out",
+    "register": "Sign Up",
+    "name": "Full name",
+    "phone": "Phone",
+    "confirmPassword": "Confirm password",
+    "passwordMismatch": "Passwords do not match.",
+    "passwordTooShort": "Password must be at least 6 characters.",
+    "registerSuccess": "Account created! Check your email to confirm.",
+    "registerError": "Error creating account.",
+    "noAccount": "Don't have an account? Sign Up",
+    "hasAccount": "Already have an account? Sign In"
+  },
+  "tabs": {
+    "book": "Book",
+    "appointments": "My Appointments",
+    "profile": "Profile"
+  },
+  "booking": {
+    "title": "Book Appointment",
+    "selectService": "Select a service",
+    "selectProfessional": "Select a professional",
+    "selectDate": "Select a date",
+    "selectTime": "Select a time",
+    "confirm": "Confirm Booking",
+    "success": "Appointment booked successfully!",
+    "error": "Error creating appointment.",
+    "noSlots": "No available slots",
+    "any": "Any professional"
+  },
+  "appointments": {
+    "title": "My Appointments",
+    "upcoming": "Upcoming",
+    "past": "Past",
+    "empty": "No appointments found.",
+    "cancel": "Cancel",
+    "reschedule": "Reschedule",
+    "cancelConfirm": "Are you sure you want to cancel?",
+    "cancelSuccess": "Appointment cancelled.",
+    "yes": "Yes",
+    "no": "No",
+    "status": {
+      "pendente": "Pending",
+      "confirmado": "Confirmed",
+      "concluido": "Completed",
+      "cancelado": "Cancelled"
+    }
+  },
+  "profile": {
+    "title": "Profile",
+    "language": "Language",
+    "notifications": "Push notifications",
+    "version": "Version",
+    "pushError": "Failed to enable notifications.",
+    "pushDenied": "Notification permission denied."
+  },
+  "common": {
+    "loading": "Loading...",
+    "retry": "Retry",
+    "cancel": "Cancel"
+  }
+}

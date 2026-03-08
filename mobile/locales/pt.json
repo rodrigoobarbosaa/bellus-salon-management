@@ -1,0 +1,70 @@
+{
+  "app": { "name": "Bellus" },
+  "auth": {
+    "login": "Entrar",
+    "email": "Email",
+    "password": "Senha",
+    "forgotPassword": "Esqueceu a senha?",
+    "loading": "Entrando...",
+    "invalidCredentials": "Credenciais incorretas.",
+    "logout": "Sair",
+    "register": "Criar Conta",
+    "name": "Nome completo",
+    "phone": "Telefone",
+    "confirmPassword": "Confirmar senha",
+    "passwordMismatch": "As senhas nao coincidem.",
+    "passwordTooShort": "A senha deve ter pelo menos 6 caracteres.",
+    "registerSuccess": "Conta criada! Verifique seu email para confirmar.",
+    "registerError": "Erro ao criar conta.",
+    "noAccount": "Nao tem conta? Cadastre-se",
+    "hasAccount": "Ja tem conta? Entrar"
+  },
+  "tabs": {
+    "book": "Agendar",
+    "appointments": "Meus Horarios",
+    "profile": "Perfil"
+  },
+  "booking": {
+    "title": "Agendar Servico",
+    "selectService": "Selecione o servico",
+    "selectProfessional": "Selecione o profissional",
+    "selectDate": "Selecione a data",
+    "selectTime": "Selecione o horario",
+    "confirm": "Confirmar Agendamento",
+    "success": "Agendamento criado com sucesso!",
+    "error": "Erro ao criar agendamento.",
+    "noSlots": "Sem horarios disponiveis",
+    "any": "Qualquer profissional"
+  },
+  "appointments": {
+    "title": "Meus Agendamentos",
+    "upcoming": "Proximos",
+    "past": "Anteriores",
+    "empty": "Nenhum agendamento encontrado.",
+    "cancel": "Cancelar",
+    "reschedule": "Reagendar",
+    "cancelConfirm": "Tem certeza que deseja cancelar?",
+    "cancelSuccess": "Agendamento cancelado.",
+    "yes": "Sim",
+    "no": "Nao",
+    "status": {
+      "pendente": "Pendente",
+      "confirmado": "Confirmado",
+      "concluido": "Concluido",
+      "cancelado": "Cancelado"
+    }
+  },
+  "profile": {
+    "title": "Perfil",
+    "language": "Idioma",
+    "notifications": "Notificacoes push",
+    "version": "Versao",
+    "pushError": "Erro ao ativar notificacoes.",
+    "pushDenied": "Permissao de notificacoes negada."
+  },
+  "common": {
+    "loading": "Carregando...",
+    "retry": "Tentar novamente",
+    "cancel": "Cancelar"
+  }
+}

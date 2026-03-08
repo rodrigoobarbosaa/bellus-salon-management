@@ -1,0 +1,70 @@
+{
+  "app": { "name": "Bellus" },
+  "auth": {
+    "login": "Voiti",
+    "email": "Email",
+    "password": "Parol",
+    "forgotPassword": "Zabyli parol?",
+    "loading": "Vhod...",
+    "invalidCredentials": "Nevernye dannye.",
+    "logout": "Vyiti",
+    "register": "Sozdat akkaunt",
+    "name": "Polnoe imya",
+    "phone": "Telefon",
+    "confirmPassword": "Podtverdit parol",
+    "passwordMismatch": "Paroli ne sovpadayut.",
+    "passwordTooShort": "Parol dolzhen soderzhat ne menee 6 simvolov.",
+    "registerSuccess": "Akkaunt sozdan! Proverite pochtu dlya podtverzhdeniya.",
+    "registerError": "Oshibka pri sozdanii akkaunta.",
+    "noAccount": "Net akkaunta? Zaregistrirovat'sya",
+    "hasAccount": "Uzhe est akkaunt? Voyti"
+  },
+  "tabs": {
+    "book": "Zapisatsya",
+    "appointments": "Moi Zapisi",
+    "profile": "Profil"
+  },
+  "booking": {
+    "title": "Zapisatsya na priyom",
+    "selectService": "Vyberite uslugu",
+    "selectProfessional": "Vyberite specialista",
+    "selectDate": "Vyberite datu",
+    "selectTime": "Vyberite vremya",
+    "confirm": "Podtverdit zapis",
+    "success": "Zapis sozdana uspeshno!",
+    "error": "Oshibka pri sozdanii zapisi.",
+    "noSlots": "Net dostupnyh slotov",
+    "any": "Lyuboy specialist"
+  },
+  "appointments": {
+    "title": "Moi Zapisi",
+    "upcoming": "Predstoyashchie",
+    "past": "Proshedshie",
+    "empty": "Zapisey ne naydeno.",
+    "cancel": "Otmenit",
+    "reschedule": "Perenesti",
+    "cancelConfirm": "Vy uvereny chto hotite otmenit?",
+    "cancelSuccess": "Zapis otmenena.",
+    "yes": "Da",
+    "no": "Net",
+    "status": {
+      "pendente": "Ozhidaet",
+      "confirmado": "Podtverzhdena",
+      "concluido": "Zavershena",
+      "cancelado": "Otmenena"
+    }
+  },
+  "profile": {
+    "title": "Profil",
+    "language": "Yazyk",
+    "notifications": "Push-uvedomleniya",
+    "version": "Versiya",
+    "pushError": "Oshibka pri aktivatsii uvedomleniy.",
+    "pushDenied": "Razreshenie na uvedomleniya otkloneno."
+  },
+  "common": {
+    "loading": "Zagruzka...",
+    "retry": "Povtorit",
+    "cancel": "Otmena"
+  }
+}
