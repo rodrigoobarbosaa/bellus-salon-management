@@ -1,9 +1,13 @@
 import React from "react";
+import { Text } from "react-native";
 import { Tabs } from "expo-router";
-import { SymbolView } from "expo-symbols";
 import Colors, { bellusGold, bellusDark } from "@/constants/Colors";
 import { useColorScheme } from "@/components/useColorScheme";
 import i18n from "@/lib/i18n";
+
+function TabIcon({ label, color }: { label: string; color: string }) {
+  return <Text style={{ fontSize: 22, color }}>{label}</Text>;
+}
 
 export default function TabLayout() {
   const colorScheme = useColorScheme() ?? "light";
@@ -22,39 +26,28 @@ export default function TabLayout() {
         name="index"
         options={{
           title: i18n.t("tabs.book"),
-          tabBarIcon: ({ color }) => (
-            <SymbolView
-              name={{ ios: "calendar", android: "calendar_month", web: "calendar_month" }}
-              tintColor={color}
-              size={28}
-            />
-          ),
+          tabBarIcon: ({ color }) => <TabIcon label={"\u{1F4C5}"} color={color} />,
+        }}
+      />
+      <Tabs.Screen
+        name="explore"
+        options={{
+          title: i18n.t("tabs.explore"),
+          tabBarIcon: ({ color }) => <TabIcon label={"\u{2728}"} color={color} />,
         }}
       />
       <Tabs.Screen
         name="appointments"
         options={{
           title: i18n.t("tabs.appointments"),
-          tabBarIcon: ({ color }) => (
-            <SymbolView
-              name={{ ios: "list.bullet", android: "list", web: "list" }}
-              tintColor={color}
-              size={28}
-            />
-          ),
+          tabBarIcon: ({ color }) => <TabIcon label={"\u{1F4CB}"} color={color} />,
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: i18n.t("tabs.profile"),
-          tabBarIcon: ({ color }) => (
-            <SymbolView
-              name={{ ios: "person", android: "person", web: "person" }}
-              tintColor={color}
-              size={28}
-            />
-          ),
+          tabBarIcon: ({ color }) => <TabIcon label={"\u{1F464}"} color={color} />,
         }}
       />
     </Tabs>

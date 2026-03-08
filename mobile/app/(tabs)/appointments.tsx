@@ -9,6 +9,7 @@ import {
   Alert,
   RefreshControl,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import i18n from "@/lib/i18n";
 import { bellusGold, bellusDark } from "@/constants/Colors";
@@ -24,10 +25,12 @@ interface Appointment {
 }
 
 export default function AppointmentsScreen() {
+  const router = useRouter();
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [tab, setTab] = useState<"upcoming" | "past">("upcoming");
+  const [salaoId, setSalaoId] = useState<string | null>(null);
 
   const loadAppointments = useCallback(async () => {
     try {
@@ -39,11 +42,12 @@ export default function AppointmentsScreen() {
 
       const { data: cliente } = await sb
         .from("clientes")
-        .select("id")
+        .select("id, salao_id")
         .eq("email", user.email)
         .single();
 
       if (!cliente?.id) return;
+      setSalaoId(cliente.salao_id ?? null);
 
       const now = new Date().toISOString();
       let query = sb
@@ -130,11 +134,31 @@ export default function AppointmentsScreen() {
             </Text>
           </View>
         </View>
-        {canCancel && tab === "upcoming" && (
-          <TouchableOpacity style={styles.cancelBtn} onPress={() => handleCancel(item.id)}>
-            <Text style={styles.cancelText}>{i18n.t("appointments.cancel")}</Text>
-          </TouchableOpacity>
-        )}
+        <View style={{ gap: 6 }}>
+          {canCancel && tab === "upcoming" && (
+            <TouchableOpacity style={styles.cancelBtn} onPress={() => handleCancel(item.id)}>
+              <Text style={styles.cancelText}>{i18n.t("appointments.cancel")}</Text>
+            </TouchableOpacity>
+          )}
+          {item.status === "concluido" && tab === "past" && salaoId && (
+            <TouchableOpacity
+              style={styles.reviewBtn}
+              onPress={() =>
+                router.push({
+                  pathname: "/review",
+                  params: {
+                    agendamentoId: item.id,
+                    servicoNome: item.servico_nome,
+                    profissionalNome: item.profissional_nome,
+                    salaoId,
+                  },
+                })
+              }
+            >
+              <Text style={styles.reviewText}>{i18n.t("appointments.review")}</Text>
+            </TouchableOpacity>
+          )}
+        </View>
       </View>
     );
   };
@@ -208,5 +232,7 @@ const styles = StyleSheet.create({
   statusText: { fontSize: 12, fontWeight: "500", marginTop: 4 },
   cancelBtn: { borderWidth: 1, borderColor: "#ef4444", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
   cancelText: { color: "#ef4444", fontSize: 12 },
+  reviewBtn: { borderWidth: 1, borderColor: bellusGold, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
+  reviewText: { color: bellusGold, fontSize: 12, fontWeight: "500" },
   empty: { textAlign: "center", color: "#999", marginTop: 40, fontSize: 14 },
 });

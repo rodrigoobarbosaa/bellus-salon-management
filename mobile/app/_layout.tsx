@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
+import { Platform } from "react-native";
 import { useFonts } from "expo-font";
-import { Stack, useRouter, useSegments } from "expo-router";
+import { Stack, useRouter, useSegments, useRootNavigationState } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import "react-native-reanimated";
 import { supabase } from "@/lib/supabase";
@@ -8,7 +9,9 @@ import type { Session } from "@supabase/supabase-js";
 
 export { ErrorBoundary } from "expo-router";
 
-SplashScreen.preventAutoHideAsync();
+if (Platform.OS !== "web") {
+  SplashScreen.preventAutoHideAsync();
+}
 
 export default function RootLayout() {
   const [loaded, error] = useFonts({
@@ -16,14 +19,18 @@ export default function RootLayout() {
   });
 
   useEffect(() => {
-    if (error) throw error;
+    if (error) console.warn("Font loading error:", error);
   }, [error]);
 
   useEffect(() => {
-    if (loaded) SplashScreen.hideAsync();
-  }, [loaded]);
+    if (loaded || error) {
+      if (Platform.OS !== "web") {
+        SplashScreen.hideAsync();
+      }
+    }
+  }, [loaded, error]);
 
-  if (!loaded) return null;
+  if (!loaded && !error && Platform.OS !== "web") return null;
 
   return <RootLayoutNav />;
 }
@@ -33,6 +40,7 @@ function RootLayoutNav() {
   const [ready, setReady] = useState(false);
   const segments = useSegments();
   const router = useRouter();
+  const navigationState = useRootNavigationState();
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session: s } }) => {
@@ -51,6 +59,7 @@ function RootLayoutNav() {
 
   useEffect(() => {
     if (!ready) return;
+    if (!navigationState?.key) return;
 
     const inAuthGroup = segments[0] === "login";
 
@@ -59,12 +68,13 @@ function RootLayoutNav() {
     } else if (session && inAuthGroup) {
       router.replace("/(tabs)");
     }
-  }, [session, segments, ready, router]);
+  }, [session, ready, navigationState?.key]);
 
   return (
-    <Stack>
-      <Stack.Screen name="login" options={{ headerShown: false }} />
-      <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
+    <Stack screenOptions={{ headerShown: false }}>
+      <Stack.Screen name="login" />
+      <Stack.Screen name="(tabs)" />
+      <Stack.Screen name="review" options={{ presentation: "modal" }} />
     </Stack>
   );
 }

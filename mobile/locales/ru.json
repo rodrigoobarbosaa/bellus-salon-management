@@ -20,8 +20,9 @@
     "hasAccount": "Uzhe est akkaunt? Voyti"
   },
   "tabs": {
-    "book": "Zapisatsya",
-    "appointments": "Moi Zapisi",
+    "book": "Zapis",
+    "explore": "Obzor",
+    "appointments": "Zapisi",
     "profile": "Profil"
   },
   "booking": {
@@ -45,6 +46,7 @@
     "reschedule": "Perenesti",
     "cancelConfirm": "Vy uvereny chto hotite otmenit?",
     "cancelSuccess": "Zapis otmenena.",
+    "review": "Otsenit",
     "yes": "Da",
     "no": "Net",
     "status": {
@@ -53,6 +55,31 @@
       "concluido": "Zavershena",
       "cancelado": "Otmenena"
     }
+  },
+  "explore": {
+    "title": "Obzor",
+    "gallery": "Galereya",
+    "reviews": "Otzyvy",
+    "noPhotos": "Poka net foto.",
+    "noReviews": "Poka net otzyvov.",
+    "reviewCount": "otzyvov",
+    "anonymous": "Klient"
+  },
+  "review": {
+    "title": "Otsenite poseshchenie",
+    "howWasIt": "Kak vam obsluzhivanie?",
+    "comment": "Ostavte kommentariy (neobyzatelno)",
+    "commentPlaceholder": "Rasskazhite o vashem opyte...",
+    "submit": "Otpravit otzyv",
+    "selectRating": "Vyberite otsenku.",
+    "success": "Otzyv otpravlen! Spasibo.",
+    "error": "Oshibka pri otpravke otzyva.",
+    "alreadyReviewed": "Vy uzhe otsenili eto poseshchenie.",
+    "rating1": "Uzhasno",
+    "rating2": "Ploho",
+    "rating3": "Normalno",
+    "rating4": "Horosho",
+    "rating5": "Otlichno"
   },
   "profile": {
     "title": "Profil",

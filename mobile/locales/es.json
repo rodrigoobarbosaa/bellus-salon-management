@@ -21,7 +21,8 @@
   },
   "tabs": {
     "book": "Reservar",
-    "appointments": "Mis Citas",
+    "explore": "Explorar",
+    "appointments": "Citas",
     "profile": "Perfil"
   },
   "booking": {
@@ -45,6 +46,7 @@
     "reschedule": "Reagendar",
     "cancelConfirm": "Estas seguro de que deseas cancelar?",
     "cancelSuccess": "Cita cancelada.",
+    "review": "Valorar",
     "yes": "Si",
     "no": "No",
     "status": {
@@ -53,6 +55,31 @@
       "concluido": "Completada",
       "cancelado": "Cancelada"
     }
+  },
+  "explore": {
+    "title": "Explorar",
+    "gallery": "Galeria",
+    "reviews": "Valoraciones",
+    "noPhotos": "Ninguna foto aun.",
+    "noReviews": "Ninguna valoracion aun.",
+    "reviewCount": "valoraciones",
+    "anonymous": "Cliente"
+  },
+  "review": {
+    "title": "Valorar atencion",
+    "howWasIt": "Como fue la experiencia?",
+    "comment": "Deja un comentario (opcional)",
+    "commentPlaceholder": "Cuenta como fue la atencion...",
+    "submit": "Enviar Valoracion",
+    "selectRating": "Selecciona una nota.",
+    "success": "Valoracion enviada! Gracias.",
+    "error": "Error al enviar valoracion.",
+    "alreadyReviewed": "Ya valoraste esta atencion.",
+    "rating1": "Pesimo",
+    "rating2": "Malo",
+    "rating3": "Regular",
+    "rating4": "Bueno",
+    "rating5": "Excelente"
   },
   "profile": {
     "title": "Perfil",

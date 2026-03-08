@@ -21,7 +21,8 @@
   },
   "tabs": {
     "book": "Book",
-    "appointments": "My Appointments",
+    "explore": "Explore",
+    "appointments": "Bookings",
     "profile": "Profile"
   },
   "booking": {
@@ -45,6 +46,7 @@
     "reschedule": "Reschedule",
     "cancelConfirm": "Are you sure you want to cancel?",
     "cancelSuccess": "Appointment cancelled.",
+    "review": "Review",
     "yes": "Yes",
     "no": "No",
     "status": {
@@ -53,6 +55,31 @@
       "concluido": "Completed",
       "cancelado": "Cancelled"
     }
+  },
+  "explore": {
+    "title": "Explore",
+    "gallery": "Gallery",
+    "reviews": "Reviews",
+    "noPhotos": "No photos yet.",
+    "noReviews": "No reviews yet.",
+    "reviewCount": "reviews",
+    "anonymous": "Client"
+  },
+  "review": {
+    "title": "Rate your visit",
+    "howWasIt": "How was your experience?",
+    "comment": "Leave a comment (optional)",
+    "commentPlaceholder": "Tell us about your experience...",
+    "submit": "Submit Review",
+    "selectRating": "Please select a rating.",
+    "success": "Review submitted! Thank you.",
+    "error": "Error submitting review.",
+    "alreadyReviewed": "You already reviewed this appointment.",
+    "rating1": "Terrible",
+    "rating2": "Bad",
+    "rating3": "Average",
+    "rating4": "Good",
+    "rating5": "Excellent"
   },
   "profile": {
     "title": "Profile",

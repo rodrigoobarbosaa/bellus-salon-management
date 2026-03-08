@@ -21,7 +21,8 @@
   },
   "tabs": {
     "book": "Agendar",
-    "appointments": "Meus Horarios",
+    "explore": "Explorar",
+    "appointments": "Horarios",
     "profile": "Perfil"
   },
   "booking": {
@@ -45,6 +46,7 @@
     "reschedule": "Reagendar",
     "cancelConfirm": "Tem certeza que deseja cancelar?",
     "cancelSuccess": "Agendamento cancelado.",
+    "review": "Avaliar",
     "yes": "Sim",
     "no": "Nao",
     "status": {
@@ -53,6 +55,31 @@
       "concluido": "Concluido",
       "cancelado": "Cancelado"
     }
+  },
+  "explore": {
+    "title": "Explorar",
+    "gallery": "Galeria",
+    "reviews": "Avaliacoes",
+    "noPhotos": "Nenhuma foto ainda.",
+    "noReviews": "Nenhuma avaliacao ainda.",
+    "reviewCount": "avaliacoes",
+    "anonymous": "Cliente"
+  },
+  "review": {
+    "title": "Avaliar atendimento",
+    "howWasIt": "Como foi a experiencia?",
+    "comment": "Deixe um comentario (opcional)",
+    "commentPlaceholder": "Conte como foi o atendimento...",
+    "submit": "Enviar Avaliacao",
+    "selectRating": "Selecione uma nota.",
+    "success": "Avaliacao enviada! Obrigado.",
+    "error": "Erro ao enviar avaliacao.",
+    "alreadyReviewed": "Voce ja avaliou este atendimento.",
+    "rating1": "Pessimo",
+    "rating2": "Ruim",
+    "rating3": "Regular",
+    "rating4": "Bom",
+    "rating5": "Excelente"
   },
   "profile": {
     "title": "Perfil",
