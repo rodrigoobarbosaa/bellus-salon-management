@@ -83,6 +83,23 @@ export default function LoginScreen() {
     }
   };
 
+  const handleForgotPassword = async () => {
+    if (!email.trim()) {
+      Alert.alert("Bellus", i18n.t("auth.email"));
+      return;
+    }
+    setLoading(true);
+    try {
+      const { error } = await supabase.auth.resetPasswordForEmail(email.trim());
+      if (error) throw error;
+      Alert.alert("Bellus", i18n.t("auth.resetSent"));
+    } catch {
+      Alert.alert("Error", i18n.t("auth.resetError"));
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const switchMode = () => {
     setMode(mode === "login" ? "register" : "login");
     setPassword("");
@@ -170,7 +187,7 @@ export default function LoginScreen() {
         </TouchableOpacity>
 
         {mode === "login" && (
-          <TouchableOpacity style={styles.forgotLink}>
+          <TouchableOpacity style={styles.forgotLink} onPress={handleForgotPassword}>
             <Text style={styles.forgotText}>
               {i18n.t("auth.forgotPassword")}
             </Text>

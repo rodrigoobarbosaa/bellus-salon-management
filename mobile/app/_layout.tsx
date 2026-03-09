@@ -75,6 +75,7 @@ function RootLayoutNav() {
       <Stack.Screen name="login" />
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="review" options={{ presentation: "modal" }} />
+      <Stack.Screen name="reschedule" options={{ presentation: "modal" }} />
     </Stack>
   );
 }

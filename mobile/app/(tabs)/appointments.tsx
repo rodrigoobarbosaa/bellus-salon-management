@@ -21,6 +21,7 @@ interface Appointment {
   status: string;
   notas: string | null;
   servico_nome: string;
+  servico_duracao: number;
   profissional_nome: string;
 }
 
@@ -52,7 +53,7 @@ export default function AppointmentsScreen() {
       const now = new Date().toISOString();
       let query = sb
         .from("agendamentos")
-        .select("id, data_hora_inicio, data_hora_fim, status, notas, servico:servicos(nome), profissional:profissionais(nome)")
+        .select("id, data_hora_inicio, data_hora_fim, status, notas, servico:servicos(nome, duracao_minutos), profissional:profissionais(nome)")
         .eq("cliente_id", cliente.id);
 
       if (tab === "upcoming") {
@@ -70,6 +71,7 @@ export default function AppointmentsScreen() {
         status: a.status,
         notas: a.notas,
         servico_nome: a.servico?.nome ?? "—",
+        servico_duracao: a.servico?.duracao_minutos ?? 60,
         profissional_nome: a.profissional?.nome ?? "—",
       }));
 
@@ -136,9 +138,26 @@ export default function AppointmentsScreen() {
         </View>
         <View style={{ gap: 6 }}>
           {canCancel && tab === "upcoming" && (
-            <TouchableOpacity style={styles.cancelBtn} onPress={() => handleCancel(item.id)}>
-              <Text style={styles.cancelText}>{i18n.t("appointments.cancel")}</Text>
-            </TouchableOpacity>
+            <>
+              <TouchableOpacity
+                style={styles.rescheduleBtn}
+                onPress={() =>
+                  router.push({
+                    pathname: "/reschedule",
+                    params: {
+                      agendamentoId: item.id,
+                      salaoId: salaoId ?? "",
+                      servicoDuracao: String(item.servico_duracao),
+                    },
+                  })
+                }
+              >
+                <Text style={styles.rescheduleText}>{i18n.t("appointments.reschedule")}</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.cancelBtn} onPress={() => handleCancel(item.id)}>
+                <Text style={styles.cancelText}>{i18n.t("appointments.cancel")}</Text>
+              </TouchableOpacity>
+            </>
           )}
           {item.status === "concluido" && tab === "past" && salaoId && (
             <TouchableOpacity
@@ -232,6 +251,8 @@ const styles = StyleSheet.create({
   statusText: { fontSize: 12, fontWeight: "500", marginTop: 4 },
   cancelBtn: { borderWidth: 1, borderColor: "#ef4444", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
   cancelText: { color: "#ef4444", fontSize: 12 },
+  rescheduleBtn: { borderWidth: 1, borderColor: bellusGold, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
+  rescheduleText: { color: bellusGold, fontSize: 12, fontWeight: "500" },
   reviewBtn: { borderWidth: 1, borderColor: bellusGold, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
   reviewText: { color: bellusGold, fontSize: 12, fontWeight: "500" },
   empty: { textAlign: "center", color: "#999", marginTop: 40, fontSize: 14 },

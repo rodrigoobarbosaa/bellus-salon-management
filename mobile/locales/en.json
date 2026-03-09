@@ -17,7 +17,9 @@
     "registerSuccess": "Account created! Check your email to confirm.",
     "registerError": "Error creating account.",
     "noAccount": "Don't have an account? Sign Up",
-    "hasAccount": "Already have an account? Sign In"
+    "hasAccount": "Already have an account? Sign In",
+    "resetSent": "Recovery email sent! Check your inbox.",
+    "resetError": "Error sending recovery email."
   },
   "tabs": {
     "book": "Book",
@@ -46,6 +48,8 @@
     "reschedule": "Reschedule",
     "cancelConfirm": "Are you sure you want to cancel?",
     "cancelSuccess": "Appointment cancelled.",
+    "rescheduleSuccess": "Appointment rescheduled!",
+    "rescheduleError": "Error rescheduling.",
     "review": "Review",
     "yes": "Yes",
     "no": "No",
@@ -92,7 +96,12 @@
     "notifications": "Push notifications",
     "version": "Version",
     "pushError": "Failed to enable notifications.",
-    "pushDenied": "Notification permission denied."
+    "pushDenied": "Notification permission denied.",
+    "editProfile": "Edit Profile",
+    "phone": "Phone",
+    "save": "Save",
+    "saved": "Profile updated!",
+    "saveError": "Error saving profile."
   },
   "common": {
     "loading": "Loading...",

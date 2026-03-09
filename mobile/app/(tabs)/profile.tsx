@@ -2,10 +2,12 @@ import { useState, useEffect } from "react";
 import {
   View,
   Text,
+  TextInput,
   TouchableOpacity,
   StyleSheet,
   Switch,
   Alert,
+  ActivityIndicator,
 } from "react-native";
 import { supabase } from "@/lib/supabase";
 import i18n from "@/lib/i18n";
@@ -22,25 +24,51 @@ const LANGUAGES = [
 export default function ProfileScreen() {
   const [email, setEmail] = useState("");
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [clienteId, setClienteId] = useState<string | null>(null);
+  const [editing, setEditing] = useState(false);
+  const [saving, setSaving] = useState(false);
   const [currentLang, setCurrentLang] = useState(i18n.locale);
   const [pushEnabled, setPushEnabled] = useState(false);
+
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  const sb = supabase as any;
 
   useEffect(() => {
     async function load() {
       const { data: { user } } = await supabase.auth.getUser();
       if (user?.email) {
         setEmail(user.email);
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const { data: cliente } = await (supabase as any)
+        const { data: cliente } = await sb
           .from("clientes")
-          .select("nome")
+          .select("id, nome, telefone")
           .eq("email", user.email)
           .single();
         setName(cliente?.nome ?? "");
+        setPhone(cliente?.telefone ?? "");
+        setClienteId(cliente?.id ?? null);
       }
     }
     load();
   }, []);
+
+  const handleSaveProfile = async () => {
+    if (!clienteId) return;
+    setSaving(true);
+    try {
+      const { error } = await sb
+        .from("clientes")
+        .update({ nome: name.trim(), telefone: phone.trim() })
+        .eq("id", clienteId);
+      if (error) throw error;
+      setEditing(false);
+      Alert.alert("Bellus", i18n.t("profile.saved"));
+    } catch {
+      Alert.alert("Error", i18n.t("profile.saveError"));
+    } finally {
+      setSaving(false);
+    }
+  };
 
   const changeLang = (code: string) => {
     i18n.locale = code;
@@ -83,8 +111,46 @@ export default function ProfileScreen() {
       <Text style={styles.title}>{i18n.t("profile.title")}</Text>
 
       <View style={styles.section}>
-        <Text style={styles.name}>{name || email}</Text>
-        <Text style={styles.email}>{email}</Text>
+        {editing ? (
+          <>
+            <Text style={styles.sectionTitle}>{i18n.t("auth.name")}</Text>
+            <TextInput
+              style={styles.input}
+              value={name}
+              onChangeText={setName}
+              placeholder={i18n.t("auth.name")}
+              placeholderTextColor="#999"
+            />
+            <Text style={styles.sectionTitle}>{i18n.t("profile.phone")}</Text>
+            <TextInput
+              style={styles.input}
+              value={phone}
+              onChangeText={setPhone}
+              placeholder={i18n.t("profile.phone")}
+              placeholderTextColor="#999"
+              keyboardType="phone-pad"
+            />
+            <View style={styles.editBtnRow}>
+              <TouchableOpacity style={styles.saveBtn} onPress={handleSaveProfile} disabled={saving}>
+                {saving ? (
+                  <ActivityIndicator color="#fff" size="small" />
+                ) : (
+                  <Text style={styles.saveBtnText}>{i18n.t("profile.save")}</Text>
+                )}
+              </TouchableOpacity>
+              <TouchableOpacity style={styles.cancelEditBtn} onPress={() => setEditing(false)}>
+                <Text style={styles.cancelEditText}>{i18n.t("common.cancel")}</Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        ) : (
+          <TouchableOpacity onPress={() => setEditing(true)}>
+            <Text style={styles.name}>{name || email}</Text>
+            {phone ? <Text style={styles.phoneText}>{phone}</Text> : null}
+            <Text style={styles.email}>{email}</Text>
+            <Text style={styles.editHint}>{i18n.t("profile.editProfile")}</Text>
+          </TouchableOpacity>
+        )}
       </View>
 
       <View style={styles.section}>
@@ -149,4 +215,18 @@ const styles = StyleSheet.create({
     borderRadius: 12, padding: 16, alignItems: "center",
   },
   logoutText: { color: "#ef4444", fontSize: 16, fontWeight: "600" },
+  input: {
+    borderWidth: 1, borderColor: "#ddd", borderRadius: 10, padding: 12,
+    fontSize: 16, color: bellusDark, marginBottom: 12, backgroundColor: "#fafafa",
+  },
+  editBtnRow: { flexDirection: "row", gap: 10, marginTop: 4 },
+  saveBtn: {
+    backgroundColor: bellusGold, borderRadius: 10, paddingHorizontal: 20,
+    paddingVertical: 10, alignItems: "center",
+  },
+  saveBtnText: { color: "#fff", fontWeight: "600", fontSize: 14 },
+  cancelEditBtn: { borderRadius: 10, paddingHorizontal: 20, paddingVertical: 10 },
+  cancelEditText: { color: "#999", fontSize: 14 },
+  phoneText: { fontSize: 14, color: "#666", marginTop: 2 },
+  editHint: { fontSize: 12, color: bellusGold, marginTop: 6 },
 });

@@ -17,7 +17,9 @@
     "registerSuccess": "Cuenta creada! Revisa tu correo para confirmar.",
     "registerError": "Error al crear la cuenta.",
     "noAccount": "No tienes cuenta? Registrate",
-    "hasAccount": "Ya tienes cuenta? Iniciar sesion"
+    "hasAccount": "Ya tienes cuenta? Iniciar sesion",
+    "resetSent": "Correo de recuperacion enviado! Revisa tu bandeja.",
+    "resetError": "Error al enviar correo de recuperacion."
   },
   "tabs": {
     "book": "Reservar",
@@ -46,6 +48,8 @@
     "reschedule": "Reagendar",
     "cancelConfirm": "Estas seguro de que deseas cancelar?",
     "cancelSuccess": "Cita cancelada.",
+    "rescheduleSuccess": "Cita reagendada!",
+    "rescheduleError": "Error al reagendar.",
     "review": "Valorar",
     "yes": "Si",
     "no": "No",
@@ -92,7 +96,12 @@
     "notifications": "Notificaciones push",
     "version": "Version",
     "pushError": "Error al activar notificaciones.",
-    "pushDenied": "Permiso de notificaciones denegado."
+    "pushDenied": "Permiso de notificaciones denegado.",
+    "editProfile": "Editar Perfil",
+    "phone": "Telefono",
+    "save": "Guardar",
+    "saved": "Perfil actualizado!",
+    "saveError": "Error al guardar perfil."
   },
   "common": {
     "loading": "Cargando...",

@@ -17,7 +17,9 @@
     "registerSuccess": "Akkaunt sozdan! Proverite pochtu dlya podtverzhdeniya.",
     "registerError": "Oshibka pri sozdanii akkaunta.",
     "noAccount": "Net akkaunta? Zaregistrirovat'sya",
-    "hasAccount": "Uzhe est akkaunt? Voyti"
+    "hasAccount": "Uzhe est akkaunt? Voyti",
+    "resetSent": "Pismo dlya vosstanovleniya otpravleno! Proverite pochtu.",
+    "resetError": "Oshibka pri otpravke pisma vosstanovleniya."
   },
   "tabs": {
     "book": "Zapis",
@@ -46,6 +48,8 @@
     "reschedule": "Perenesti",
     "cancelConfirm": "Vy uvereny chto hotite otmenit?",
     "cancelSuccess": "Zapis otmenena.",
+    "rescheduleSuccess": "Zapis perenesena!",
+    "rescheduleError": "Oshibka pri perenose.",
     "review": "Otsenit",
     "yes": "Da",
     "no": "Net",
@@ -92,7 +96,12 @@
     "notifications": "Push-uvedomleniya",
     "version": "Versiya",
     "pushError": "Oshibka pri aktivatsii uvedomleniy.",
-    "pushDenied": "Razreshenie na uvedomleniya otkloneno."
+    "pushDenied": "Razreshenie na uvedomleniya otkloneno.",
+    "editProfile": "Redaktirovat profil",
+    "phone": "Telefon",
+    "save": "Sohranit",
+    "saved": "Profil obnovlen!",
+    "saveError": "Oshibka pri sohranenii profilya."
   },
   "common": {
     "loading": "Zagruzka...",
