@@ -9,7 +9,6 @@ import {
   Alert,
 } from "react-native";
 import { supabase } from "@/lib/supabase";
-import { fetchSlots } from "@/lib/api";
 import i18n from "@/lib/i18n";
 import { bellusGold, bellusDark } from "@/constants/Colors";
 
@@ -17,7 +16,7 @@ interface Service {
   id: string;
   nome: string;
   duracao_minutos: number;
-  preco: number;
+  preco_base: number;
 }
 
 interface Professional {
@@ -76,7 +75,7 @@ export default function BookScreen() {
 
         const { data: svcs } = await sb
           .from("servicos")
-          .select("id, nome, duracao_minutos, preco")
+          .select("id, nome, duracao_minutos, preco_base")
           .eq("salao_id", sid)
           .eq("ativo", true)
           .order("nome");
@@ -109,13 +108,26 @@ export default function BookScreen() {
   const loadSlots = useCallback(async () => {
     if (!salaoId || !selectedDate || !selectedService) return;
     try {
-      const result = await fetchSlots({
-        salao_id: salaoId,
-        date: selectedDate,
-        profissional_id: selectedProfessional?.id,
-        duration: selectedService.duracao_minutos,
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const sb = supabase as any;
+      let query = sb
+        .from("agendamentos")
+        .select("data_hora_inicio")
+        .eq("salao_id", salaoId)
+        .gte("data_hora_inicio", `${selectedDate}T00:00:00`)
+        .lt("data_hora_inicio", `${selectedDate}T23:59:59`)
+        .neq("status", "cancelado");
+
+      if (selectedProfessional?.id) {
+        query = query.eq("profissional_id", selectedProfessional.id);
+      }
+
+      const { data } = await query;
+      const busy = (data ?? []).map((a: { data_hora_inicio: string }) => {
+        const d = new Date(a.data_hora_inicio);
+        return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
       });
-      setBusySlots(result.busy);
+      setBusySlots(busy);
     } catch {
       setBusySlots([]);
     }
@@ -214,7 +226,7 @@ export default function BookScreen() {
             <Text style={[styles.chipText, selectedService?.id === svc.id && styles.chipTextActive]}>
               {svc.nome}
             </Text>
-            <Text style={styles.chipMeta}>{svc.duracao_minutos}min - {svc.preco}EUR</Text>
+            <Text style={styles.chipMeta}>{svc.duracao_minutos}min - {svc.preco_base}EUR</Text>
           </TouchableOpacity>
         ))}
       </ScrollView>
