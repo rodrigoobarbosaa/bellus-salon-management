@@ -2,7 +2,6 @@ import * as Notifications from "expo-notifications";
 import * as Device from "expo-constants";
 import { Platform } from "react-native";
 import { supabase } from "./supabase";
-import { API_BASE_URL } from "./api";
 
 Notifications.setNotificationHandler({
   handleNotification: async () => ({
@@ -53,7 +52,9 @@ export async function sendTokenToServer(pushToken: string): Promise<boolean> {
     if (!user?.email) return false;
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const { data: cliente } = await (supabase as any)
+    const sb = supabase as any;
+
+    const { data: cliente } = await sb
       .from("clientes")
       .select("id")
       .eq("email", user.email)
@@ -61,17 +62,19 @@ export async function sendTokenToServer(pushToken: string): Promise<boolean> {
 
     if (!cliente?.id) return false;
 
-    const res = await fetch(`${API_BASE_URL}/api/push/register`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        clienteId: cliente.id,
-        pushToken,
-        platform: Platform.OS,
-      }),
-    });
+    const { error } = await sb
+      .from("push_tokens")
+      .upsert(
+        {
+          cliente_id: cliente.id,
+          token: pushToken,
+          platform: Platform.OS,
+          updated_at: new Date().toISOString(),
+        },
+        { onConflict: "token" }
+      );
 
-    return res.ok;
+    return !error;
   } catch (err) {
     console.error("Error sending push token:", err);
     return false;

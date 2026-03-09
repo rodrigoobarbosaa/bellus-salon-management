@@ -72,7 +72,10 @@
     "noFavorites": "Poka net izbrannyh.",
     "favorited": "Dobavleno v izbrannoe!",
     "unfavorited": "Udaleno iz izbrannogo.",
-    "services": "uslugi"
+    "services": "uslugi",
+    "professionalServices": "Predlagaemye uslugi",
+    "professionalReviews": "Poslednie otzyvy",
+    "bookWith": "Zapisatsya k"
   },
   "review": {
     "title": "Otsenite poseshchenie",

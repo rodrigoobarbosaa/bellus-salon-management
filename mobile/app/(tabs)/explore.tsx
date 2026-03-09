@@ -10,6 +10,7 @@ import {
   RefreshControl,
   Dimensions,
 } from "react-native";
+import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import i18n from "@/lib/i18n";
 import { bellusGold, bellusDark } from "@/constants/Colors";
@@ -47,6 +48,7 @@ interface FavProfessional {
 type Tab = "gallery" | "reviews" | "favorites";
 
 export default function ExploreScreen() {
+  const router = useRouter();
   const [tab, setTab] = useState<Tab>("gallery");
   const [photos, setPhotos] = useState<PortfolioPhoto[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
@@ -213,7 +215,15 @@ export default function ExploreScreen() {
   );
 
   const renderFavorite = ({ item }: { item: FavProfessional }) => (
-    <View style={styles.favCard}>
+    <TouchableOpacity
+      style={styles.favCard}
+      onPress={() =>
+        router.push({
+          pathname: "/professional",
+          params: { profissionalId: item.profissional_id, nome: item.nome, salaoId: salaoId ?? "" },
+        })
+      }
+    >
       <View style={styles.favAvatar}>
         <Text style={styles.favAvatarText}>{item.nome.charAt(0).toUpperCase()}</Text>
       </View>
@@ -229,7 +239,7 @@ export default function ExploreScreen() {
           {item.isFav ? "\u2764" : "\u2661"}
         </Text>
       </TouchableOpacity>
-    </View>
+    </TouchableOpacity>
   );
 
   const renderReview = ({ item }: { item: Review }) => {

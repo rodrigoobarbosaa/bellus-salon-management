@@ -72,7 +72,10 @@
     "noFavorites": "Ningun favorito aun.",
     "favorited": "Agregado a favoritos!",
     "unfavorited": "Eliminado de favoritos.",
-    "services": "servicios"
+    "services": "servicios",
+    "professionalServices": "Servicios ofrecidos",
+    "professionalReviews": "Valoraciones recientes",
+    "bookWith": "Reservar con"
   },
   "review": {
     "title": "Valorar atencion",

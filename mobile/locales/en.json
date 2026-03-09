@@ -72,7 +72,10 @@
     "noFavorites": "No favorites yet.",
     "favorited": "Added to favorites!",
     "unfavorited": "Removed from favorites.",
-    "services": "services"
+    "services": "services",
+    "professionalServices": "Services offered",
+    "professionalReviews": "Recent reviews",
+    "bookWith": "Book with"
   },
   "review": {
     "title": "Rate your visit",

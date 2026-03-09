@@ -1,8 +1,9 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Platform } from "react-native";
 import { useFonts } from "expo-font";
 import { Stack, useRouter, useSegments, useRootNavigationState } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
+import * as Notifications from "expo-notifications";
 import "react-native-reanimated";
 import { supabase } from "@/lib/supabase";
 import type { Session } from "@supabase/supabase-js";
@@ -41,6 +42,8 @@ function RootLayoutNav() {
   const segments = useSegments();
   const router = useRouter();
   const navigationState = useRootNavigationState();
+  const notificationListener = useRef<Notifications.EventSubscription>(null);
+  const responseListener = useRef<Notifications.EventSubscription>(null);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session: s } }) => {
@@ -55,6 +58,24 @@ function RootLayoutNav() {
     });
 
     return () => subscription.unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    notificationListener.current = Notifications.addNotificationReceivedListener((notification) => {
+      console.log("Notification received:", notification.request.content.title);
+    });
+
+    responseListener.current = Notifications.addNotificationResponseReceivedListener((response) => {
+      const data = response.notification.request.content.data;
+      if (data?.screen === "appointments") {
+        router.push("/(tabs)/appointments");
+      }
+    });
+
+    return () => {
+      notificationListener.current?.remove();
+      responseListener.current?.remove();
+    };
   }, []);
 
   useEffect(() => {
@@ -76,6 +97,7 @@ function RootLayoutNav() {
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="review" options={{ presentation: "modal" }} />
       <Stack.Screen name="reschedule" options={{ presentation: "modal" }} />
+      <Stack.Screen name="professional" options={{ presentation: "modal" }} />
     </Stack>
   );
 }
