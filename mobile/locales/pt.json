@@ -63,7 +63,12 @@
     "noPhotos": "Nenhuma foto ainda.",
     "noReviews": "Nenhuma avaliacao ainda.",
     "reviewCount": "avaliacoes",
-    "anonymous": "Cliente"
+    "anonymous": "Cliente",
+    "favorites": "Favoritos",
+    "noFavorites": "Nenhum favorito ainda.",
+    "favorited": "Favoritado!",
+    "unfavorited": "Removido dos favoritos.",
+    "services": "servicos"
   },
   "review": {
     "title": "Avaliar atendimento",

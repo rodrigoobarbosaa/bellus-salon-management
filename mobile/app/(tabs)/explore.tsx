@@ -35,15 +35,26 @@ interface Review {
   servico_nome: string | null;
 }
 
-type Tab = "gallery" | "reviews";
+interface FavProfessional {
+  id: string;
+  profissional_id: string;
+  nome: string;
+  servicos_count: number;
+  avg_rating: number;
+  isFav: boolean;
+}
+
+type Tab = "gallery" | "reviews" | "favorites";
 
 export default function ExploreScreen() {
   const [tab, setTab] = useState<Tab>("gallery");
   const [photos, setPhotos] = useState<PortfolioPhoto[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [favorites, setFavorites] = useState<FavProfessional[]>([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [salaoId, setSalaoId] = useState<string | null>(null);
+  const [clienteId, setClienteId] = useState<string | null>(null);
   const [avgRating, setAvgRating] = useState<number>(0);
   const [totalReviews, setTotalReviews] = useState<number>(0);
 
@@ -56,11 +67,12 @@ export default function ExploreScreen() {
       if (!user?.email) return;
       const { data: cliente } = await sb
         .from("clientes")
-        .select("salao_id")
+        .select("id, salao_id")
         .eq("email", user.email)
         .single();
       if (cliente?.salao_id) {
         setSalaoId(cliente.salao_id);
+        setClienteId(cliente.id);
       }
     }
     getSalao();
@@ -86,7 +98,7 @@ export default function ExploreScreen() {
             servico_nome: p.servico?.nome ?? null,
           }))
         );
-      } else {
+      } else if (tab === "reviews") {
         const { data } = await sb
           .from("avaliacoes")
           .select("id, nota, comentario, created_at, cliente:clientes(nome), profissional:profissionais(nome), agendamento:agendamentos(servico:servicos(nome))")
@@ -112,6 +124,8 @@ export default function ExploreScreen() {
           setAvgRating(sum / mapped.length);
           setTotalReviews(mapped.length);
         }
+      } else if (tab === "favorites") {
+        await loadFavorites();
       }
     } catch (err) {
       console.error("Error loading explore data:", err);
@@ -125,6 +139,54 @@ export default function ExploreScreen() {
     setLoading(true);
     loadData();
   }, [loadData]);
+
+  const loadFavorites = async () => {
+    if (!salaoId || !clienteId) return;
+    const { data: profs } = await sb
+      .from("profissionais").select("id, nome")
+      .eq("salao_id", salaoId).eq("ativo", true);
+    const { data: favs } = await sb
+      .from("favoritos").select("profissional_id")
+      .eq("cliente_id", clienteId);
+    const favIds = new Set((favs ?? []).map((f: any) => f.profissional_id));
+    const { data: svcCounts } = await sb
+      .from("servicos_profissionais").select("profissional_id");
+    const countMap: Record<string, number> = {};
+    (svcCounts ?? []).forEach((s: any) => {
+      countMap[s.profissional_id] = (countMap[s.profissional_id] || 0) + 1;
+    });
+    const { data: ratings } = await sb
+      .from("avaliacoes").select("profissional_id, nota").eq("salao_id", salaoId);
+    const ratingMap: Record<string, { sum: number; count: number }> = {};
+    (ratings ?? []).forEach((r: any) => {
+      if (!r.profissional_id) return;
+      if (!ratingMap[r.profissional_id]) ratingMap[r.profissional_id] = { sum: 0, count: 0 };
+      ratingMap[r.profissional_id].sum += r.nota;
+      ratingMap[r.profissional_id].count += 1;
+    });
+    setFavorites((profs ?? []).map((p: any) => ({
+      id: p.id, profissional_id: p.id, nome: p.nome,
+      servicos_count: countMap[p.id] || 0,
+      avg_rating: ratingMap[p.id] ? ratingMap[p.id].sum / ratingMap[p.id].count : 0,
+      isFav: favIds.has(p.id),
+    })));
+  };
+
+  const toggleFavorite = async (profId: string) => {
+    if (!clienteId) return;
+    const current = favorites.find(f => f.profissional_id === profId);
+    if (!current) return;
+    if (current.isFav) {
+      await sb.from("favoritos").delete()
+        .eq("cliente_id", clienteId).eq("profissional_id", profId);
+    } else {
+      await sb.from("favoritos")
+        .insert({ cliente_id: clienteId, profissional_id: profId });
+    }
+    setFavorites(prev =>
+      prev.map(f => f.profissional_id === profId ? { ...f, isFav: !f.isFav } : f)
+    );
+  };
 
   const renderStars = (rating: number, size = 16) => {
     return (
@@ -147,6 +209,26 @@ export default function ExploreScreen() {
           {item.servico_nome ? ` \u2022 ${item.servico_nome}` : ""}
         </Text>
       ) : null}
+    </View>
+  );
+
+  const renderFavorite = ({ item }: { item: FavProfessional }) => (
+    <View style={styles.favCard}>
+      <View style={styles.favAvatar}>
+        <Text style={styles.favAvatarText}>{item.nome.charAt(0).toUpperCase()}</Text>
+      </View>
+      <View style={styles.favInfo}>
+        <Text style={styles.favName}>{item.nome}</Text>
+        <Text style={styles.favMeta}>
+          {item.servicos_count} {i18n.t("explore.services")}
+          {item.avg_rating > 0 ? ` \u2022 ${item.avg_rating.toFixed(1)} \u2605` : ""}
+        </Text>
+      </View>
+      <TouchableOpacity style={styles.heartBtn} onPress={() => toggleFavorite(item.profissional_id)}>
+        <Text style={{ fontSize: 22, color: item.isFav ? "#e74c3c" : "#ccc" }}>
+          {item.isFav ? "\u2764" : "\u2661"}
+        </Text>
+      </TouchableOpacity>
     </View>
   );
 
@@ -209,6 +291,14 @@ export default function ExploreScreen() {
             {i18n.t("explore.reviews")}
           </Text>
         </TouchableOpacity>
+        <TouchableOpacity
+          style={[styles.tab, tab === "favorites" && styles.tabActive]}
+          onPress={() => setTab("favorites")}
+        >
+          <Text style={[styles.tabText, tab === "favorites" && styles.tabTextActive]}>
+            {i18n.t("explore.favorites")}
+          </Text>
+        </TouchableOpacity>
       </View>
 
       {loading ? (
@@ -233,7 +323,7 @@ export default function ExploreScreen() {
             <Text style={styles.empty}>{i18n.t("explore.noPhotos")}</Text>
           }
         />
-      ) : (
+      ) : tab === "reviews" ? (
         <FlatList
           data={reviews}
           keyExtractor={(item) => item.id}
@@ -248,6 +338,23 @@ export default function ExploreScreen() {
           }
           ListEmptyComponent={
             <Text style={styles.empty}>{i18n.t("explore.noReviews")}</Text>
+          }
+        />
+      ) : (
+        <FlatList
+          data={favorites}
+          keyExtractor={(item) => item.id}
+          renderItem={renderFavorite}
+          contentContainerStyle={styles.list}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={() => { setRefreshing(true); loadData(); }}
+              tintColor={bellusGold}
+            />
+          }
+          ListEmptyComponent={
+            <Text style={styles.empty}>{i18n.t("explore.noFavorites")}</Text>
           }
         />
       )}
@@ -281,4 +388,17 @@ const styles = StyleSheet.create({
   reviewProfessional: { fontSize: 13, color: bellusGold, marginTop: 8, fontWeight: "500" },
   reviewComment: { fontSize: 14, color: "#444", marginTop: 8, lineHeight: 20 },
   empty: { textAlign: "center", color: "#999", marginTop: 40, fontSize: 14 },
+  favCard: {
+    flexDirection: "row", alignItems: "center", backgroundColor: "#fafafa",
+    borderRadius: 12, padding: 14, marginBottom: 10,
+  },
+  favAvatar: {
+    width: 44, height: 44, borderRadius: 22, backgroundColor: bellusGold,
+    justifyContent: "center", alignItems: "center", marginRight: 12,
+  },
+  favAvatarText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
+  favInfo: { flex: 1 },
+  favName: { fontSize: 15, fontWeight: "600", color: bellusDark },
+  favMeta: { fontSize: 12, color: "#999", marginTop: 2 },
+  heartBtn: { padding: 8 },
 });

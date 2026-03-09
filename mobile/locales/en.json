@@ -63,7 +63,12 @@
     "noPhotos": "No photos yet.",
     "noReviews": "No reviews yet.",
     "reviewCount": "reviews",
-    "anonymous": "Client"
+    "anonymous": "Client",
+    "favorites": "Favorites",
+    "noFavorites": "No favorites yet.",
+    "favorited": "Added to favorites!",
+    "unfavorited": "Removed from favorites.",
+    "services": "services"
   },
   "review": {
     "title": "Rate your visit",

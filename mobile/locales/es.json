@@ -63,7 +63,12 @@
     "noPhotos": "Ninguna foto aun.",
     "noReviews": "Ninguna valoracion aun.",
     "reviewCount": "valoraciones",
-    "anonymous": "Cliente"
+    "anonymous": "Cliente",
+    "favorites": "Favoritos",
+    "noFavorites": "Ningun favorito aun.",
+    "favorited": "Agregado a favoritos!",
+    "unfavorited": "Eliminado de favoritos.",
+    "services": "servicios"
   },
   "review": {
     "title": "Valorar atencion",

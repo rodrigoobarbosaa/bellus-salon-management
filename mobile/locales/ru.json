@@ -63,7 +63,12 @@
     "noPhotos": "Poka net foto.",
     "noReviews": "Poka net otzyvov.",
     "reviewCount": "otzyvov",
-    "anonymous": "Klient"
+    "anonymous": "Klient",
+    "favorites": "Izbrannoe",
+    "noFavorites": "Poka net izbrannyh.",
+    "favorited": "Dobavleno v izbrannoe!",
+    "unfavorited": "Udaleno iz izbrannogo.",
+    "services": "uslugi"
   },
   "review": {
     "title": "Otsenite poseshchenie",
