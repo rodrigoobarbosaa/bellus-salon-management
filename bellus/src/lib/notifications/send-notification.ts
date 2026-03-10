@@ -2,11 +2,6 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { sendWhatsApp, sendSMS, isTwilioConfigured } from "./twilio";
 import { getConfirmationTemplate, renderTemplate } from "./templates";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function db(supabase: SupabaseClient): SupabaseClient<any> {
-  return supabase as SupabaseClient<Record<string, unknown>>;
-}
-
 interface BookingConfirmationParams {
   supabase: SupabaseClient;
   salaoId: string;
@@ -26,7 +21,7 @@ export async function sendBookingConfirmation(params: BookingConfirmationParams)
   const { supabase, salaoId, clienteId, agendamentoId, telefone, idioma, variables, customTemplate } = params;
 
   // Check if client opted out
-  const { data: cliente } = await db(supabase)
+  const { data: cliente } = await supabase
     .from("clientes")
     .select("opt_out_notificacoes")
     .eq("id", clienteId)
@@ -42,7 +37,7 @@ export async function sendBookingConfirmation(params: BookingConfirmationParams)
   const message = renderTemplate(template, variables);
 
   // Log notification as pending
-  const { data: notifLog } = await db(supabase)
+  const { data: notifLog } = await supabase
     .from("notificacoes_log")
     .insert({
       salao_id: salaoId,
@@ -67,7 +62,7 @@ export async function sendBookingConfirmation(params: BookingConfirmationParams)
 
   if (waResult.success) {
     if (logId) {
-      await db(supabase)
+      await supabase
         .from("notificacoes_log")
         .update({ status: "enviado", enviado_em: new Date().toISOString() })
         .eq("id", logId);
@@ -82,7 +77,7 @@ export async function sendBookingConfirmation(params: BookingConfirmationParams)
 
   if (smsResult.success) {
     if (logId) {
-      await db(supabase)
+      await supabase
         .from("notificacoes_log")
         .update({ status: "enviado", enviado_em: new Date().toISOString() })
         .eq("id", logId);
@@ -94,7 +89,7 @@ export async function sendBookingConfirmation(params: BookingConfirmationParams)
 
   // Mark as failed
   if (logId) {
-    await db(supabase)
+    await supabase
       .from("notificacoes_log")
       .update({ status: "falhou" })
       .eq("id", logId);
@@ -116,7 +111,7 @@ export async function sendNotification(params: {
   const { supabase, salaoId, clienteId, agendamentoId, telefone, tipo, message } = params;
 
   // Check opt-out
-  const { data: cliente } = await db(supabase)
+  const { data: cliente } = await supabase
     .from("clientes")
     .select("opt_out_notificacoes")
     .eq("id", clienteId)
@@ -127,7 +122,7 @@ export async function sendNotification(params: {
   }
 
   // Log
-  const { data: notifLog } = await db(supabase)
+  const { data: notifLog } = await supabase
     .from("notificacoes_log")
     .insert({
       salao_id: salaoId,
@@ -150,7 +145,7 @@ export async function sendNotification(params: {
   const waResult = await sendWhatsApp(telefone, message);
   if (waResult.success) {
     if (logId) {
-      await db(supabase)
+      await supabase
         .from("notificacoes_log")
         .update({ status: "enviado", enviado_em: new Date().toISOString() })
         .eq("id", logId);
@@ -161,7 +156,7 @@ export async function sendNotification(params: {
   const smsResult = await sendSMS(telefone, message);
   if (smsResult.success) {
     if (logId) {
-      await db(supabase)
+      await supabase
         .from("notificacoes_log")
         .update({ status: "enviado", enviado_em: new Date().toISOString() })
         .eq("id", logId);
@@ -170,7 +165,7 @@ export async function sendNotification(params: {
   }
 
   if (logId) {
-    await db(supabase)
+    await supabase
       .from("notificacoes_log")
       .update({ status: "falhou" })
       .eq("id", logId);

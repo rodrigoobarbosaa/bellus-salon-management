@@ -3,11 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { ClientesList } from "./clientes-list";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function db(supabase: SupabaseClient): SupabaseClient<any> {
-  return supabase as SupabaseClient<Record<string, unknown>>;
-}
-
 export default async function ClientesPage() {
   const supabase = await createClient();
   const {
@@ -16,7 +11,7 @@ export default async function ClientesPage() {
 
   if (!user) redirect("/login");
 
-  const { data: usuario } = await db(supabase)
+  const { data: usuario } = await supabase
     .from("usuarios")
     .select("salao_id")
     .eq("id", user.id)
@@ -27,7 +22,7 @@ export default async function ClientesPage() {
   const salaoId = (usuario as { salao_id: string }).salao_id;
 
   // Fetch all clients
-  const { data: clientes } = await db(supabase)
+  const { data: clientes } = await supabase
     .from("clientes")
     .select("id, nome, telefone, email, idioma_preferido, opt_out_notificacoes, proximo_retorno, created_at")
     .eq("salao_id", salaoId)
@@ -51,7 +46,7 @@ export default async function ClientesPage() {
   ).length;
 
   // Fetch notification stats for conversion dashboard
-  const { data: notifStats } = await db(supabase)
+  const { data: notifStats } = await supabase
     .from("notificacoes_log")
     .select("id, tipo, status, cliente_id")
     .eq("salao_id", salaoId)

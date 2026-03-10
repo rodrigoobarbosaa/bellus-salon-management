@@ -4,11 +4,6 @@ import { sendNotification } from "@/lib/notifications/send-notification";
 import { getReturnReminderTemplate, renderTemplate } from "@/lib/notifications/templates";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function db(supabase: SupabaseClient): SupabaseClient<any> {
-  return supabase as SupabaseClient<Record<string, unknown>>;
-}
-
 /**
  * GET /api/cron/return-reminders
  * Sends return reminder notifications to clients whose proximo_retorno <= today
@@ -27,7 +22,7 @@ export async function GET(request: NextRequest) {
   const today = new Date().toISOString().split("T")[0];
 
   // Fetch clients with proximo_retorno <= today, not opted out, with phone
-  const { data: clientes } = await db(supabase)
+  const { data: clientes } = await supabase
     .from("clientes")
     .select("id, salao_id, nome, telefone, idioma_preferido, proximo_retorno")
     .lte("proximo_retorno", today)
@@ -52,7 +47,7 @@ export async function GET(request: NextRequest) {
 
   for (const cl of items) {
     // Check if client already has a future appointment
-    const { data: futureAg } = await db(supabase)
+    const { data: futureAg } = await supabase
       .from("agendamentos")
       .select("id")
       .eq("cliente_id", cl.id)
@@ -62,7 +57,7 @@ export async function GET(request: NextRequest) {
 
     if (futureAg && (futureAg as unknown[]).length > 0) {
       // Client already has upcoming appointment — clear proximo_retorno
-      await db(supabase)
+      await supabase
         .from("clientes")
         .update({ proximo_retorno: null })
         .eq("id", cl.id);
@@ -74,7 +69,7 @@ export async function GET(request: NextRequest) {
     const sevenDaysAgo = new Date();
     sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
 
-    const { data: recentReminder } = await db(supabase)
+    const { data: recentReminder } = await supabase
       .from("notificacoes_log")
       .select("id")
       .eq("cliente_id", cl.id)
@@ -88,7 +83,7 @@ export async function GET(request: NextRequest) {
     }
 
     // Get salon info for template
-    const { data: salao } = await db(supabase)
+    const { data: salao } = await supabase
       .from("saloes")
       .select("nome, slug")
       .eq("id", cl.salao_id)
@@ -98,7 +93,7 @@ export async function GET(request: NextRequest) {
     const salaoSlug = (salao as { nome: string; slug: string } | null)?.slug ?? "";
 
     // Check for custom template
-    const { data: customTpl } = await db(supabase)
+    const { data: customTpl } = await supabase
       .from("notification_templates")
       .select("template")
       .eq("salao_id", cl.salao_id)

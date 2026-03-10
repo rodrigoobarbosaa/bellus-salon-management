@@ -51,9 +51,7 @@ export async function sendTokenToServer(pushToken: string): Promise<boolean> {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user?.email) return false;
 
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const sb = supabase as any;
-
+  
     const { data: cliente } = await sb
       .from("clientes")
       .select("id")

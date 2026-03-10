@@ -1,12 +1,22 @@
 import React from "react";
-import { Text } from "react-native";
 import { Tabs } from "expo-router";
-import Colors, { bellusGold, bellusDark } from "@/constants/Colors";
+import { Ionicons } from "@expo/vector-icons";
+import { bellusGold, bellusDark } from "@/constants/Colors";
 import { useColorScheme } from "@/components/useColorScheme";
 import i18n from "@/lib/i18n";
 
-function TabIcon({ label, color }: { label: string; color: string }) {
-  return <Text style={{ fontSize: 22, color }}>{label}</Text>;
+type IoniconName = React.ComponentProps<typeof Ionicons>["name"];
+
+function TabIcon({
+  name,
+  focused,
+  color,
+}: {
+  name: IoniconName;
+  focused: boolean;
+  color: string;
+}) {
+  return <Ionicons name={name} size={24} color={color} />;
 }
 
 export default function TabLayout() {
@@ -15,39 +25,56 @@ export default function TabLayout() {
   return (
     <Tabs
       screenOptions={{
-        tabBarActiveTintColor: Colors[colorScheme].tint,
-        tabBarInactiveTintColor: Colors[colorScheme].tabIconDefault,
+        tabBarActiveTintColor: bellusGold,
+        tabBarInactiveTintColor: "#aaa",
+        tabBarStyle: {
+          backgroundColor: "#fff",
+          borderTopColor: "#ede8e3",
+          borderTopWidth: 1,
+          height: 64,
+          paddingBottom: 10,
+          paddingTop: 6,
+        },
+        tabBarLabelStyle: { fontSize: 11, fontWeight: "600", letterSpacing: 0.3 },
         headerStyle: { backgroundColor: bellusDark },
         headerTintColor: bellusGold,
-        headerTitleStyle: { fontWeight: "bold" },
+        headerTitleStyle: { fontWeight: "700", letterSpacing: 1.5, fontSize: 15 },
       }}
     >
       <Tabs.Screen
         name="index"
         options={{
           title: i18n.t("tabs.book"),
-          tabBarIcon: ({ color }) => <TabIcon label={"\u{1F4C5}"} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon name={focused ? "calendar" : "calendar-outline"} focused={focused} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="explore"
         options={{
           title: i18n.t("tabs.explore"),
-          tabBarIcon: ({ color }) => <TabIcon label={"\u{2728}"} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon name={focused ? "images" : "images-outline"} focused={focused} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="appointments"
         options={{
           title: i18n.t("tabs.appointments"),
-          tabBarIcon: ({ color }) => <TabIcon label={"\u{1F4CB}"} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon name={focused ? "time" : "time-outline"} focused={focused} color={color} />
+          ),
         }}
       />
       <Tabs.Screen
         name="profile"
         options={{
           title: i18n.t("tabs.profile"),
-          tabBarIcon: ({ color }) => <TabIcon label={"\u{1F464}"} color={color} />,
+          tabBarIcon: ({ color, focused }) => (
+            <TabIcon name={focused ? "person" : "person-outline"} focused={focused} color={color} />
+          ),
         }}
       />
     </Tabs>

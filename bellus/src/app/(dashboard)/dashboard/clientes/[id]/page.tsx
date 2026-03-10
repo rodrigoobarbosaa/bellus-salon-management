@@ -3,11 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { ClienteFicha } from "./cliente-ficha";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function db(supabase: SupabaseClient): SupabaseClient<any> {
-  return supabase as SupabaseClient<Record<string, unknown>>;
-}
-
 interface ClientePageProps {
   params: Promise<{ id: string }>;
 }
@@ -21,7 +16,7 @@ export default async function ClientePage({ params }: ClientePageProps) {
 
   if (!user) redirect("/login");
 
-  const { data: usuario } = await db(supabase)
+  const { data: usuario } = await supabase
     .from("usuarios")
     .select("salao_id")
     .eq("id", user.id)
@@ -31,7 +26,7 @@ export default async function ClientePage({ params }: ClientePageProps) {
   const salaoId = (usuario as { salao_id: string }).salao_id;
 
   // Fetch client
-  const { data: cliente } = await db(supabase)
+  const { data: cliente } = await supabase
     .from("clientes")
     .select("*")
     .eq("id", id)
@@ -54,7 +49,7 @@ export default async function ClientePage({ params }: ClientePageProps) {
   };
 
   // Fetch visit history (agendamentos with service and professional)
-  const { data: visitas } = await db(supabase)
+  const { data: visitas } = await supabase
     .from("agendamentos")
     .select("id, data_hora_inicio, data_hora_fim, status, notas, servico_id, profissional_id")
     .eq("cliente_id", id)
@@ -75,7 +70,7 @@ export default async function ClientePage({ params }: ClientePageProps) {
   // Fetch service names
   const servicoIds = [...new Set(visitasList.map((v) => v.servico_id))];
   const { data: servicos } = servicoIds.length > 0
-    ? await db(supabase).from("servicos").select("id, nome, preco_base").in("id", servicoIds)
+    ? await supabase.from("servicos").select("id, nome, preco_base").in("id", servicoIds)
     : { data: [] };
 
   const servicoMap = new Map(
@@ -85,7 +80,7 @@ export default async function ClientePage({ params }: ClientePageProps) {
   // Fetch professional names
   const profIds = [...new Set(visitasList.map((v) => v.profissional_id))];
   const { data: profs } = profIds.length > 0
-    ? await db(supabase).from("profissionais").select("id, nome").in("id", profIds)
+    ? await supabase.from("profissionais").select("id, nome").in("id", profIds)
     : { data: [] };
 
   const profMap = new Map(
@@ -105,7 +100,7 @@ export default async function ClientePage({ params }: ClientePageProps) {
   const totalSpent = completedVisits.reduce((sum, v) => sum + v.servico_preco, 0);
 
   // Fetch salon slug for booking link
-  const { data: salao } = await db(supabase)
+  const { data: salao } = await supabase
     .from("saloes")
     .select("slug")
     .eq("id", salaoId)

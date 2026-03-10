@@ -87,18 +87,20 @@ export function CaixaView({ salaoId, profissionais, servicos }: CaixaViewProps) 
   const profMap = new Map(profissionais.map((p) => [p.id, p.nome]));
   const servicoMap = new Map(servicos.map((s) => [s.id, s.nome]));
 
+  type RawTransacao = Omit<Transacao, "cliente_nome" | "servico_nome" | "profissional_nome"> & {
+    clientes: { nome: string } | null;
+  };
+
   const fetchTransacoes = useCallback(
     async (from: string, to: string) => {
       setLoading(true);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const sb = supabase as any;
 
       const toEnd = new Date(to);
       toEnd.setDate(toEnd.getDate() + 1);
 
-      let query = sb
+      let query = supabase
         .from("transacoes")
-        .select("*, clientes(nome)")
+        .select("*, clientes(nome)" as string)
         .gte("created_at", `${from}T00:00:00`)
         .lt("created_at", toEnd.toISOString())
         .order("created_at", { ascending: false });
@@ -113,12 +115,11 @@ export function CaixaView({ salaoId, profissionais, servicos }: CaixaViewProps) 
       const { data } = await query;
 
       if (data) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const mapped = (data as any[]).map((t) => ({
+        const mapped = (data as RawTransacao[]).map((t) => ({
           ...t,
           cliente_nome: t.clientes?.nome ?? "—",
-          servico_nome: servicoMap.get(t.servico_id) ?? "—",
-          profissional_nome: profMap.get(t.profissional_id) ?? "—",
+          servico_nome: servicoMap.get(t.servico_id ?? "") ?? "—",
+          profissional_nome: profMap.get(t.profissional_id ?? "") ?? "—",
         }));
         setTransacoes(mapped);
       } else {

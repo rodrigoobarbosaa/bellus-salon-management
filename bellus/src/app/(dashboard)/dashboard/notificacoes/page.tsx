@@ -3,11 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { TemplateEditor } from "./template-editor";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function db(supabase: SupabaseClient): SupabaseClient<any> {
-  return supabase as SupabaseClient<Record<string, unknown>>;
-}
-
 export default async function NotificacoesPage() {
   const supabase = await createClient();
   const {
@@ -16,7 +11,7 @@ export default async function NotificacoesPage() {
 
   if (!user) redirect("/login");
 
-  const { data: usuario } = await db(supabase)
+  const { data: usuario } = await supabase
     .from("usuarios")
     .select("salao_id, role")
     .eq("id", user.id)
@@ -29,7 +24,7 @@ export default async function NotificacoesPage() {
   const salaoId = (usuario as { salao_id: string }).salao_id;
 
   // Fetch existing custom templates
-  const { data: templates } = await db(supabase)
+  const { data: templates } = await supabase
     .from("notification_templates")
     .select("*")
     .eq("salao_id", salaoId)
@@ -44,7 +39,7 @@ export default async function NotificacoesPage() {
   }>;
 
   // Fetch recent notification log
-  const { data: recentLogs } = await db(supabase)
+  const { data: recentLogs } = await supabase
     .from("notificacoes_log")
     .select("id, tipo, status, mensagem, enviado_em, created_at")
     .eq("salao_id", salaoId)

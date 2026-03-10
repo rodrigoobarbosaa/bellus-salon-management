@@ -4,11 +4,6 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function db(supabase: SupabaseClient): SupabaseClient<any> {
-  return supabase as SupabaseClient<Record<string, unknown>>;
-}
-
 async function getUserSalaoId(supabase: SupabaseClient) {
   const {
     data: { user },
@@ -16,7 +11,7 @@ async function getUserSalaoId(supabase: SupabaseClient) {
 
   if (!user) return { userId: null, salaoId: null };
 
-  const { data: usuario } = await db(supabase)
+  const { data: usuario } = await supabase
     .from("usuarios")
     .select("salao_id")
     .eq("id", user.id)
@@ -59,7 +54,7 @@ export async function createTransacao(formData: FormData) {
   }
   if (valorFinal < 0) valorFinal = 0;
 
-  const { error } = await db(supabase).from("transacoes").insert({
+  const { error } = await supabase.from("transacoes").insert({
     salao_id: salaoId,
     agendamento_id: agendamentoId,
     cliente_id: clienteId,
@@ -79,14 +74,14 @@ export async function createTransacao(formData: FormData) {
   }
 
   // Also update agendamento status to concluido if not already
-  await db(supabase)
+  await supabase
     .from("agendamentos")
     .update({ status: "concluido", updated_at: new Date().toISOString() })
     .eq("id", agendamentoId);
 
   // Calculate proximo_retorno for client
   if (clienteId) {
-    const { data: cliente } = await db(supabase)
+    const { data: cliente } = await supabase
       .from("clientes")
       .select("intervalo_retorno_dias")
       .eq("id", clienteId)
@@ -98,7 +93,7 @@ export async function createTransacao(formData: FormData) {
     if (intervalo && intervalo > 0) {
       const proximoRetorno = new Date();
       proximoRetorno.setDate(proximoRetorno.getDate() + intervalo);
-      await db(supabase)
+      await supabase
         .from("clientes")
         .update({ proximo_retorno: proximoRetorno.toISOString().split("T")[0] })
         .eq("id", clienteId);

@@ -41,32 +41,32 @@ export default function ProfessionalScreen() {
   const [totalReviews, setTotalReviews] = useState(0);
   const [loading, setLoading] = useState(true);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sb = supabase as any;
 
   useEffect(() => {
     async function load() {
       try {
         // Services via junction table
-        const { data: svcLinks } = await sb
+        type SvcLink = { servico: ProfService | null };
+        const { data: svcLinks } = await supabase
           .from("servicos_profissionais")
           .select("servico:servicos(id, nome, duracao_minutos, preco_base)")
           .eq("profissional_id", profissionalId);
 
-        const svcs: ProfService[] = (svcLinks ?? [])
-          .filter((s: any) => s.servico)
-          .map((s: any) => s.servico);
+        const svcs: ProfService[] = ((svcLinks as SvcLink[]) ?? [])
+          .filter((s) => s.servico !== null)
+          .map((s) => s.servico as ProfService);
         setServices(svcs);
 
         // Reviews
-        const { data: revs } = await sb
+        type RevRow = { id: string; nota: number; comentario: string | null; created_at: string; cliente: { nome: string } | null };
+        const { data: revs } = await supabase
           .from("avaliacoes")
           .select("id, nota, comentario, created_at, cliente:clientes(nome)")
           .eq("profissional_id", profissionalId)
           .order("created_at", { ascending: false })
           .limit(10);
 
-        const mapped: ProfReview[] = (revs ?? []).map((r: any) => ({
+        const mapped: ProfReview[] = ((revs as RevRow[]) ?? []).map((r) => ({
           id: r.id,
           nota: r.nota,
           comentario: r.comentario,

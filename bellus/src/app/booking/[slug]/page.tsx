@@ -4,11 +4,6 @@ import { SalonInfo } from "./salon-info";
 import { BookingWizard } from "./booking-wizard";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function db(supabase: SupabaseClient): SupabaseClient<any> {
-  return supabase as SupabaseClient<Record<string, unknown>>;
-}
-
 interface BookingPageProps {
   params: Promise<{ slug: string }>;
 }
@@ -18,7 +13,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
   const supabase = createServiceClient();
 
   // Fetch salon by slug
-  const { data: salao } = await db(supabase)
+  const { data: salao } = await supabase
     .from("saloes")
     .select("*")
     .eq("slug", slug)
@@ -45,7 +40,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
   };
 
   // Fetch active services for this salon
-  const { data: servicosRaw } = await db(supabase)
+  const { data: servicosRaw } = await supabase
     .from("servicos")
     .select("id, nome, descricao, duracao_minutos, preco_base, categoria")
     .eq("salao_id", salon.id)
@@ -63,7 +58,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
   }>;
 
   // Fetch professionals with their services
-  const { data: profissionaisRaw } = await db(supabase)
+  const { data: profissionaisRaw } = await supabase
     .from("profissionais")
     .select("id, nome, cor_agenda")
     .eq("salao_id", salon.id)
@@ -77,7 +72,7 @@ export default async function BookingPage({ params }: BookingPageProps) {
   }>;
 
   // Fetch service-professional associations
-  const { data: spRaw } = await db(supabase)
+  const { data: spRaw } = await supabase
     .from("servicos_profissionais")
     .select("servico_id, profissional_id, preco_override");
 

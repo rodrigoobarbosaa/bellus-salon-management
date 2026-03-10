@@ -4,11 +4,6 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function db(supabase: SupabaseClient): SupabaseClient<any> {
-  return supabase as SupabaseClient<Record<string, unknown>>;
-}
-
 async function getUserSalaoId(supabase: SupabaseClient) {
   const {
     data: { user },
@@ -16,7 +11,7 @@ async function getUserSalaoId(supabase: SupabaseClient) {
 
   if (!user) return { userId: null, salaoId: null };
 
-  const { data: usuario } = await db(supabase)
+  const { data: usuario } = await supabase
     .from("usuarios")
     .select("salao_id")
     .eq("id", user.id)
@@ -47,7 +42,7 @@ export async function createAgendamento(formData: FormData) {
   }
 
   // Buscar duração do serviço
-  const { data: servico } = await db(supabase)
+  const { data: servico } = await supabase
     .from("servicos")
     .select("duracao_minutos")
     .eq("id", servico_id)
@@ -72,7 +67,7 @@ export async function createAgendamento(formData: FormData) {
       return { error: "El nombre del cliente es obligatorio." };
     }
 
-    const { data: newCliente, error: clienteError } = await db(supabase)
+    const { data: newCliente, error: clienteError } = await supabase
       .from("clientes")
       .insert({ salao_id: salaoId, nome, telefone })
       .select("id")
@@ -91,7 +86,7 @@ export async function createAgendamento(formData: FormData) {
   }
 
   // Verificar conflito de horário com agendamentos
-  const { data: conflitos } = await db(supabase)
+  const { data: conflitos } = await supabase
     .from("agendamentos")
     .select("id")
     .eq("profissional_id", profissional_id)
@@ -104,7 +99,7 @@ export async function createAgendamento(formData: FormData) {
   }
 
   // Verificar conflito com bloqueios
-  const { data: bloqueios } = await db(supabase)
+  const { data: bloqueios } = await supabase
     .from("bloqueios")
     .select("id")
     .eq("profissional_id", profissional_id)
@@ -116,7 +111,7 @@ export async function createAgendamento(formData: FormData) {
   }
 
   // Criar agendamento
-  const { error } = await db(supabase).from("agendamentos").insert({
+  const { error } = await supabase.from("agendamentos").insert({
     salao_id: salaoId,
     cliente_id,
     profissional_id,
@@ -151,7 +146,7 @@ export async function updateAgendamentoStatus(id: string, status: string) {
     confirmado: ["concluido", "cancelado"],
   };
 
-  const { data: current } = await db(supabase)
+  const { data: current } = await supabase
     .from("agendamentos")
     .select("status")
     .eq("id", id)
@@ -168,7 +163,7 @@ export async function updateAgendamentoStatus(id: string, status: string) {
     return { error: `No se puede cambiar de "${currentStatus}" a "${status}".` };
   }
 
-  const { error } = await db(supabase)
+  const { error } = await supabase
     .from("agendamentos")
     .update({ status, updated_at: new Date().toISOString() })
     .eq("id", id);
@@ -179,7 +174,7 @@ export async function updateAgendamentoStatus(id: string, status: string) {
 
   // When completing an appointment, calculate next return date
   if (status === "concluido") {
-    const { data: agendamento } = await db(supabase)
+    const { data: agendamento } = await supabase
       .from("agendamentos")
       .select("cliente_id")
       .eq("id", id)
@@ -187,7 +182,7 @@ export async function updateAgendamentoStatus(id: string, status: string) {
 
     if (agendamento) {
       const clienteId = (agendamento as { cliente_id: string }).cliente_id;
-      const { data: cliente } = await db(supabase)
+      const { data: cliente } = await supabase
         .from("clientes")
         .select("intervalo_retorno_dias")
         .eq("id", clienteId)
@@ -199,7 +194,7 @@ export async function updateAgendamentoStatus(id: string, status: string) {
       if (intervalo && intervalo > 0) {
         const proximoRetorno = new Date();
         proximoRetorno.setDate(proximoRetorno.getDate() + intervalo);
-        await db(supabase)
+        await supabase
           .from("clientes")
           .update({ proximo_retorno: proximoRetorno.toISOString().split("T")[0] })
           .eq("id", clienteId);

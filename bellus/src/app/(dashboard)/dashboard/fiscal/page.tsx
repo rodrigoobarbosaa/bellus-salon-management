@@ -3,11 +3,6 @@ import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { FiscalView } from "./fiscal-view";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function db(supabase: SupabaseClient): SupabaseClient<any> {
-  return supabase as SupabaseClient<Record<string, unknown>>;
-}
-
 export default async function FiscalPage() {
   const supabase = await createClient();
   const {
@@ -16,7 +11,7 @@ export default async function FiscalPage() {
 
   if (!user) redirect("/login");
 
-  const { data: usuario } = await db(supabase)
+  const { data: usuario } = await supabase
     .from("usuarios")
     .select("salao_id, role")
     .eq("id", user.id)
@@ -29,7 +24,7 @@ export default async function FiscalPage() {
 
   // Get or create fiscal config
   let configFiscal = null;
-  const { data: existing } = await db(supabase)
+  const { data: existing } = await supabase
     .from("configuracoes_fiscais")
     .select("*")
     .eq("salao_id", salaoId)
@@ -45,7 +40,7 @@ export default async function FiscalPage() {
     };
   } else {
     // Create default
-    const { data: created } = await db(supabase)
+    const { data: created } = await supabase
       .from("configuracoes_fiscais")
       .insert({
         salao_id: salaoId,
@@ -66,7 +61,7 @@ export default async function FiscalPage() {
   }
 
   // Get salon name for exports
-  const { data: salao } = await db(supabase)
+  const { data: salao } = await supabase
     .from("saloes")
     .select("nome")
     .eq("id", salaoId)

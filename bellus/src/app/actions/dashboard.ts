@@ -1,26 +1,22 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import type { Database } from "@/types/supabase";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function db(supabase: SupabaseClient): SupabaseClient<any> {
-  return supabase as SupabaseClient<Record<string, unknown>>;
-}
-
-async function getUserSalaoId(supabase: SupabaseClient) {
+async function getUserSalaoId(supabase: SupabaseClient<Database>) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: usuario } = await db(supabase)
+  const { data: usuario } = await supabase
     .from("usuarios")
     .select("salao_id")
     .eq("id", user.id)
     .single();
 
-  return (usuario as { salao_id: string } | null)?.salao_id ?? null;
+  return usuario?.salao_id ?? null;
 }
 
 function startOfDay(date: Date) {
@@ -128,10 +124,15 @@ export async function getDashboardData() {
   const prevMonthStart = startOfPrevMonth(now);
   const prevMonthEnd = endOfPrevMonth(now);
 
-  // --- Today's appointments ---
-  const { data: rawAppointments } = await db(supabase)
+  // --- Today's appointments (single query with JOINs) ---
+  const { data: rawAppointments } = await supabase
     .from("agendamentos")
-    .select("id, data_hora_inicio, status, cliente_id, servico_id, profissional_id")
+    .select(
+      "id, data_hora_inicio, status, " +
+      "cliente:clientes(nome), " +
+      "servico:servicos(nome), " +
+      "profissional:profissionais(nome)"
+    )
     .eq("salao_id", salaoId)
     .gte("data_hora_inicio", todayStart)
     .lte("data_hora_inicio", todayEnd)
@@ -142,57 +143,26 @@ export async function getDashboardData() {
     id: string;
     data_hora_inicio: string;
     status: string;
-    cliente_id: string | null;
-    servico_id: string | null;
-    profissional_id: string | null;
+    cliente: { nome: string } | null;
+    servico: { nome: string } | null;
+    profissional: { nome: string } | null;
   };
 
-  const appointments = (rawAppointments as RawAppointment[]) || [];
-
-  // Fetch related names
-  const clienteIds = [...new Set(appointments.map((a) => a.cliente_id).filter(Boolean))] as string[];
-  const servicoIds = [...new Set(appointments.map((a) => a.servico_id).filter(Boolean))] as string[];
-  const profIds = [...new Set(appointments.map((a) => a.profissional_id).filter(Boolean))] as string[];
-
-  const [clientesRes, servicosRes, profsRes] = await Promise.all([
-    clienteIds.length
-      ? db(supabase).from("clientes").select("id, nome").in("id", clienteIds)
-      : { data: [] },
-    servicoIds.length
-      ? db(supabase).from("servicos").select("id, nome").in("id", servicoIds)
-      : { data: [] },
-    profIds.length
-      ? db(supabase).from("profissionais").select("id, nome").in("id", profIds)
-      : { data: [] },
-  ]);
-
-  type NameMap = Record<string, string>;
-  const clienteMap: NameMap = {};
-  ((clientesRes.data as { id: string; nome: string }[]) || []).forEach(
-    (c) => (clienteMap[c.id] = c.nome)
-  );
-  const servicoMap: NameMap = {};
-  ((servicosRes.data as { id: string; nome: string }[]) || []).forEach(
-    (s) => (servicoMap[s.id] = s.nome)
-  );
-  const profMap: NameMap = {};
-  ((profsRes.data as { id: string; nome: string }[]) || []).forEach(
-    (p) => (profMap[p.id] = p.nome)
-  );
-
-  const todayAppointments: TodayAppointment[] = appointments.map((a) => ({
+  const todayAppointments: TodayAppointment[] = (
+    (rawAppointments as RawAppointment[]) || []
+  ).map((a) => ({
     id: a.id,
     data_hora_inicio: a.data_hora_inicio,
     status: a.status,
-    cliente_nome: a.cliente_id ? clienteMap[a.cliente_id] || "—" : "—",
-    servico_nome: a.servico_id ? servicoMap[a.servico_id] || "—" : "—",
-    profissional_nome: a.profissional_id ? profMap[a.profissional_id] || "—" : "—",
+    cliente_nome: a.cliente?.nome ?? "—",
+    servico_nome: a.servico?.nome ?? "—",
+    profissional_nome: a.profissional?.nome ?? "—",
   }));
 
   // --- Revenue ---
   type Transacao = { valor_final: number; created_at: string };
 
-  const { data: allTx } = await db(supabase)
+  const { data: allTx } = await supabase
     .from("transacoes")
     .select("valor_final, created_at")
     .eq("salao_id", salaoId)
@@ -216,7 +186,7 @@ export async function getDashboardData() {
   };
 
   // Quarter needs separate query since prevMonthStart might not cover it
-  const { data: quarterTx } = await db(supabase)
+  const { data: quarterTx } = await supabase
     .from("transacoes")
     .select("valor_final")
     .eq("salao_id", salaoId)
@@ -231,7 +201,7 @@ export async function getDashboardData() {
   const ninetyDaysAgo = new Date(now);
   ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
-  const { data: activeClients } = await db(supabase)
+  const { data: activeClients } = await supabase
     .from("clientes")
     .select("id, created_at")
     .eq("salao_id", salaoId);
@@ -239,7 +209,7 @@ export async function getDashboardData() {
   const allClients = (activeClients as { id: string; created_at: string }[]) || [];
 
   // Clients with appointments in last 90 days
-  const { data: recentAppointments } = await db(supabase)
+  const { data: recentAppointments } = await supabase
     .from("agendamentos")
     .select("cliente_id")
     .eq("salao_id", salaoId)
@@ -250,34 +220,44 @@ export async function getDashboardData() {
     ((recentAppointments as { cliente_id: string }[]) || []).map((a) => a.cliente_id)
   );
 
-  // Clients with >1 completed appointment this month
-  const { data: monthAppointments } = await db(supabase)
-    .from("agendamentos")
-    .select("cliente_id")
-    .eq("salao_id", salaoId)
-    .eq("status", "concluido")
-    .gte("data_hora_inicio", monthStart);
+  // Single query for all this-month completed appointments
+  // (replaces two separate queries for monthAppointments + completedAppts)
+  const [monthApptRes, reminderRes, serviceTxRes] = await Promise.all([
+    supabase
+      .from("agendamentos")
+      .select("cliente_id, servico_id")
+      .eq("salao_id", salaoId)
+      .eq("status", "concluido")
+      .gte("data_hora_inicio", monthStart),
+    supabase
+      .from("notificacoes_log")
+      .select("id, status")
+      .eq("salao_id", salaoId)
+      .eq("tipo", "lembrete_retorno")
+      .gte("created_at", monthStart),
+    supabase
+      .from("transacoes")
+      .select("servico_id, valor_final")
+      .eq("salao_id", salaoId)
+      .gte("created_at", monthStart),
+  ]);
+
+  type MonthAppt = { cliente_id: string; servico_id: string };
+  const monthAppts = (monthApptRes.data as MonthAppt[]) || [];
 
   const monthClientCounts: Record<string, number> = {};
-  ((monthAppointments as { cliente_id: string }[]) || []).forEach((a) => {
-    monthClientCounts[a.cliente_id] = (monthClientCounts[a.cliente_id] || 0) + 1;
+  const serviceCounts: Record<string, number> = {};
+  monthAppts.forEach((a) => {
+    if (a.cliente_id) monthClientCounts[a.cliente_id] = (monthClientCounts[a.cliente_id] || 0) + 1;
+    if (a.servico_id) serviceCounts[a.servico_id] = (serviceCounts[a.servico_id] || 0) + 1;
   });
 
   const newThisMonth = allClients.filter((c) => c.created_at >= monthStart).length;
   const returningThisMonth = Object.values(monthClientCounts).filter((c) => c > 1).length;
 
-  // Reminder conversion
-  const { data: reminderLogs } = await db(supabase)
-    .from("notificacoes_log")
-    .select("id, tipo, status")
-    .eq("salao_id", salaoId)
-    .eq("tipo", "lembrete_retorno")
-    .gte("created_at", monthStart);
-
-  const reminders = (reminderLogs as { id: string; tipo: string; status: string }[]) || [];
+  const reminders = (reminderRes.data as { id: string; status: string }[]) || [];
   const remindersSent = reminders.filter((r) => r.status === "enviado").length;
 
-  // Prev month new clients
   const prevMonthNew = allClients.filter(
     (c) => c.created_at >= prevMonthStart && c.created_at <= prevMonthEnd
   ).length;
@@ -287,34 +267,13 @@ export async function getDashboardData() {
     newThisMonth,
     returningThisMonth,
     remindersSent,
-    remindersConverted: 0, // Would need tracking of conversions
+    remindersConverted: 0,
     prevMonthNew,
   };
 
-  // --- Top Services ---
-  const { data: completedAppts } = await db(supabase)
-    .from("agendamentos")
-    .select("servico_id")
-    .eq("salao_id", salaoId)
-    .eq("status", "concluido")
-    .gte("data_hora_inicio", monthStart);
-
-  const serviceCounts: Record<string, number> = {};
-  ((completedAppts as { servico_id: string }[]) || []).forEach((a) => {
-    if (a.servico_id) {
-      serviceCounts[a.servico_id] = (serviceCounts[a.servico_id] || 0) + 1;
-    }
-  });
-
-  // Get revenue per service
-  const { data: serviceTx } = await db(supabase)
-    .from("transacoes")
-    .select("servico_id, valor_final")
-    .eq("salao_id", salaoId)
-    .gte("created_at", monthStart);
-
+  // --- Top Services (data already fetched above) ---
   const serviceRevenue: Record<string, number> = {};
-  ((serviceTx as { servico_id: string; valor_final: number }[]) || []).forEach((t) => {
+  ((serviceTxRes.data as { servico_id: string; valor_final: number }[]) || []).forEach((t) => {
     if (t.servico_id) {
       serviceRevenue[t.servico_id] = (serviceRevenue[t.servico_id] || 0) + (t.valor_final || 0);
     }
@@ -326,10 +285,10 @@ export async function getDashboardData() {
     .map(([id]) => id);
 
   const { data: serviceNames } = topServiceIds.length
-    ? await db(supabase).from("servicos").select("id, nome").in("id", topServiceIds)
+    ? await supabase.from("servicos").select("id, nome").in("id", topServiceIds)
     : { data: [] };
 
-  const serviceNameMap: NameMap = {};
+  const serviceNameMap: Record<string, string> = {};
   ((serviceNames as { id: string; nome: string }[]) || []).forEach(
     (s) => (serviceNameMap[s.id] = s.nome)
   );
@@ -342,7 +301,7 @@ export async function getDashboardData() {
   }));
 
   // --- Fiscal Summary ---
-  const { data: configFiscal } = await db(supabase)
+  const { data: configFiscal } = await supabase
     .from("configuracoes_fiscais")
     .select("iva_pct, irpf_pct, cuota_autonomos_mensual")
     .eq("salao_id", salaoId)
@@ -362,7 +321,7 @@ export async function getDashboardData() {
   const ivaRepercutido = revenue.quarter * (ivaPct / (100 + ivaPct));
 
   // IVA soportado from despesas
-  const { data: despesasQ } = await db(supabase)
+  const { data: despesasQ } = await supabase
     .from("despesas")
     .select("valor")
     .eq("salao_id", salaoId)

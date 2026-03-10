@@ -105,16 +105,17 @@ export function AgendaView({
     return m;
   }, [servicos]);
 
+  type RawAgendamento = Omit<Agendamento, "cliente_nome" | "servico_nome" | "profissional_nome"> & {
+    clientes: { nome: string } | null;
+  };
+
   // Fetch agendamentos + bloqueios
   const fetchData = useCallback(
     async (start: string, end: string) => {
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const sb = supabase as any;
-
       // Agendamentos
-      let agQuery = sb
+      let agQuery = supabase
         .from("agendamentos")
-        .select("*, clientes!inner(nome)")
+        .select("*, clientes!inner(nome)" as string)
         .gte("data_hora_inicio", start)
         .lte("data_hora_inicio", end);
 
@@ -123,7 +124,7 @@ export function AgendaView({
       }
 
       // Bloqueios
-      let blQuery = sb
+      let blQuery = supabase
         .from("bloqueios")
         .select("*")
         .gte("data_hora_inicio", start)
@@ -136,8 +137,7 @@ export function AgendaView({
       const [agResult, blResult] = await Promise.all([agQuery, blQuery]);
 
       if (agResult.data) {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const mapped = (agResult.data as any[]).map((a) => ({
+        const mapped = (agResult.data as RawAgendamento[]).map((a) => ({
           id: a.id,
           cliente_id: a.cliente_id,
           profissional_id: a.profissional_id,

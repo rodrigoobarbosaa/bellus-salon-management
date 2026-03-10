@@ -18,23 +18,20 @@ export default async function MarketingPage() {
 
   // Check role — owner only
   const { data: usuario } = await supabase
-    .from("usuarios" as string)
+    .from("usuarios")
     .select("salao_id, role")
     .eq("id", user.id)
     .single();
 
-  const role = (usuario as { role: string } | null)?.role;
-  if (role !== "proprietario") redirect("/dashboard");
+  if (usuario?.role !== "proprietario") redirect("/dashboard");
 
-  const salaoId = (usuario as { salao_id: string } | null)?.salao_id;
+  const salaoId = usuario?.salao_id;
 
   // Fetch services for content generator
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const db = supabase as any;
-  const { data: servicos } = await db
+  const { data: servicos } = await supabase
     .from("servicos")
     .select("id, nome, preco_base, categoria")
-    .eq("salao_id", salaoId)
+    .eq("salao_id", salaoId ?? "")
     .eq("ativo", true);
 
   const [campaigns, integrations, contents, analytics] = await Promise.all([

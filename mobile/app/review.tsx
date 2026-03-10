@@ -41,10 +41,8 @@ export default function ReviewScreen() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.email) return;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const sb = supabase as any;
-
-      const { data: cliente } = await sb
+    
+      const { data: cliente } = await supabase
         .from("clientes")
         .select("id")
         .eq("email", user.email)
@@ -53,13 +51,13 @@ export default function ReviewScreen() {
       if (!cliente?.id) return;
 
       // Get agendamento details for profissional_id
-      const { data: agendamento } = await sb
+      const { data: agendamento } = await supabase
         .from("agendamentos")
         .select("profissional_id")
         .eq("id", agendamentoId)
         .single();
 
-      const { error } = await sb.from("avaliacoes").insert({
+      const { error } = await supabase.from("avaliacoes").insert({
         salao_id: salaoId,
         cliente_id: cliente.id,
         profissional_id: agendamento?.profissional_id ?? null,

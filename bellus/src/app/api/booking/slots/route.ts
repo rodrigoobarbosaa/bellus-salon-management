@@ -2,11 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function db(supabase: SupabaseClient): SupabaseClient<any> {
-  return supabase as SupabaseClient<Record<string, unknown>>;
-}
-
 /**
  * GET /api/booking/slots?salao_id=X&date=YYYY-MM-DD&profissional_id=Y&duration=Z
  * Returns busy time slots for the given date and professional.
@@ -28,7 +23,7 @@ export async function GET(request: NextRequest) {
   const dayEnd = `${date}T23:59:59`;
 
   // Build query for appointments
-  let agendaQuery = db(supabase)
+  let agendaQuery = supabase
     .from("agendamentos")
     .select("data_hora_inicio, data_hora_fim")
     .eq("salao_id", salaoId)
@@ -43,7 +38,7 @@ export async function GET(request: NextRequest) {
   const { data: agendamentos } = await agendaQuery;
 
   // Build query for bloqueios
-  let bloqueioQuery = db(supabase)
+  let bloqueioQuery = supabase
     .from("bloqueios")
     .select("data_hora_inicio, data_hora_fim")
     .eq("salao_id", salaoId)

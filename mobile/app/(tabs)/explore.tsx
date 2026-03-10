@@ -10,6 +10,7 @@ import {
   RefreshControl,
   Dimensions,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import i18n from "@/lib/i18n";
@@ -60,14 +61,12 @@ export default function ExploreScreen() {
   const [avgRating, setAvgRating] = useState<number>(0);
   const [totalReviews, setTotalReviews] = useState<number>(0);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sb = supabase as any;
 
   useEffect(() => {
     async function getSalao() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.email) return;
-      const { data: cliente } = await sb
+      const { data: cliente } = await supabase
         .from("clientes")
         .select("id, salao_id")
         .eq("email", user.email)
@@ -84,7 +83,7 @@ export default function ExploreScreen() {
     if (!salaoId) return;
     try {
       if (tab === "gallery") {
-        const { data } = await sb
+        const { data } = await supabase
           .from("portfolio_fotos")
           .select("id, url, descricao, profissional:profissionais(nome), servico:servicos(nome)")
           .eq("salao_id", salaoId)
@@ -101,7 +100,7 @@ export default function ExploreScreen() {
           }))
         );
       } else if (tab === "reviews") {
-        const { data } = await sb
+        const { data } = await supabase
           .from("avaliacoes")
           .select("id, nota, comentario, created_at, cliente:clientes(nome), profissional:profissionais(nome), agendamento:agendamentos(servico:servicos(nome))")
           .eq("salao_id", salaoId)
@@ -144,34 +143,46 @@ export default function ExploreScreen() {
 
   const loadFavorites = async () => {
     if (!salaoId || !clienteId) return;
-    const { data: profs } = await sb
-      .from("profissionais").select("id, nome")
-      .eq("salao_id", salaoId).eq("ativo", true);
-    const { data: favs } = await sb
-      .from("favoritos").select("profissional_id")
-      .eq("cliente_id", clienteId);
-    const favIds = new Set((favs ?? []).map((f: any) => f.profissional_id));
-    const { data: svcCounts } = await sb
-      .from("servicos_profissionais").select("profissional_id");
-    const countMap: Record<string, number> = {};
-    (svcCounts ?? []).forEach((s: any) => {
-      countMap[s.profissional_id] = (countMap[s.profissional_id] || 0) + 1;
-    });
-    const { data: ratings } = await sb
-      .from("avaliacoes").select("profissional_id, nota").eq("salao_id", salaoId);
+
+    // Run 3 queries in parallel instead of 4 sequential full-table scans.
+    // servicos_profissionais is now filtered by salao profissionais only.
+    const [profsResult, favsResult, ratingsResult] = await Promise.all([
+      supabase.from("profissionais")
+        .select("id, nome, servicos_profissionais(count)")
+        .eq("salao_id", salaoId)
+        .eq("ativo", true),
+      supabase.from("favoritos")
+        .select("profissional_id")
+        .eq("cliente_id", clienteId),
+      supabase.from("avaliacoes")
+        .select("profissional_id, nota")
+        .eq("salao_id", salaoId),
+    ]);
+
+    const favIds = new Set(
+      (favsResult.data ?? []).map((f: any) => f.profissional_id as string)
+    );
+
     const ratingMap: Record<string, { sum: number; count: number }> = {};
-    (ratings ?? []).forEach((r: any) => {
+    (ratingsResult.data ?? []).forEach((r: any) => {
       if (!r.profissional_id) return;
       if (!ratingMap[r.profissional_id]) ratingMap[r.profissional_id] = { sum: 0, count: 0 };
       ratingMap[r.profissional_id].sum += r.nota;
       ratingMap[r.profissional_id].count += 1;
     });
-    setFavorites((profs ?? []).map((p: any) => ({
-      id: p.id, profissional_id: p.id, nome: p.nome,
-      servicos_count: countMap[p.id] || 0,
-      avg_rating: ratingMap[p.id] ? ratingMap[p.id].sum / ratingMap[p.id].count : 0,
-      isFav: favIds.has(p.id),
-    })));
+
+    setFavorites(
+      (profsResult.data ?? []).map((p: any) => ({
+        id: p.id,
+        profissional_id: p.id,
+        nome: p.nome,
+        servicos_count: p.servicos_profissionais?.[0]?.count ?? 0,
+        avg_rating: ratingMap[p.id]
+          ? ratingMap[p.id].sum / ratingMap[p.id].count
+          : 0,
+        isFav: favIds.has(p.id),
+      }))
+    );
   };
 
   const toggleFavorite = async (profId: string) => {
@@ -179,10 +190,10 @@ export default function ExploreScreen() {
     const current = favorites.find(f => f.profissional_id === profId);
     if (!current) return;
     if (current.isFav) {
-      await sb.from("favoritos").delete()
+      await supabase.from("favoritos").delete()
         .eq("cliente_id", clienteId).eq("profissional_id", profId);
     } else {
-      await sb.from("favoritos")
+      await supabase.from("favoritos")
         .insert({ cliente_id: clienteId, profissional_id: profId });
     }
     setFavorites(prev =>
@@ -194,9 +205,12 @@ export default function ExploreScreen() {
     return (
       <View style={{ flexDirection: "row", gap: 2 }}>
         {[1, 2, 3, 4, 5].map((star) => (
-          <Text key={star} style={{ fontSize: size, color: star <= rating ? bellusGold : "#ddd" }}>
-            {"\u2605"}
-          </Text>
+          <Ionicons
+            key={star}
+            name={star <= rating ? "star" : "star-outline"}
+            size={size}
+            color={star <= rating ? bellusGold : "#ddd"}
+          />
         ))}
       </View>
     );
@@ -235,9 +249,11 @@ export default function ExploreScreen() {
         </Text>
       </View>
       <TouchableOpacity style={styles.heartBtn} onPress={() => toggleFavorite(item.profissional_id)}>
-        <Text style={{ fontSize: 22, color: item.isFav ? "#e74c3c" : "#ccc" }}>
-          {item.isFav ? "\u2764" : "\u2661"}
-        </Text>
+        <Ionicons
+          name={item.isFav ? "heart" : "heart-outline"}
+          size={22}
+          color={item.isFav ? "#e74c3c" : "#ccc"}
+        />
       </TouchableOpacity>
     </TouchableOpacity>
   );
@@ -372,43 +388,63 @@ export default function ExploreScreen() {
   );
 }
 
+const BG = "#faf8f5";
+const CARD = "#ffffff";
+const GOLD = bellusGold;
+const DARK = bellusDark;
+const MUTED = "#8a7c6e";
+const BORDER = "#ede8e3";
+
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
-  title: { fontSize: 24, fontWeight: "bold", color: bellusDark, padding: 20, paddingBottom: 12 },
-  ratingOverview: { alignItems: "center", paddingBottom: 16 },
-  ratingBig: { fontSize: 36, fontWeight: "bold", color: bellusDark },
-  ratingCount: { fontSize: 13, color: "#999", marginTop: 4 },
-  tabRow: { flexDirection: "row", paddingHorizontal: 20, marginBottom: 12, gap: 10 },
-  tab: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: "#f5f5f5" },
-  tabActive: { backgroundColor: bellusGold },
-  tabText: { fontSize: 14, color: "#666" },
-  tabTextActive: { color: "#fff", fontWeight: "600" },
+  container: { flex: 1, backgroundColor: BG },
+  title: { fontSize: 22, fontWeight: "800", color: DARK, paddingHorizontal: 20, paddingTop: 18, paddingBottom: 4, letterSpacing: 0.5 },
+  ratingOverview: {
+    alignItems: "center", paddingVertical: 16, marginHorizontal: 20, marginBottom: 8,
+    backgroundColor: CARD, borderRadius: 14, borderWidth: 1, borderColor: BORDER,
+  },
+  ratingBig: { fontSize: 40, fontWeight: "800", color: DARK, lineHeight: 46 },
+  ratingCount: { fontSize: 12, color: MUTED, marginTop: 4 },
+  tabRow: {
+    flexDirection: "row", marginHorizontal: 20, marginBottom: 14,
+    backgroundColor: CARD, borderRadius: 14, padding: 4,
+    borderWidth: 1, borderColor: BORDER,
+  },
+  tab: { flex: 1, paddingVertical: 9, borderRadius: 11, alignItems: "center" },
+  tabActive: { backgroundColor: DARK },
+  tabText: { fontSize: 13, color: MUTED, fontWeight: "600" },
+  tabTextActive: { color: "#fff" },
   center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  grid: { paddingHorizontal: 12 },
-  photoCard: { margin: 4, width: PHOTO_SIZE },
-  photoImg: { width: PHOTO_SIZE, height: PHOTO_SIZE, borderRadius: 8, backgroundColor: "#f0f0f0" },
-  photoCaption: { fontSize: 10, color: "#999", marginTop: 4, textAlign: "center" },
-  list: { paddingHorizontal: 20, paddingBottom: 20 },
+  grid: { paddingHorizontal: 12, paddingBottom: 20 },
+  photoCard: { margin: 3, width: PHOTO_SIZE },
+  photoImg: { width: PHOTO_SIZE, height: PHOTO_SIZE, borderRadius: 10, backgroundColor: "#ede8e3" },
+  photoCaption: { fontSize: 9, color: MUTED, marginTop: 3, textAlign: "center" },
+  list: { paddingHorizontal: 16, paddingBottom: 20 },
   reviewCard: {
-    backgroundColor: "#fafafa", borderRadius: 12, padding: 16, marginBottom: 10,
+    backgroundColor: CARD, borderRadius: 14, padding: 16, marginBottom: 10,
+    borderWidth: 1, borderColor: BORDER,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
   },
   reviewHeader: { flexDirection: "row", justifyContent: "space-between", alignItems: "flex-start" },
-  reviewName: { fontSize: 15, fontWeight: "600", color: bellusDark },
-  reviewDate: { fontSize: 12, color: "#999", marginTop: 2 },
-  reviewProfessional: { fontSize: 13, color: bellusGold, marginTop: 8, fontWeight: "500" },
-  reviewComment: { fontSize: 14, color: "#444", marginTop: 8, lineHeight: 20 },
-  empty: { textAlign: "center", color: "#999", marginTop: 40, fontSize: 14 },
+  reviewName: { fontSize: 15, fontWeight: "700", color: DARK },
+  reviewDate: { fontSize: 11, color: MUTED, marginTop: 2 },
+  reviewProfessional: { fontSize: 12, color: GOLD, marginTop: 8, fontWeight: "600" },
+  reviewComment: { fontSize: 14, color: "#555", marginTop: 8, lineHeight: 20 },
+  empty: { textAlign: "center", color: "#bbb", marginTop: 60, fontSize: 14 },
   favCard: {
-    flexDirection: "row", alignItems: "center", backgroundColor: "#fafafa",
-    borderRadius: 12, padding: 14, marginBottom: 10,
+    flexDirection: "row", alignItems: "center", backgroundColor: CARD,
+    borderRadius: 14, padding: 14, marginBottom: 10,
+    borderWidth: 1, borderColor: BORDER,
+    shadowColor: "#000", shadowOffset: { width: 0, height: 1 },
+    shadowOpacity: 0.04, shadowRadius: 4, elevation: 1,
   },
   favAvatar: {
-    width: 44, height: 44, borderRadius: 22, backgroundColor: bellusGold,
-    justifyContent: "center", alignItems: "center", marginRight: 12,
+    width: 48, height: 48, borderRadius: 24, backgroundColor: DARK,
+    justifyContent: "center", alignItems: "center", marginRight: 14,
   },
-  favAvatarText: { color: "#fff", fontSize: 18, fontWeight: "bold" },
+  favAvatarText: { color: GOLD, fontSize: 18, fontWeight: "800" },
   favInfo: { flex: 1 },
-  favName: { fontSize: 15, fontWeight: "600", color: bellusDark },
-  favMeta: { fontSize: 12, color: "#999", marginTop: 2 },
+  favName: { fontSize: 15, fontWeight: "700", color: DARK },
+  favMeta: { fontSize: 12, color: MUTED, marginTop: 3 },
   heartBtn: { padding: 8 },
 });

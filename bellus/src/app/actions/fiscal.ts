@@ -4,18 +4,13 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function db(supabase: SupabaseClient): SupabaseClient<any> {
-  return supabase as SupabaseClient<Record<string, unknown>>;
-}
-
 async function getUserSalaoId(supabase: SupabaseClient) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: usuario } = await db(supabase)
+  const { data: usuario } = await supabase
     .from("usuarios")
     .select("salao_id")
     .eq("id", user.id)
@@ -41,7 +36,7 @@ export async function createDespesa(formData: FormData) {
     return { error: "Datos incompletos." };
   }
 
-  const { error } = await db(supabase).from("despesas").insert({
+  const { error } = await supabase.from("despesas").insert({
     salao_id: salaoId,
     descricao,
     categoria,
@@ -61,7 +56,7 @@ export async function deleteDespesa(id: string) {
   const salaoId = await getUserSalaoId(supabase);
   if (!salaoId) return { error: "No autenticado." };
 
-  const { error } = await db(supabase)
+  const { error } = await supabase
     .from("despesas")
     .delete()
     .eq("id", id)
@@ -80,7 +75,7 @@ export async function getOrCreateConfigFiscal() {
   const salaoId = await getUserSalaoId(supabase);
   if (!salaoId) return { error: "No autenticado.", data: null };
 
-  const { data: existing } = await db(supabase)
+  const { data: existing } = await supabase
     .from("configuracoes_fiscais")
     .select("*")
     .eq("salao_id", salaoId)
@@ -91,7 +86,7 @@ export async function getOrCreateConfigFiscal() {
   }
 
   // Create default config
-  const { data: created, error } = await db(supabase)
+  const { data: created, error } = await supabase
     .from("configuracoes_fiscais")
     .insert({
       salao_id: salaoId,
@@ -132,7 +127,7 @@ export async function updateConfigFiscal(formData: FormData) {
     return { error: "Los porcentajes son obligatorios." };
   }
 
-  const { error } = await db(supabase)
+  const { error } = await supabase
     .from("configuracoes_fiscais")
     .update({
       iva_pct: ivaPct,

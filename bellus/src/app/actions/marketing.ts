@@ -3,19 +3,15 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import type { Database } from "@/types/supabase";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function db(supabase: SupabaseClient): SupabaseClient<any> {
-  return supabase as SupabaseClient<Record<string, unknown>>;
-}
-
-async function getUserSalaoId(supabase: SupabaseClient) {
+async function getUserSalaoId(supabase: SupabaseClient<Database>) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return null;
 
-  const { data: usuario } = await db(supabase)
+  const { data: usuario } = await supabase
     .from("usuarios")
     .select("salao_id")
     .eq("id", user.id)
@@ -37,7 +33,7 @@ export async function getConversations() {
   const salaoId = await getUserSalaoId(supabase);
   if (!salaoId) return [];
 
-  const { data } = await db(supabase)
+  const { data } = await supabase
     .from("marketing_conversas")
     .select("id, titulo, created_at, updated_at")
     .eq("salao_id", salaoId)
@@ -52,7 +48,7 @@ export async function getConversation(id: string) {
   const salaoId = await getUserSalaoId(supabase);
   if (!salaoId) return null;
 
-  const { data } = await db(supabase)
+  const { data } = await supabase
     .from("marketing_conversas")
     .select("*")
     .eq("id", id)
@@ -67,7 +63,7 @@ export async function createConversation() {
   const salaoId = await getUserSalaoId(supabase);
   if (!salaoId) return null;
 
-  const { data } = await db(supabase)
+  const { data } = await supabase
     .from("marketing_conversas")
     .insert({ salao_id: salaoId, titulo: "Nova conversa", mensagens: [] })
     .select("id")
@@ -88,7 +84,7 @@ export async function updateConversation(id: string, mensagens: ChatMessage[], t
   };
   if (titulo) update.titulo = titulo;
 
-  await db(supabase)
+  await supabase
     .from("marketing_conversas")
     .update(update)
     .eq("id", id)
@@ -122,7 +118,7 @@ export async function getCampaigns() {
   const salaoId = await getUserSalaoId(supabase);
   if (!salaoId) return [];
 
-  const { data } = await db(supabase)
+  const { data } = await supabase
     .from("marketing_campanhas")
     .select("*")
     .eq("salao_id", salaoId)
@@ -144,7 +140,7 @@ export async function createCampaign(formData: FormData) {
 
   if (!nome || !plataforma) return { error: "Nombre y plataforma obligatorios." };
 
-  const { error } = await db(supabase).from("marketing_campanhas").insert({
+  const { error } = await supabase.from("marketing_campanhas").insert({
     salao_id: salaoId,
     nome,
     plataforma,
@@ -165,7 +161,7 @@ export async function updateCampaignStatus(id: string, status: string) {
   const salaoId = await getUserSalaoId(supabase);
   if (!salaoId) return { error: "No autenticado." };
 
-  const { error } = await db(supabase)
+  const { error } = await supabase
     .from("marketing_campanhas")
     .update({ status, updated_at: new Date().toISOString() })
     .eq("id", id)
@@ -191,7 +187,7 @@ export async function getIntegrations() {
   const salaoId = await getUserSalaoId(supabase);
   if (!salaoId) return [];
 
-  const { data } = await db(supabase)
+  const { data } = await supabase
     .from("marketing_integracoes")
     .select("id, provider, account_name, connected_at")
     .eq("salao_id", salaoId);
@@ -204,7 +200,7 @@ export async function disconnectIntegration(provider: string) {
   const salaoId = await getUserSalaoId(supabase);
   if (!salaoId) return { error: "No autenticado." };
 
-  await db(supabase)
+  await supabase
     .from("marketing_integracoes")
     .delete()
     .eq("salao_id", salaoId)
@@ -234,7 +230,7 @@ export async function getGeneratedContents() {
   const salaoId = await getUserSalaoId(supabase);
   if (!salaoId) return [];
 
-  const { data } = await db(supabase)
+  const { data } = await supabase
     .from("marketing_conteudos")
     .select("*")
     .eq("salao_id", salaoId)
@@ -254,7 +250,7 @@ export async function saveGeneratedContent(content: {
   const salaoId = await getUserSalaoId(supabase);
   if (!salaoId) return null;
 
-  const { data } = await db(supabase)
+  const { data } = await supabase
     .from("marketing_conteudos")
     .insert({
       salao_id: salaoId,
@@ -285,7 +281,7 @@ export async function getMarketingAnalytics() {
   if (!salaoId) return { channels: [], totalSpend: 0, totalRevenue: 0 };
 
   // Atribuicoes por canal
-  const { data: atribuicoes } = await db(supabase)
+  const { data: atribuicoes } = await supabase
     .from("marketing_atribuicoes")
     .select("canal, cliente_id")
     .eq("salao_id", salaoId);
@@ -297,7 +293,7 @@ export async function getMarketingAnalytics() {
   });
 
   // Total spend from campaigns
-  const { data: campanhas } = await db(supabase)
+  const { data: campanhas } = await supabase
     .from("marketing_campanhas")
     .select("metricas")
     .eq("salao_id", salaoId);
@@ -313,7 +309,7 @@ export async function getMarketingAnalytics() {
   monthStart.setDate(1);
   monthStart.setHours(0, 0, 0, 0);
 
-  const { data: txData } = await db(supabase)
+  const { data: txData } = await supabase
     .from("transacoes")
     .select("valor_final")
     .eq("salao_id", salaoId)
@@ -341,7 +337,7 @@ export async function getMarketingConfig() {
   const salaoId = await getUserSalaoId(supabase);
   if (!salaoId) return null;
 
-  const { data } = await db(supabase)
+  const { data } = await supabase
     .from("marketing_config")
     .select("*")
     .eq("salao_id", salaoId)
@@ -350,7 +346,7 @@ export async function getMarketingConfig() {
   if (data) return data as Record<string, unknown>;
 
   // Create default
-  const { data: created } = await db(supabase)
+  const { data: created } = await supabase
     .from("marketing_config")
     .insert({ salao_id: salaoId })
     .select("*")
@@ -367,15 +363,15 @@ export async function getSalonContext() {
   if (!salaoId) return null;
 
   const [salaoRes, servicosRes, clientesCountRes, agendamentosRes, campanhasRes] = await Promise.all([
-    db(supabase).from("saloes").select("nome, endereco, whatsapp").eq("id", salaoId).single(),
-    db(supabase).from("servicos").select("nome, preco_base, categoria, duracao_minutos").eq("salao_id", salaoId).eq("ativo", true),
-    db(supabase).from("clientes").select("id", { count: "exact", head: true }).eq("salao_id", salaoId),
-    db(supabase)
+    supabase.from("saloes").select("nome, endereco, whatsapp").eq("id", salaoId).single(),
+    supabase.from("servicos").select("nome, preco_base, categoria, duracao_minutos").eq("salao_id", salaoId).eq("ativo", true),
+    supabase.from("clientes").select("id", { count: "exact", head: true }).eq("salao_id", salaoId),
+    supabase
       .from("agendamentos")
       .select("id", { count: "exact", head: true })
       .eq("salao_id", salaoId)
       .gte("data_hora_inicio", new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString()),
-    db(supabase).from("marketing_campanhas").select("nome, plataforma, status, metricas").eq("salao_id", salaoId).in("status", ["ativa", "pausada"]),
+    supabase.from("marketing_campanhas").select("nome, plataforma, status, metricas").eq("salao_id", salaoId).in("status", ["ativa", "pausada"]),
   ]);
 
   type Servico = { nome: string; preco_base: number; categoria: string; duracao_minutos: number };

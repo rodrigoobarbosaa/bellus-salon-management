@@ -117,13 +117,11 @@ export function FiscalView({ salaoId, salaoNome, configFiscal }: FiscalViewProps
 
   const fetchData = useCallback(async () => {
     setLoading(true);
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const sb = supabase as any;
 
     const { start, end } = getTrimestreDates(year, trimestre);
 
     // Fetch transactions (ingresos)
-    const { data: transacoes } = await sb
+    const { data: transacoes } = await supabase
       .from("transacoes")
       .select("valor_final")
       .gte("created_at", start.toISOString())
@@ -134,7 +132,7 @@ export function FiscalView({ salaoId, salaoNome, configFiscal }: FiscalViewProps
     setIngresos(totalIngresos);
 
     // Fetch despesas
-    const { data: rawDespesas } = await sb
+    const { data: rawDespesas } = await supabase
       .from("despesas")
       .select("*")
       .gte("data", start.toISOString().split("T")[0])

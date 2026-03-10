@@ -9,10 +9,21 @@ import {
   Alert,
   RefreshControl,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
+import type { ComponentProps } from "react";
+
+type IoniconsName = ComponentProps<typeof Ionicons>["name"];
 import { useRouter } from "expo-router";
 import { supabase } from "@/lib/supabase";
 import i18n from "@/lib/i18n";
 import { bellusGold, bellusDark } from "@/constants/Colors";
+
+const BG = "#faf8f5";
+const CARD = "#ffffff";
+const GOLD = bellusGold;
+const DARK = bellusDark;
+const MUTED = "#8a7c6e";
+const BORDER = "#ede8e3";
 
 interface Appointment {
   id: string;
@@ -24,6 +35,13 @@ interface Appointment {
   servico_duracao: number;
   profissional_nome: string;
 }
+
+const STATUS_CONFIG: Record<string, { color: string; label: string; icon: IoniconsName }> = {
+  pendente:   { color: "#f59e0b", label: "pending",   icon: "time-outline" },
+  confirmado: { color: "#22c55e", label: "confirmed", icon: "checkmark-circle-outline" },
+  concluido:  { color: "#6b7280", label: "completed", icon: "checkmark-done-outline" },
+  cancelado:  { color: "#ef4444", label: "cancelled", icon: "close-circle-outline" },
+};
 
 export default function AppointmentsScreen() {
   const router = useRouter();
@@ -38,20 +56,14 @@ export default function AppointmentsScreen() {
       const { data: { user } } = await supabase.auth.getUser();
       if (!user?.email) return;
 
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      const sb = supabase as any;
-
-      const { data: cliente } = await sb
-        .from("clientes")
-        .select("id, salao_id")
-        .eq("email", user.email)
-        .single();
+      const { data: cliente } = await supabase
+        .from("clientes").select("id, salao_id").eq("email", user.email).single();
 
       if (!cliente?.id) return;
       setSalaoId(cliente.salao_id ?? null);
 
       const now = new Date().toISOString();
-      let query = sb
+      let query = supabase
         .from("agendamentos")
         .select("id, data_hora_inicio, data_hora_fim, status, notas, servico:servicos(nome, duracao_minutos), profissional:profissionais(nome)")
         .eq("cliente_id", cliente.id);
@@ -64,7 +76,13 @@ export default function AppointmentsScreen() {
 
       const { data } = await query.limit(50);
 
-      const mapped: Appointment[] = (data ?? []).map((a: any) => ({
+      type RawAppt = {
+        id: string; data_hora_inicio: string; data_hora_fim: string;
+        status: string; notas: string | null;
+        servico: { nome: string; duracao_minutos: number } | null;
+        profissional: { nome: string } | null;
+      };
+      const mapped: Appointment[] = ((data as RawAppt[]) ?? []).map((a) => ({
         id: a.id,
         data_hora_inicio: a.data_hora_inicio,
         data_hora_fim: a.data_hora_fim,
@@ -96,8 +114,7 @@ export default function AppointmentsScreen() {
         text: i18n.t("appointments.yes"),
         style: "destructive",
         onPress: async () => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          await (supabase as any).from("agendamentos").update({ status: "cancelado" }).eq("id", apptId);
+          await supabase.from("agendamentos").update({ status: "cancelado" }).eq("id", apptId);
           Alert.alert("Bellus", i18n.t("appointments.cancelSuccess"));
           loadAppointments();
         },
@@ -105,100 +122,129 @@ export default function AppointmentsScreen() {
     ]);
   };
 
-  const formatDateTime = (iso: string) => {
-    const d = new Date(iso);
-    const date = d.toLocaleDateString(i18n.locale, { weekday: "short", day: "numeric", month: "short" });
-    const time = d.toLocaleTimeString(i18n.locale, { hour: "2-digit", minute: "2-digit" });
-    return { date, time };
-  };
+  const formatDate = (iso: string) =>
+    new Date(iso).toLocaleDateString(i18n.locale, {
+      weekday: "short",
+      day: "numeric",
+      month: "short",
+    });
 
-  const statusColor: Record<string, string> = {
-    pendente: "#f59e0b",
-    confirmado: "#22c55e",
-    concluido: "#6b7280",
-    cancelado: "#ef4444",
-  };
+  const formatTime = (iso: string) =>
+    new Date(iso).toLocaleTimeString(i18n.locale, { hour: "2-digit", minute: "2-digit" });
 
   const renderItem = ({ item }: { item: Appointment }) => {
-    const { date, time } = formatDateTime(item.data_hora_inicio);
+    const cfg = STATUS_CONFIG[item.status] ?? { color: "#999", label: item.status, icon: "ellipse-outline" };
     const canCancel = item.status === "pendente" || item.status === "confirmado";
 
     return (
-      <View style={styles.card}>
-        <View style={styles.cardLeft}>
-          <View style={[styles.statusDot, { backgroundColor: statusColor[item.status] ?? "#999" }]} />
-          <View style={{ flex: 1 }}>
-            <Text style={styles.serviceName}>{item.servico_nome}</Text>
-            <Text style={styles.profName}>{item.profissional_nome}</Text>
-            <Text style={styles.dateText}>{date} - {time}</Text>
-            <Text style={[styles.statusText, { color: statusColor[item.status] ?? "#999" }]}>
+      <View style={[styles.card, { borderLeftColor: cfg.color }]}>
+        {/* Header row */}
+        <View style={styles.cardHeader}>
+          <View style={styles.dateBlock}>
+            <Text style={styles.dateText}>{formatDate(item.data_hora_inicio)}</Text>
+            <Text style={styles.timeText}>{formatTime(item.data_hora_inicio)}</Text>
+          </View>
+          <View style={[styles.statusBadge, { backgroundColor: cfg.color + "18" }]}>
+            <Ionicons name={cfg.icon} size={13} color={cfg.color} />
+            <Text style={[styles.statusText, { color: cfg.color }]}>
               {i18n.t(`appointments.status.${item.status}`)}
             </Text>
           </View>
         </View>
-        <View style={{ gap: 6 }}>
-          {canCancel && tab === "upcoming" && (
-            <>
+
+        {/* Service + professional */}
+        <Text style={styles.serviceName}>{item.servico_nome}</Text>
+        <View style={styles.profRow}>
+          <Ionicons name="person-outline" size={13} color={MUTED} />
+          <Text style={styles.profName}>{item.profissional_nome}</Text>
+          <View style={styles.dot} />
+          <Ionicons name="time-outline" size={13} color={MUTED} />
+          <Text style={styles.profName}>{item.servico_duracao} min</Text>
+        </View>
+
+        {/* Actions */}
+        {(canCancel && tab === "upcoming") || (item.status === "concluido" && tab === "past") ? (
+          <View style={styles.actions}>
+            {canCancel && tab === "upcoming" && (
+              <>
+                <TouchableOpacity
+                  style={styles.actionBtn}
+                  onPress={() =>
+                    router.push({
+                      pathname: "/reschedule",
+                      params: {
+                        agendamentoId: item.id,
+                        salaoId: salaoId ?? "",
+                        servicoDuracao: String(item.servico_duracao),
+                      },
+                    })
+                  }
+                >
+                  <Ionicons name="calendar-outline" size={14} color={GOLD} />
+                  <Text style={styles.actionBtnText}>{i18n.t("appointments.reschedule")}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity
+                  style={[styles.actionBtn, styles.actionBtnDanger]}
+                  onPress={() => handleCancel(item.id)}
+                >
+                  <Ionicons name="close-outline" size={14} color="#ef4444" />
+                  <Text style={[styles.actionBtnText, styles.actionBtnTextDanger]}>
+                    {i18n.t("appointments.cancel")}
+                  </Text>
+                </TouchableOpacity>
+              </>
+            )}
+            {item.status === "concluido" && tab === "past" && salaoId && (
               <TouchableOpacity
-                style={styles.rescheduleBtn}
+                style={[styles.actionBtn, styles.actionBtnReview]}
                 onPress={() =>
                   router.push({
-                    pathname: "/reschedule",
+                    pathname: "/review",
                     params: {
                       agendamentoId: item.id,
-                      salaoId: salaoId ?? "",
-                      servicoDuracao: String(item.servico_duracao),
+                      servicoNome: item.servico_nome,
+                      profissionalNome: item.profissional_nome,
+                      salaoId,
                     },
                   })
                 }
               >
-                <Text style={styles.rescheduleText}>{i18n.t("appointments.reschedule")}</Text>
+                <Ionicons name="star-outline" size={14} color={GOLD} />
+                <Text style={styles.actionBtnText}>{i18n.t("appointments.review")}</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.cancelBtn} onPress={() => handleCancel(item.id)}>
-                <Text style={styles.cancelText}>{i18n.t("appointments.cancel")}</Text>
-              </TouchableOpacity>
-            </>
-          )}
-          {item.status === "concluido" && tab === "past" && salaoId && (
-            <TouchableOpacity
-              style={styles.reviewBtn}
-              onPress={() =>
-                router.push({
-                  pathname: "/review",
-                  params: {
-                    agendamentoId: item.id,
-                    servicoNome: item.servico_nome,
-                    profissionalNome: item.profissional_nome,
-                    salaoId,
-                  },
-                })
-              }
-            >
-              <Text style={styles.reviewText}>{i18n.t("appointments.review")}</Text>
-            </TouchableOpacity>
-          )}
-        </View>
+            )}
+          </View>
+        ) : null}
       </View>
     );
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>{i18n.t("appointments.title")}</Text>
-
-      <View style={styles.tabRow}>
+    <View style={styles.root}>
+      {/* Tab selector */}
+      <View style={styles.tabContainer}>
         <TouchableOpacity
-          style={[styles.tab, tab === "upcoming" && styles.tabActive]}
+          style={[styles.tabBtn, tab === "upcoming" && styles.tabBtnActive]}
           onPress={() => setTab("upcoming")}
         >
+          <Ionicons
+            name="calendar-outline"
+            size={16}
+            color={tab === "upcoming" ? "#fff" : MUTED}
+          />
           <Text style={[styles.tabText, tab === "upcoming" && styles.tabTextActive]}>
             {i18n.t("appointments.upcoming")}
           </Text>
         </TouchableOpacity>
         <TouchableOpacity
-          style={[styles.tab, tab === "past" && styles.tabActive]}
+          style={[styles.tabBtn, tab === "past" && styles.tabBtnActive]}
           onPress={() => setTab("past")}
         >
+          <Ionicons
+            name="time-outline"
+            size={16}
+            color={tab === "past" ? "#fff" : MUTED}
+          />
           <Text style={[styles.tabText, tab === "past" && styles.tabTextActive]}>
             {i18n.t("appointments.past")}
           </Text>
@@ -207,7 +253,7 @@ export default function AppointmentsScreen() {
 
       {loading ? (
         <View style={styles.center}>
-          <ActivityIndicator size="large" color={bellusGold} />
+          <ActivityIndicator size="large" color={GOLD} />
         </View>
       ) : (
         <FlatList
@@ -219,10 +265,15 @@ export default function AppointmentsScreen() {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={() => { setRefreshing(true); loadAppointments(); }}
-              tintColor={bellusGold}
+              tintColor={GOLD}
             />
           }
-          ListEmptyComponent={<Text style={styles.empty}>{i18n.t("appointments.empty")}</Text>}
+          ListEmptyComponent={
+            <View style={styles.emptyBox}>
+              <Ionicons name="calendar-clear-outline" size={48} color="#ddd" />
+              <Text style={styles.emptyText}>{i18n.t("appointments.empty")}</Text>
+            </View>
+          }
         />
       )}
     </View>
@@ -230,30 +281,66 @@ export default function AppointmentsScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: "#fff" },
-  title: { fontSize: 24, fontWeight: "bold", color: bellusDark, padding: 20, paddingBottom: 12 },
-  tabRow: { flexDirection: "row", paddingHorizontal: 20, marginBottom: 12, gap: 10 },
-  tab: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 20, backgroundColor: "#f5f5f5" },
-  tabActive: { backgroundColor: bellusGold },
-  tabText: { fontSize: 14, color: "#666" },
-  tabTextActive: { color: "#fff", fontWeight: "600" },
-  center: { flex: 1, justifyContent: "center", alignItems: "center" },
-  list: { paddingHorizontal: 20, paddingBottom: 20 },
-  card: {
-    flexDirection: "row", justifyContent: "space-between", alignItems: "center",
-    backgroundColor: "#fafafa", borderRadius: 12, padding: 16, marginBottom: 10,
+  root: { flex: 1, backgroundColor: BG },
+  tabContainer: {
+    flexDirection: "row",
+    backgroundColor: CARD,
+    margin: 16,
+    borderRadius: 14,
+    padding: 4,
+    borderWidth: 1,
+    borderColor: BORDER,
   },
-  cardLeft: { flexDirection: "row", alignItems: "center", gap: 12, flex: 1 },
-  statusDot: { width: 10, height: 10, borderRadius: 5 },
-  serviceName: { fontSize: 16, fontWeight: "600", color: bellusDark },
-  profName: { fontSize: 13, color: "#666", marginTop: 2 },
-  dateText: { fontSize: 13, color: "#999", marginTop: 2 },
-  statusText: { fontSize: 12, fontWeight: "500", marginTop: 4 },
-  cancelBtn: { borderWidth: 1, borderColor: "#ef4444", borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
-  cancelText: { color: "#ef4444", fontSize: 12 },
-  rescheduleBtn: { borderWidth: 1, borderColor: bellusGold, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
-  rescheduleText: { color: bellusGold, fontSize: 12, fontWeight: "500" },
-  reviewBtn: { borderWidth: 1, borderColor: bellusGold, borderRadius: 8, paddingHorizontal: 12, paddingVertical: 6 },
-  reviewText: { color: bellusGold, fontSize: 12, fontWeight: "500" },
-  empty: { textAlign: "center", color: "#999", marginTop: 40, fontSize: 14 },
+  tabBtn: {
+    flex: 1, flexDirection: "row", alignItems: "center", justifyContent: "center",
+    gap: 6, paddingVertical: 10, borderRadius: 11,
+  },
+  tabBtnActive: { backgroundColor: DARK },
+  tabText: { fontSize: 13, fontWeight: "600", color: MUTED },
+  tabTextActive: { color: "#fff" },
+  center: { flex: 1, justifyContent: "center", alignItems: "center" },
+  list: { paddingHorizontal: 16, paddingBottom: 20 },
+  card: {
+    backgroundColor: CARD,
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 12,
+    borderLeftWidth: 4,
+    borderLeftColor: GOLD,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  cardHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "flex-start",
+    marginBottom: 10,
+  },
+  dateBlock: {},
+  dateText: { fontSize: 13, fontWeight: "600", color: DARK },
+  timeText: { fontSize: 20, fontWeight: "800", color: DARK, lineHeight: 26 },
+  statusBadge: {
+    flexDirection: "row", alignItems: "center", gap: 4,
+    paddingHorizontal: 10, paddingVertical: 4, borderRadius: 20,
+  },
+  statusText: { fontSize: 11, fontWeight: "700" },
+  serviceName: { fontSize: 16, fontWeight: "700", color: DARK, marginBottom: 4 },
+  profRow: { flexDirection: "row", alignItems: "center", gap: 5, marginBottom: 4 },
+  profName: { fontSize: 13, color: MUTED },
+  dot: { width: 3, height: 3, borderRadius: 1.5, backgroundColor: "#ccc" },
+  actions: { flexDirection: "row", gap: 10, marginTop: 12, paddingTop: 12, borderTopWidth: 1, borderTopColor: BORDER },
+  actionBtn: {
+    flexDirection: "row", alignItems: "center", gap: 5,
+    borderWidth: 1.5, borderColor: GOLD, borderRadius: 10,
+    paddingHorizontal: 14, paddingVertical: 8,
+  },
+  actionBtnText: { fontSize: 13, color: GOLD, fontWeight: "600" },
+  actionBtnDanger: { borderColor: "#ef4444" },
+  actionBtnTextDanger: { color: "#ef4444" },
+  actionBtnReview: { borderColor: GOLD },
+  emptyBox: { alignItems: "center", paddingTop: 60, gap: 12 },
+  emptyText: { color: "#bbb", fontSize: 15 },
 });

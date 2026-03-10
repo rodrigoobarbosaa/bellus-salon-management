@@ -4,11 +4,6 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function db(supabase: SupabaseClient): SupabaseClient<any> {
-  return supabase as SupabaseClient<Record<string, unknown>>;
-}
-
 async function getUserSalaoId(supabase: SupabaseClient) {
   const {
     data: { user },
@@ -16,7 +11,7 @@ async function getUserSalaoId(supabase: SupabaseClient) {
 
   if (!user) return null;
 
-  const { data: usuario } = await db(supabase)
+  const { data: usuario } = await supabase
     .from("usuarios")
     .select("salao_id")
     .eq("id", user.id)
@@ -68,7 +63,7 @@ export async function createBloqueio(formData: FormData) {
     }
   }
 
-  const { error } = await db(supabase).from("bloqueios").insert({
+  const { error } = await supabase.from("bloqueios").insert({
     salao_id: salaoId,
     profissional_id,
     data_hora_inicio,
@@ -95,7 +90,7 @@ export async function deleteBloqueio(id: string) {
     return { error: "No autenticado." };
   }
 
-  const { error } = await db(supabase)
+  const { error } = await supabase
     .from("bloqueios")
     .delete()
     .eq("id", id);

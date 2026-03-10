@@ -2,11 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function db(supabase: SupabaseClient): SupabaseClient<any> {
-  return supabase as SupabaseClient<Record<string, unknown>>;
-}
-
 /**
  * GET /api/opt-out?client_id=X
  * Public endpoint for clients to opt out of notifications via link.
@@ -22,7 +17,7 @@ export async function GET(request: NextRequest) {
 
   const supabase = createServiceClient();
 
-  const { error } = await db(supabase)
+  const { error } = await supabase
     .from("clientes")
     .update({ opt_out_notificacoes: true, updated_at: new Date().toISOString() })
     .eq("id", clientId);

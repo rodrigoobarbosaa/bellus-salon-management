@@ -4,11 +4,6 @@ import { createServiceClient } from "@/lib/supabase/service";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { sendBookingConfirmation } from "@/lib/notifications/send-notification";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function db(supabase: SupabaseClient): SupabaseClient<any> {
-  return supabase as SupabaseClient<Record<string, unknown>>;
-}
-
 /**
  * Public booking creation — no auth required.
  * Uses service_role to bypass RLS.
@@ -31,7 +26,7 @@ export async function createPublicBooking(formData: FormData) {
   const supabase = createServiceClient();
 
   // Fetch service duration
-  const { data: servico } = await db(supabase)
+  const { data: servico } = await supabase
     .from("servicos")
     .select("duracao_minutos, nome")
     .eq("id", servicoId)
@@ -50,7 +45,7 @@ export async function createPublicBooking(formData: FormData) {
   let resolvedProfId = profissionalId;
   if (!resolvedProfId) {
     // Get professionals for this service
-    const { data: sps } = await db(supabase)
+    const { data: sps } = await supabase
       .from("servicos_profissionais")
       .select("profissional_id")
       .eq("servico_id", servicoId);
@@ -60,7 +55,7 @@ export async function createPublicBooking(formData: FormData) {
 
     // If no associations, get all active professionals
     if (profIds.length === 0) {
-      const { data: allProfs } = await db(supabase)
+      const { data: allProfs } = await supabase
         .from("profissionais")
         .select("id")
         .eq("salao_id", salaoId)
@@ -71,7 +66,7 @@ export async function createPublicBooking(formData: FormData) {
 
     // Find first available (no conflict)
     for (const pid of profIds) {
-      const { data: conflicts } = await db(supabase)
+      const { data: conflicts } = await supabase
         .from("agendamentos")
         .select("id")
         .eq("profissional_id", pid)
@@ -79,7 +74,7 @@ export async function createPublicBooking(formData: FormData) {
         .lt("data_hora_inicio", fim.toISOString())
         .gt("data_hora_fim", inicio.toISOString());
 
-      const { data: blockConflicts } = await db(supabase)
+      const { data: blockConflicts } = await supabase
         .from("bloqueios")
         .select("id")
         .eq("profissional_id", pid)
@@ -101,7 +96,7 @@ export async function createPublicBooking(formData: FormData) {
   }
 
   // Verify no conflict for resolved professional
-  const { data: conflitos } = await db(supabase)
+  const { data: conflitos } = await supabase
     .from("agendamentos")
     .select("id")
     .eq("profissional_id", resolvedProfId)
@@ -114,7 +109,7 @@ export async function createPublicBooking(formData: FormData) {
   }
 
   // Check bloqueios
-  const { data: bloqueios } = await db(supabase)
+  const { data: bloqueios } = await supabase
     .from("bloqueios")
     .select("id")
     .eq("profissional_id", resolvedProfId)
@@ -129,7 +124,7 @@ export async function createPublicBooking(formData: FormData) {
   const validIdiomas = ["pt", "es", "en", "ru"];
   const idiomaCliente = validIdiomas.includes(idioma) ? idioma : "es";
 
-  const { data: existingClient } = await db(supabase)
+  const { data: existingClient } = await supabase
     .from("clientes")
     .select("id")
     .eq("salao_id", salaoId)
@@ -141,7 +136,7 @@ export async function createPublicBooking(formData: FormData) {
   if (existingClient) {
     clienteId = (existingClient as { id: string }).id;
   } else {
-    const { data: newClient, error: clienteError } = await db(supabase)
+    const { data: newClient, error: clienteError } = await supabase
       .from("clientes")
       .insert({
         salao_id: salaoId,
@@ -160,7 +155,7 @@ export async function createPublicBooking(formData: FormData) {
   }
 
   // Get professional name for notification
-  const { data: profData } = await db(supabase)
+  const { data: profData } = await supabase
     .from("profissionais")
     .select("nome")
     .eq("id", resolvedProfId)
@@ -169,7 +164,7 @@ export async function createPublicBooking(formData: FormData) {
   const profNome = (profData as { nome: string } | null)?.nome ?? "";
 
   // Get salon info for notification
-  const { data: salaoData } = await db(supabase)
+  const { data: salaoData } = await supabase
     .from("saloes")
     .select("nome, endereco")
     .eq("id", salaoId)
@@ -179,7 +174,7 @@ export async function createPublicBooking(formData: FormData) {
   const salaoEndereco = (salaoData as { nome: string; endereco: string | null } | null)?.endereco ?? "";
 
   // Create appointment
-  const { data: agendamento, error: agendamentoError } = await db(supabase)
+  const { data: agendamento, error: agendamentoError } = await supabase
     .from("agendamentos")
     .insert({
       salao_id: salaoId,

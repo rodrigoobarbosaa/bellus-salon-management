@@ -26,9 +26,6 @@ export default function RescheduleScreen() {
   const [busySlots, setBusySlots] = useState<string[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  const sb = supabase as any;
-
   const dates = Array.from({ length: 14 }, (_, i) => {
     const d = new Date();
     d.setDate(d.getDate() + i);
@@ -38,7 +35,7 @@ export default function RescheduleScreen() {
   const loadSlots = useCallback(async () => {
     if (!salaoId || !selectedDate) return;
     try {
-      const { data } = await sb
+      const { data } = await supabase
         .from("agendamentos")
         .select("data_hora_inicio")
         .eq("salao_id", salaoId)
@@ -75,7 +72,7 @@ export default function RescheduleScreen() {
       const inicio = new Date(`${selectedDate}T${selectedTime}:00`);
       const fim = new Date(inicio.getTime() + duracao * 60 * 1000);
 
-      const { error } = await sb
+      const { error } = await supabase
         .from("agendamentos")
         .update({
           data_hora_inicio: inicio.toISOString(),

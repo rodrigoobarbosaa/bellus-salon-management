@@ -4,18 +4,13 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function db(supabase: SupabaseClient): SupabaseClient<any> {
-  return supabase as SupabaseClient<Record<string, unknown>>;
-}
-
 async function getUserSalaoId(supabase: SupabaseClient) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
   if (!user) return { userId: null, salaoId: null };
 
-  const { data: usuario } = await db(supabase)
+  const { data: usuario } = await supabase
     .from("usuarios")
     .select("salao_id")
     .eq("id", user.id)
@@ -46,7 +41,7 @@ export async function updateCliente(formData: FormData) {
     return { error: "Nombre y teléfono son obligatorios." };
   }
 
-  const { error } = await db(supabase)
+  const { error } = await supabase
     .from("clientes")
     .update({
       nome,
@@ -84,7 +79,7 @@ export async function createCliente(formData: FormData) {
     return { error: "Nombre y teléfono son obligatorios." };
   }
 
-  const { data, error } = await db(supabase)
+  const { data, error } = await supabase
     .from("clientes")
     .insert({
       salao_id: salaoId,

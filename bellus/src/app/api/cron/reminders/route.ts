@@ -2,12 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { sendNotification } from "@/lib/notifications/send-notification";
 import { getReminderTemplate, renderTemplate } from "@/lib/notifications/templates";
-import type { SupabaseClient } from "@supabase/supabase-js";
-
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function db(supabase: SupabaseClient): SupabaseClient<any> {
-  return supabase as SupabaseClient<Record<string, unknown>>;
-}
 
 /**
  * GET /api/cron/reminders
@@ -31,7 +25,7 @@ export async function GET(request: NextRequest) {
   const to = new Date(now.getTime() + 25 * 60 * 60 * 1000);
 
   // Fetch eligible appointments (confirmed or pendente, not cancelled)
-  const { data: agendamentos } = await db(supabase)
+  const { data: agendamentos } = await supabase
     .from("agendamentos")
     .select(`
       id,
@@ -60,80 +54,73 @@ export async function GET(request: NextRequest) {
     status: string;
   }>;
 
+  const agendamentoIds = items.map((a) => a.id);
+  const clienteIds   = [...new Set(items.map((a) => a.cliente_id))];
+  const servicoIds   = [...new Set(items.map((a) => a.servico_id))];
+  const profIds      = [...new Set(items.map((a) => a.profissional_id))];
+  const salaoIds     = [...new Set(items.map((a) => a.salao_id))];
+
+  // Batch-fetch all related data and already-sent reminders in parallel
+  const [alreadySentRes, clientesRes, servicosRes, profsRes, saloesRes] = await Promise.all([
+    supabase
+      .from("notificacoes_log")
+      .select("agendamento_id")
+      .in("agendamento_id", agendamentoIds)
+      .eq("tipo", "lembrete_24h"),
+    supabase
+      .from("clientes")
+      .select("id, nome, telefone, idioma_preferido, opt_out_notificacoes")
+      .in("id", clienteIds),
+    supabase
+      .from("servicos")
+      .select("id, nome")
+      .in("id", servicoIds),
+    supabase
+      .from("profissionais")
+      .select("id, nome")
+      .in("id", profIds),
+    supabase
+      .from("saloes")
+      .select("id, nome, endereco")
+      .in("id", salaoIds),
+  ]);
+
+  const alreadySentIds = new Set(
+    ((alreadySentRes.data ?? []) as { agendamento_id: string }[]).map((r) => r.agendamento_id)
+  );
+
+  type ClienteRow = { id: string; nome: string; telefone: string; idioma_preferido: string; opt_out_notificacoes?: boolean };
+  type NomeRow    = { id: string; nome: string };
+  type SalaoRow   = { id: string; nome: string; endereco: string | null };
+
+  const clienteMap = Object.fromEntries(((clientesRes.data ?? []) as ClienteRow[]).map((c) => [c.id, c]));
+  const servicoMap = Object.fromEntries(((servicosRes.data ?? []) as NomeRow[]).map((s) => [s.id, s.nome]));
+  const profMap    = Object.fromEntries(((profsRes.data ?? []) as NomeRow[]).map((p) => [p.id, p.nome]));
+  const salaoMap   = Object.fromEntries(((saloesRes.data ?? []) as SalaoRow[]).map((s) => [s.id, s]));
+
   let sent = 0;
   let skipped = 0;
 
   for (const ag of items) {
-    // Check if reminder already sent for this appointment
-    const { data: existingReminder } = await db(supabase)
-      .from("notificacoes_log")
-      .select("id")
-      .eq("agendamento_id", ag.id)
-      .eq("tipo", "lembrete_24h")
-      .single();
+    if (alreadySentIds.has(ag.id)) { skipped++; continue; }
 
-    if (existingReminder) {
-      skipped++;
-      continue;
-    }
+    const cl = clienteMap[ag.cliente_id];
+    if (!cl || cl.opt_out_notificacoes || !cl.telefone) { skipped++; continue; }
 
-    // Fetch client info
-    const { data: cliente } = await db(supabase)
-      .from("clientes")
-      .select("nome, telefone, idioma_preferido, opt_out_notificacoes")
-      .eq("id", ag.cliente_id)
-      .single();
-
-    if (!cliente) continue;
-
-    const cl = cliente as {
-      nome: string;
-      telefone: string;
-      idioma_preferido: string;
-      opt_out_notificacoes?: boolean;
-    };
-
-    if (cl.opt_out_notificacoes || !cl.telefone) {
-      skipped++;
-      continue;
-    }
-
-    // Fetch service and professional names
-    const { data: servico } = await db(supabase)
-      .from("servicos")
-      .select("nome")
-      .eq("id", ag.servico_id)
-      .single();
-
-    const { data: prof } = await db(supabase)
-      .from("profissionais")
-      .select("nome")
-      .eq("id", ag.profissional_id)
-      .single();
-
-    const { data: salao } = await db(supabase)
-      .from("saloes")
-      .select("nome, endereco")
-      .eq("id", ag.salao_id)
-      .single();
-
-    const servicoNome = (servico as { nome: string } | null)?.nome ?? "";
-    const profNome = (prof as { nome: string } | null)?.nome ?? "";
-    const salaoNome = (salao as { nome: string; endereco: string | null } | null)?.nome ?? "";
-    const salaoEndereco = (salao as { nome: string; endereco: string | null } | null)?.endereco ?? "";
+    const salao = salaoMap[ag.salao_id];
 
     const inicio = new Date(ag.data_hora_inicio);
-    const dateStr = inicio.toISOString().slice(0, 10);
-    const timeStr = inicio.toISOString().slice(11, 16);
+    const dateStr = inicio.toLocaleDateString(cl.idioma_preferido, { day: "numeric", month: "long", year: "numeric" });
+    const timeStr = inicio.toLocaleTimeString(cl.idioma_preferido, { hour: "2-digit", minute: "2-digit" });
 
-    // Check for custom template
-    const { data: customTpl } = await db(supabase)
+    // Custom template (per-salao, per-idioma) — still one query but only if needed
+    const { data: customTpl } = await supabase
       .from("notification_templates")
       .select("template")
       .eq("salao_id", ag.salao_id)
       .eq("tipo", "lembrete_24h")
       .eq("idioma", cl.idioma_preferido)
-      .single();
+      .maybeSingle();
 
     const template = getReminderTemplate(
       cl.idioma_preferido,
@@ -142,12 +129,12 @@ export async function GET(request: NextRequest) {
 
     const message = renderTemplate(template, {
       nome_cliente: cl.nome,
-      servico: servicoNome,
-      profissional: profNome,
+      servico: servicoMap[ag.servico_id] ?? "",
+      profissional: profMap[ag.profissional_id] ?? "",
       data: dateStr,
       hora: timeStr,
-      salao: salaoNome,
-      endereco: salaoEndereco,
+      salao: salao?.nome ?? "",
+      endereco: salao?.endereco ?? "",
     });
 
     await sendNotification({

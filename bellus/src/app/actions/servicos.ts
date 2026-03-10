@@ -6,11 +6,6 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 // Helper: executa query sem type-checking rígido do supabase-js
 // Necessário porque o Database type usa enums que não aceitam string genérica
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-function db(supabase: SupabaseClient): SupabaseClient<any> {
-  return supabase as SupabaseClient<Record<string, unknown>>;
-}
-
 async function getSalaoId(supabase: SupabaseClient) {
   const {
     data: { user },
@@ -18,7 +13,7 @@ async function getSalaoId(supabase: SupabaseClient) {
 
   if (!user) return null;
 
-  const { data: usuario } = await db(supabase)
+  const { data: usuario } = await supabase
     .from("usuarios")
     .select("salao_id")
     .eq("id", user.id)
@@ -56,7 +51,7 @@ export async function createServico(formData: FormData) {
     return { error: "El precio no puede ser negativo." };
   }
 
-  const { error } = await db(supabase).from("servicos").insert({
+  const { error } = await supabase.from("servicos").insert({
     salao_id: salaoId,
     nome,
     descricao,
@@ -104,7 +99,7 @@ export async function updateServico(formData: FormData) {
     return { error: "El precio no puede ser negativo." };
   }
 
-  const { error } = await db(supabase)
+  const { error } = await supabase
     .from("servicos")
     .update({
       nome,
@@ -135,7 +130,7 @@ export async function toggleServicoAtivo(id: string, ativo: boolean) {
     return { error: "No autenticado." };
   }
 
-  const { error } = await db(supabase)
+  const { error } = await supabase
     .from("servicos")
     .update({ ativo, updated_at: new Date().toISOString() })
     .eq("id", id);
@@ -162,7 +157,7 @@ export async function updateServicoProfissionais(
   }
 
   // Remover associações existentes
-  const { error: deleteError } = await db(supabase)
+  const { error: deleteError } = await supabase
     .from("servicos_profissionais")
     .delete()
     .eq("servico_id", servicoId);
@@ -179,7 +174,7 @@ export async function updateServicoProfissionais(
       preco_override: p.preco_override,
     }));
 
-    const { error: insertError } = await db(supabase)
+    const { error: insertError } = await supabase
       .from("servicos_profissionais")
       .insert(rows);
 
