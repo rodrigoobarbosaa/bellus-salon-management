@@ -98,7 +98,7 @@ export async function GET(request: NextRequest) {
       .select("template")
       .eq("salao_id", cl.salao_id)
       .eq("tipo", "lembrete_retorno")
-      .eq("idioma", cl.idioma_preferido)
+      .eq("idioma", cl.idioma_preferido as "pt" | "es" | "en" | "ru")
       .single();
 
     const template = getReturnReminderTemplate(

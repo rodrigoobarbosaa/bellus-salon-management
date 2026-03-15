@@ -22,6 +22,8 @@ interface Servico {
   id: string;
   nome: string;
   duracao_minutos: number;
+  tempo_pausa_minutos?: number | null;
+  duracao_pos_pausa_minutos?: number | null;
 }
 
 interface AgendamentoFormProps {
@@ -48,6 +50,8 @@ export function AgendamentoForm({
   const [selectedCliente, setSelectedCliente] = useState<{ id: string; nome: string } | null>(null);
   const [showNewCliente, setShowNewCliente] = useState(false);
   const [selectedServico, setSelectedServico] = useState("");
+  const [addSecado, setAddSecado] = useState(false);
+  const [secadoHorario, setSecadoHorario] = useState("");
   const [searchTimeout, setSearchTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
 
   // Formatar data para input datetime-local
@@ -60,6 +64,7 @@ export function AgendamentoForm({
   // Calcular hora fim baseado no serviço
   const selectedServicoObj = servicos.find((s) => s.id === selectedServico);
   const duracao = selectedServicoObj?.duracao_minutos ?? 0;
+  const hasPausa = !!(selectedServicoObj?.tempo_pausa_minutos && selectedServicoObj?.duracao_pos_pausa_minutos);
 
   // Buscar clientes com debounce
   useEffect(() => {
@@ -110,6 +115,12 @@ export function AgendamentoForm({
       return;
     }
 
+    // Secado
+    if (addSecado && secadoHorario) {
+      formData.set("add_secado", "true");
+      formData.set("secado_hora_inicio", new Date(secadoHorario).toISOString());
+    }
+
     const result = await createAgendamento(formData);
 
     if (result?.error) {
@@ -124,6 +135,8 @@ export function AgendamentoForm({
     setClienteSearch("");
     setShowNewCliente(false);
     setSelectedServico("");
+    setAddSecado(false);
+    setSecadoHorario("");
     onOpenChange(false);
   }
 
@@ -134,6 +147,8 @@ export function AgendamentoForm({
       setClienteSearch("");
       setShowNewCliente(false);
       setSelectedServico("");
+      setAddSecado(false);
+      setSecadoHorario("");
     }
     onOpenChange(open);
   }
@@ -311,6 +326,58 @@ export function AgendamentoForm({
               disabled={isLoading}
             />
           </div>
+
+          {/* Secado — só aparece se serviço tem pausa configurada */}
+          {hasPausa && selectedServicoObj && (
+            <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
+              <div className="flex items-center gap-3">
+                <input
+                  type="checkbox"
+                  id="add_secado_check"
+                  checked={addSecado}
+                  onChange={(e) => {
+                    setAddSecado(e.target.checked);
+                    if (e.target.checked && defaultDateTime) {
+                      // Auto-sugestão: início + duração aplicação + pausa
+                      const inicioDate = new Date(defaultDateTime);
+                      const sugerido = new Date(
+                        inicioDate.getTime() +
+                          (selectedServicoObj.duracao_minutos + (selectedServicoObj.tempo_pausa_minutos ?? 0)) * 60 * 1000
+                      );
+                      const local = new Date(sugerido.getTime() - sugerido.getTimezoneOffset() * 60000);
+                      setSecadoHorario(local.toISOString().slice(0, 16));
+                    }
+                  }}
+                  className="size-4 rounded border-stone-300 accent-bellus-gold"
+                />
+                <label htmlFor="add_secado_check" className="text-sm font-medium text-amber-700">
+                  Añadir secado/acabado
+                </label>
+              </div>
+              {addSecado && (
+                <>
+                  <p className="text-xs text-amber-600">
+                    Pausa de procesamiento: {selectedServicoObj.tempo_pausa_minutos} min · Secado: {selectedServicoObj.duracao_pos_pausa_minutos} min
+                  </p>
+                  <div className="space-y-1">
+                    <label htmlFor="secado_hora" className="text-xs font-medium text-stone-700">
+                      Hora del secado
+                    </label>
+                    <Input
+                      id="secado_hora"
+                      type="datetime-local"
+                      value={secadoHorario}
+                      onChange={(e) => setSecadoHorario(e.target.value)}
+                      disabled={isLoading}
+                    />
+                    <p className="text-xs text-stone-400">
+                      Puedes ajustar el horario libremente — la profesional queda libre durante la pausa
+                    </p>
+                  </div>
+                </>
+              )}
+            </div>
+          )}
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={isLoading}>

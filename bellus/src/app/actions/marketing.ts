@@ -3,9 +3,13 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import type { Database } from "@/types/supabase";
 
-async function getUserSalaoId(supabase: SupabaseClient<Database>) {
+// Marketing tables not yet in generated Database type — use untyped client
+async function createMarketingClient(): Promise<SupabaseClient> {
+  return (await createClient()) as unknown as SupabaseClient;
+}
+
+async function getUserSalaoId(supabase: SupabaseClient) {
   const {
     data: { user },
   } = await supabase.auth.getUser();
@@ -29,7 +33,7 @@ export interface ChatMessage {
 }
 
 export async function getConversations() {
-  const supabase = await createClient();
+  const supabase = await createMarketingClient();
   const salaoId = await getUserSalaoId(supabase);
   if (!salaoId) return [];
 
@@ -44,7 +48,7 @@ export async function getConversations() {
 }
 
 export async function getConversation(id: string) {
-  const supabase = await createClient();
+  const supabase = await createMarketingClient();
   const salaoId = await getUserSalaoId(supabase);
   if (!salaoId) return null;
 
@@ -59,7 +63,7 @@ export async function getConversation(id: string) {
 }
 
 export async function createConversation() {
-  const supabase = await createClient();
+  const supabase = await createMarketingClient();
   const salaoId = await getUserSalaoId(supabase);
   if (!salaoId) return null;
 
@@ -74,7 +78,7 @@ export async function createConversation() {
 }
 
 export async function updateConversation(id: string, mensagens: ChatMessage[], titulo?: string) {
-  const supabase = await createClient();
+  const supabase = await createMarketingClient();
   const salaoId = await getUserSalaoId(supabase);
   if (!salaoId) return;
 
@@ -114,7 +118,7 @@ export interface Campaign {
 }
 
 export async function getCampaigns() {
-  const supabase = await createClient();
+  const supabase = await createMarketingClient();
   const salaoId = await getUserSalaoId(supabase);
   if (!salaoId) return [];
 
@@ -128,7 +132,7 @@ export async function getCampaigns() {
 }
 
 export async function createCampaign(formData: FormData) {
-  const supabase = await createClient();
+  const supabase = await createMarketingClient();
   const salaoId = await getUserSalaoId(supabase);
   if (!salaoId) return { error: "No autenticado." };
 
@@ -157,7 +161,7 @@ export async function createCampaign(formData: FormData) {
 }
 
 export async function updateCampaignStatus(id: string, status: string) {
-  const supabase = await createClient();
+  const supabase = await createMarketingClient();
   const salaoId = await getUserSalaoId(supabase);
   if (!salaoId) return { error: "No autenticado." };
 
@@ -183,7 +187,7 @@ export interface Integration {
 }
 
 export async function getIntegrations() {
-  const supabase = await createClient();
+  const supabase = await createMarketingClient();
   const salaoId = await getUserSalaoId(supabase);
   if (!salaoId) return [];
 
@@ -196,7 +200,7 @@ export async function getIntegrations() {
 }
 
 export async function disconnectIntegration(provider: string) {
-  const supabase = await createClient();
+  const supabase = await createMarketingClient();
   const salaoId = await getUserSalaoId(supabase);
   if (!salaoId) return { error: "No autenticado." };
 
@@ -226,7 +230,7 @@ export interface GeneratedContent {
 }
 
 export async function getGeneratedContents() {
-  const supabase = await createClient();
+  const supabase = await createMarketingClient();
   const salaoId = await getUserSalaoId(supabase);
   if (!salaoId) return [];
 
@@ -246,7 +250,7 @@ export async function saveGeneratedContent(content: {
   conteudo: Record<string, unknown>;
   servico_id?: string;
 }) {
-  const supabase = await createClient();
+  const supabase = await createMarketingClient();
   const salaoId = await getUserSalaoId(supabase);
   if (!salaoId) return null;
 
@@ -276,7 +280,7 @@ export interface ChannelStats {
 }
 
 export async function getMarketingAnalytics() {
-  const supabase = await createClient();
+  const supabase = await createMarketingClient();
   const salaoId = await getUserSalaoId(supabase);
   if (!salaoId) return { channels: [], totalSpend: 0, totalRevenue: 0 };
 
@@ -333,7 +337,7 @@ export async function getMarketingAnalytics() {
 // --- Config ---
 
 export async function getMarketingConfig() {
-  const supabase = await createClient();
+  const supabase = await createMarketingClient();
   const salaoId = await getUserSalaoId(supabase);
   if (!salaoId) return null;
 
@@ -358,7 +362,7 @@ export async function getMarketingConfig() {
 // --- Salon context for AI chat ---
 
 export async function getSalonContext() {
-  const supabase = await createClient();
+  const supabase = await createMarketingClient();
   const salaoId = await getUserSalaoId(supabase);
   if (!salaoId) return null;
 

@@ -61,10 +61,10 @@ export async function createTransacao(formData: FormData) {
     profissional_id: profissionalId,
     servico_id: servicoId,
     valor,
-    tipo_desconto: tipoDesconto,
+    tipo_desconto: (tipoDesconto === "nenhum" ? null : tipoDesconto) as "percentual" | "fixo" | null,
     valor_desconto: valorDesconto,
     valor_final: Math.round(valorFinal * 100) / 100,
-    forma_pagamento: formaPagamento,
+    forma_pagamento: formaPagamento as "efectivo" | "tarjeta" | "bizum" | "transferencia",
     notas,
   });
 

@@ -23,7 +23,7 @@ PreToolUse Hooks
 Impede leitura parcial (`limit`/`offset`) em arquivos protegidos:
 - `.claude/CLAUDE.md`
 - `.claude/rules/*.md`
-- `.aios-core/development/agents/*.md`
+- `.aiox-core/development/agents/*.md`
 - `supabase/docs/SCHEMA.md`
 - `package.json`, `tsconfig.json`
 - `app/components/ui/icons/icon-map.ts`

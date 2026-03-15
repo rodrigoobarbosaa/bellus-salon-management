@@ -109,13 +109,13 @@ export function CaixaView({ salaoId, profissionais, servicos }: CaixaViewProps) 
         query = query.eq("profissional_id", filterProf);
       }
       if (filterForma) {
-        query = query.eq("forma_pagamento", filterForma);
+        query = query.eq("forma_pagamento", filterForma as "efectivo" | "tarjeta" | "bizum" | "transferencia");
       }
 
       const { data } = await query;
 
       if (data) {
-        const mapped = (data as RawTransacao[]).map((t) => ({
+        const mapped = (data as unknown as RawTransacao[]).map((t) => ({
           ...t,
           cliente_nome: t.clientes?.nome ?? "—",
           servico_nome: servicoMap.get(t.servico_id ?? "") ?? "—",

@@ -5,7 +5,7 @@ import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
-import type { EventClickArg, DateSelectArg, DatesSetArg } from "@fullcalendar/core";
+import type { EventClickArg, DateSelectArg, DatesSetArg, EventDropArg } from "@fullcalendar/core";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Plus, Ban } from "lucide-react";
@@ -13,6 +13,7 @@ import { AgendamentoForm } from "./agendamento-form";
 import { AgendamentoDetail } from "./agendamento-detail";
 import { BloqueioForm } from "./bloqueio-form";
 import { deleteBloqueio } from "@/app/actions/bloqueios";
+import { rescheduleAgendamento } from "@/app/actions/agendamentos";
 import {
   Dialog,
   DialogContent,
@@ -33,6 +34,8 @@ interface Servico {
   nome: string;
   duracao_minutos: number;
   preco_base: number;
+  tempo_pausa_minutos?: number | null;
+  duracao_pos_pausa_minutos?: number | null;
 }
 
 interface Agendamento {
@@ -44,6 +47,8 @@ interface Agendamento {
   data_hora_fim: string;
   status: string;
   notas: string | null;
+  tipo_etapa?: string;
+  agendamento_pai_id?: string | null;
   cliente_nome?: string;
   servico_nome?: string;
   profissional_nome?: string;
@@ -81,6 +86,7 @@ export function AgendaView({
   currentProfissionalId,
 }: AgendaViewProps) {
   const calendarRef = useRef<FullCalendar>(null);
+  const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
   const [bloqueios, setBloqueios] = useState<Bloqueio[]>([]);
   const [createOpen, setCreateOpen] = useState(false);
@@ -107,6 +113,8 @@ export function AgendaView({
 
   type RawAgendamento = Omit<Agendamento, "cliente_nome" | "servico_nome" | "profissional_nome"> & {
     clientes: { nome: string } | null;
+    tipo_etapa?: string;
+    agendamento_pai_id?: string | null;
   };
 
   // Fetch agendamentos + bloqueios
@@ -137,7 +145,7 @@ export function AgendaView({
       const [agResult, blResult] = await Promise.all([agQuery, blQuery]);
 
       if (agResult.data) {
-        const mapped = (agResult.data as RawAgendamento[]).map((a) => ({
+        const mapped = (agResult.data as unknown as RawAgendamento[]).map((a) => ({
           id: a.id,
           cliente_id: a.cliente_id,
           profissional_id: a.profissional_id,
@@ -146,6 +154,8 @@ export function AgendaView({
           data_hora_fim: a.data_hora_fim,
           status: a.status,
           notas: a.notas,
+          tipo_etapa: a.tipo_etapa ?? "unico",
+          agendamento_pai_id: a.agendamento_pai_id ?? null,
           cliente_nome: a.clientes?.nome ?? "Cliente",
           servico_nome: servicoMap.get(a.servico_id)?.nome ?? "Servicio",
           profissional_nome: profMap.get(a.profissional_id)?.nome ?? "Profesional",
@@ -154,7 +164,7 @@ export function AgendaView({
       }
 
       if (blResult.data) {
-        setBloqueios(blResult.data as Bloqueio[]);
+        setBloqueios(blResult.data as unknown as Bloqueio[]);
       }
     },
     [supabase, userRole, currentProfissionalId, servicoMap, profMap]
@@ -205,14 +215,17 @@ export function AgendaView({
         const prof = profMap.get(a.profissional_id);
         const statusColor = STATUS_COLORS[a.status] ?? STATUS_COLORS.pendente;
 
+        const etapaPrefix = a.tipo_etapa === "aplicacao" ? "🎨 " : a.tipo_etapa === "secado" ? "💨 " : "";
+
         return {
           id: a.id,
-          title: `${a.cliente_nome} — ${a.servico_nome}`,
+          title: `${etapaPrefix}${a.cliente_nome} — ${a.servico_nome}`,
           start: a.data_hora_inicio,
           end: a.data_hora_fim,
           backgroundColor: a.status === "cancelado" ? statusColor.bg : (prof?.cor_agenda ?? "#C9A96E"),
           borderColor: a.status === "cancelado" ? statusColor.border : (prof?.cor_agenda ?? "#C9A96E"),
           textColor: a.status === "cancelado" ? statusColor.text : "#fff",
+          editable: a.status !== "cancelado" && a.status !== "concluido",
           extendedProps: { agendamento: a, type: "agendamento" },
           classNames: a.status === "cancelado" ? ["opacity-50", "line-through"] : [],
         };
@@ -260,6 +273,31 @@ export function AgendaView({
     }
   }
 
+  async function handleEventDrop(arg: EventDropArg) {
+    const type = arg.event.extendedProps.type;
+    if (type !== "agendamento") {
+      arg.revert();
+      return;
+    }
+
+    const ag = arg.event.extendedProps.agendamento as Agendamento;
+    if (ag.status === "concluido" || ag.status === "cancelado") {
+      arg.revert();
+      return;
+    }
+
+    const newStart = arg.event.startStr;
+    const newEnd = arg.event.endStr;
+
+    const result = await rescheduleAgendamento(ag.id, newStart, newEnd);
+    if (result.error) {
+      arg.revert();
+      alert(result.error);
+    } else {
+      handleRefresh();
+    }
+  }
+
   function handleRefresh() {
     if (currentRange) fetchData(currentRange.start, currentRange.end);
   }
@@ -285,11 +323,27 @@ export function AgendaView({
     handleRefresh();
   }
 
+  // Badge: contagem de turnos de hoje
+  const todayCount = useMemo(() => {
+    const today = new Date();
+    const todayStr = today.toISOString().slice(0, 10);
+    return agendamentos.filter(
+      (a) => a.status !== "cancelado" && a.data_hora_inicio.slice(0, 10) === todayStr
+    ).length;
+  }, [agendamentos]);
+
   return (
     <>
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <h2 className="text-2xl font-bold text-stone-900">Agenda</h2>
+        <div className="flex items-center gap-3">
+          <h2 className="text-2xl font-bold text-stone-900">Agenda</h2>
+          {todayCount > 0 && (
+            <span className="inline-flex items-center rounded-full bg-bellus-gold/15 px-2.5 py-0.5 text-xs font-semibold text-bellus-gold">
+              {todayCount} turno{todayCount !== 1 ? "s" : ""} hoy
+            </span>
+          )}
+        </div>
         <div className="flex gap-2">
           {userRole === "proprietario" && (
             <Button
@@ -353,7 +407,7 @@ export function AgendaView({
         <FullCalendar
           ref={calendarRef}
           plugins={[dayGridPlugin, timeGridPlugin, interactionPlugin]}
-          initialView="timeGridWeek"
+          initialView={isMobile ? "timeGridDay" : "timeGridWeek"}
           headerToolbar={{
             left: "prev,next today",
             center: "title",
@@ -369,11 +423,13 @@ export function AgendaView({
           selectMirror={true}
           nowIndicator={true}
           weekends={true}
-          editable={false}
+          editable={true}
+          eventDurationEditable={false}
           events={calendarEvents}
           datesSet={handleDatesSet}
           select={handleDateSelect}
           eventClick={handleEventClick}
+          eventDrop={handleEventDrop}
           height="auto"
           stickyHeaderDates={true}
           dayHeaderFormat={{ weekday: "short", day: "numeric" }}

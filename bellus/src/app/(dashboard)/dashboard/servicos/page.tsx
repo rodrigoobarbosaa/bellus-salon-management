@@ -52,6 +52,8 @@ export default async function ServicosPage() {
           preco_base: number;
           categoria: string;
           intervalo_retorno_dias: number | null;
+          tempo_pausa_minutos: number | null;
+          duracao_pos_pausa_minutos: number | null;
           ativo: boolean;
         }>) ?? []}
         profissionais={(profissionais as Array<{ id: string; nome: string }>) ?? []}

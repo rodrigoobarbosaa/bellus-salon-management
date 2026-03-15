@@ -47,7 +47,7 @@ export async function updateCliente(formData: FormData) {
       nome,
       telefone,
       email,
-      idioma_preferido,
+      idioma_preferido: idioma_preferido as "pt" | "es" | "en" | "ru",
       notas,
       intervalo_retorno_dias: intervalo_retorno_dias ? parseInt(intervalo_retorno_dias) : null,
       opt_out_notificacoes: opt_out,
@@ -86,7 +86,7 @@ export async function createCliente(formData: FormData) {
       nome,
       telefone,
       email,
-      idioma_preferido,
+      idioma_preferido: idioma_preferido as "pt" | "es" | "en" | "ru",
       notas,
     })
     .select("id")

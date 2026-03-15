@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 export async function GET() {
   try {
-    const supabase = db(createServiceClient());
+    const supabase = createServiceClient() as unknown as SupabaseClient;
 
     const { data: configs } = await supabase
       .from("marketing_config")

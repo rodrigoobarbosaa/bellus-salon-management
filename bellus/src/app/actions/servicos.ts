@@ -51,14 +51,23 @@ export async function createServico(formData: FormData) {
     return { error: "El precio no puede ser negativo." };
   }
 
+  const tempo_pausa_minutos = formData.get("tempo_pausa_minutos")
+    ? parseInt(formData.get("tempo_pausa_minutos") as string, 10)
+    : null;
+  const duracao_pos_pausa_minutos = formData.get("duracao_pos_pausa_minutos")
+    ? parseInt(formData.get("duracao_pos_pausa_minutos") as string, 10)
+    : null;
+
   const { error } = await supabase.from("servicos").insert({
     salao_id: salaoId,
     nome,
     descricao,
     duracao_minutos,
     preco_base,
-    categoria,
+    categoria: categoria as "corte" | "coloracao" | "mechas" | "tratamento" | "outro",
     intervalo_retorno_dias,
+    tempo_pausa_minutos,
+    duracao_pos_pausa_minutos,
   });
 
   if (error) {
@@ -99,6 +108,13 @@ export async function updateServico(formData: FormData) {
     return { error: "El precio no puede ser negativo." };
   }
 
+  const tempo_pausa_minutos = formData.get("tempo_pausa_minutos")
+    ? parseInt(formData.get("tempo_pausa_minutos") as string, 10)
+    : null;
+  const duracao_pos_pausa_minutos = formData.get("duracao_pos_pausa_minutos")
+    ? parseInt(formData.get("duracao_pos_pausa_minutos") as string, 10)
+    : null;
+
   const { error } = await supabase
     .from("servicos")
     .update({
@@ -106,8 +122,10 @@ export async function updateServico(formData: FormData) {
       descricao,
       duracao_minutos,
       preco_base,
-      categoria,
+      categoria: categoria as "corte" | "coloracao" | "mechas" | "tratamento" | "outro",
       intervalo_retorno_dias,
+      tempo_pausa_minutos,
+      duracao_pos_pausa_minutos,
       updated_at: new Date().toISOString(),
     })
     .eq("id", id);

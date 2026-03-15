@@ -67,8 +67,8 @@ export async function upsertNotificationTemplate(formData: FormData) {
     .from("notification_templates")
     .select("id")
     .eq("salao_id", salaoId)
-    .eq("tipo", tipo)
-    .eq("idioma", idioma)
+    .eq("tipo", tipo as "confirmacao" | "lembrete_24h" | "lembrete_retorno")
+    .eq("idioma", idioma as "pt" | "es" | "en" | "ru")
     .single();
 
   if (existing) {
@@ -81,7 +81,12 @@ export async function upsertNotificationTemplate(formData: FormData) {
   } else {
     const { error } = await supabase
       .from("notification_templates")
-      .insert({ salao_id: salaoId, tipo, idioma, template });
+      .insert({
+        salao_id: salaoId,
+        tipo: tipo as "confirmacao" | "lembrete_24h" | "lembrete_retorno",
+        idioma: idioma as "pt" | "es" | "en" | "ru",
+        template,
+      });
 
     if (error) return { error: error.message };
   }

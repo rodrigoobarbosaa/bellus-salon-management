@@ -93,10 +93,10 @@ export async function GET(request: NextRequest) {
   type NomeRow    = { id: string; nome: string };
   type SalaoRow   = { id: string; nome: string; endereco: string | null };
 
-  const clienteMap = Object.fromEntries(((clientesRes.data ?? []) as ClienteRow[]).map((c) => [c.id, c]));
-  const servicoMap = Object.fromEntries(((servicosRes.data ?? []) as NomeRow[]).map((s) => [s.id, s.nome]));
-  const profMap    = Object.fromEntries(((profsRes.data ?? []) as NomeRow[]).map((p) => [p.id, p.nome]));
-  const salaoMap   = Object.fromEntries(((saloesRes.data ?? []) as SalaoRow[]).map((s) => [s.id, s]));
+  const clienteMap = Object.fromEntries(((clientesRes.data ?? []) as unknown as ClienteRow[]).map((c) => [c.id, c]));
+  const servicoMap = Object.fromEntries(((servicosRes.data ?? []) as unknown as NomeRow[]).map((s) => [s.id, s.nome]));
+  const profMap    = Object.fromEntries(((profsRes.data ?? []) as unknown as NomeRow[]).map((p) => [p.id, p.nome]));
+  const salaoMap   = Object.fromEntries(((saloesRes.data ?? []) as unknown as SalaoRow[]).map((s) => [s.id, s]));
 
   let sent = 0;
   let skipped = 0;
@@ -119,7 +119,7 @@ export async function GET(request: NextRequest) {
       .select("template")
       .eq("salao_id", ag.salao_id)
       .eq("tipo", "lembrete_24h")
-      .eq("idioma", cl.idioma_preferido)
+      .eq("idioma", cl.idioma_preferido as "pt" | "es" | "en" | "ru")
       .maybeSingle();
 
     const template = getReminderTemplate(
