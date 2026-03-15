@@ -38,19 +38,34 @@ const IDIOMA_LABELS: Record<string, string> = { es: "ES", pt: "PT", en: "EN", ru
 export function ClientesList({ clientes, totalClientes, pendingReturn, returnNotifs }: ClientesListProps) {
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
-
-  const filtered = useMemo(() => {
-    if (!search) return clientes;
-    const q = search.toLowerCase();
-    return clientes.filter(
-      (c) =>
-        c.nome.toLowerCase().includes(q) ||
-        c.telefone.includes(q) ||
-        c.email?.toLowerCase().includes(q)
-    );
-  }, [clientes, search]);
+  const [filtroIdioma, setFiltroIdioma] = useState<string | null>(null);
+  const [filtroOptOut, setFiltroOptOut] = useState<boolean | null>(null);
+  const [filtroRetorno, setFiltroRetorno] = useState(false);
 
   const today = new Date().toISOString().slice(0, 10);
+
+  const filtered = useMemo(() => {
+    let result = clientes;
+    if (search) {
+      const q = search.toLowerCase();
+      result = result.filter(
+        (c) =>
+          c.nome.toLowerCase().includes(q) ||
+          c.telefone.includes(q) ||
+          c.email?.toLowerCase().includes(q)
+      );
+    }
+    if (filtroIdioma) {
+      result = result.filter((c) => c.idioma_preferido === filtroIdioma);
+    }
+    if (filtroOptOut !== null) {
+      result = result.filter((c) => c.opt_out_notificacoes === filtroOptOut);
+    }
+    if (filtroRetorno) {
+      result = result.filter((c) => c.proximo_retorno && c.proximo_retorno <= today);
+    }
+    return result;
+  }, [clientes, search, filtroIdioma, filtroOptOut, filtroRetorno, today]);
 
   // Conversion stats
   const totalSent = returnNotifs.length;
@@ -115,6 +130,56 @@ export function ClientesList({ clientes, totalClientes, pendingReturn, returnNot
           onChange={(e) => setSearch(e.target.value)}
           className="pl-10"
         />
+      </div>
+
+      {/* Filters */}
+      <div className="flex flex-wrap gap-2">
+        {/* Idioma filter */}
+        {(["es", "pt", "en", "ru"] as const).map((lang) => (
+          <button
+            key={lang}
+            onClick={() => setFiltroIdioma(filtroIdioma === lang ? null : lang)}
+            className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+              filtroIdioma === lang
+                ? "bg-stone-800 text-white"
+                : "bg-stone-100 text-stone-500 hover:bg-stone-200"
+            }`}
+          >
+            {IDIOMA_LABELS[lang]}
+          </button>
+        ))}
+        <span className="mx-1 self-center text-stone-300">|</span>
+        {/* Opt-out filter */}
+        <button
+          onClick={() => setFiltroOptOut(filtroOptOut === true ? null : true)}
+          className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+            filtroOptOut === true
+              ? "bg-red-600 text-white"
+              : "bg-stone-100 text-stone-500 hover:bg-stone-200"
+          }`}
+        >
+          Opt-out
+        </button>
+        {/* Retorno pendiente filter */}
+        <button
+          onClick={() => setFiltroRetorno(!filtroRetorno)}
+          className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+            filtroRetorno
+              ? "bg-amber-600 text-white"
+              : "bg-stone-100 text-stone-500 hover:bg-stone-200"
+          }`}
+        >
+          Retorno pendiente
+        </button>
+        {/* Clear filters */}
+        {(filtroIdioma || filtroOptOut !== null || filtroRetorno) && (
+          <button
+            onClick={() => { setFiltroIdioma(null); setFiltroOptOut(null); setFiltroRetorno(false); }}
+            className="rounded-full px-3 py-1 text-xs font-medium text-stone-400 hover:text-stone-600"
+          >
+            Limpiar filtros
+          </button>
+        )}
       </div>
 
       {/* Client list */}
