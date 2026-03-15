@@ -4,7 +4,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 export async function GET() {
   try {
-    const supabase = db(createServiceClient());
+    const supabase = createServiceClient() as unknown as SupabaseClient;
 
     const now = new Date();
     const in48h = new Date(now.getTime() + 48 * 60 * 60 * 1000);

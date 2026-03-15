@@ -143,7 +143,7 @@ export async function createPublicBooking(formData: FormData) {
         nome,
         telefone,
         email: email || null,
-        idioma_preferido: idiomaCliente,
+        idioma_preferido: idiomaCliente as "pt" | "es" | "en" | "ru",
       })
       .select("id")
       .single();

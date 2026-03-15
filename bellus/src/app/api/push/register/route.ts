@@ -19,7 +19,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const supabase = db(createServiceClient());
+    const supabase = createServiceClient() as unknown as SupabaseClient;
 
     // Upsert push token
     const { error } = await supabase.from("push_tokens").upsert(

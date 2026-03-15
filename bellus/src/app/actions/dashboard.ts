@@ -149,7 +149,7 @@ export async function getDashboardData() {
   };
 
   const todayAppointments: TodayAppointment[] = (
-    (rawAppointments as RawAppointment[]) || []
+    (rawAppointments as unknown as RawAppointment[]) || []
   ).map((a) => ({
     id: a.id,
     data_hora_inicio: a.data_hora_inicio,
@@ -243,7 +243,7 @@ export async function getDashboardData() {
   ]);
 
   type MonthAppt = { cliente_id: string; servico_id: string };
-  const monthAppts = (monthApptRes.data as MonthAppt[]) || [];
+  const monthAppts = (monthApptRes.data as unknown as MonthAppt[]) || [];
 
   const monthClientCounts: Record<string, number> = {};
   const serviceCounts: Record<string, number> = {};

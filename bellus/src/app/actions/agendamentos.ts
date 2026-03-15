@@ -110,20 +110,84 @@ export async function createAgendamento(formData: FormData) {
     return { error: "El profesional tiene un bloqueo de horario en ese periodo." };
   }
 
-  // Criar agendamento
-  const { error } = await supabase.from("agendamentos").insert({
-    salao_id: salaoId,
-    cliente_id,
-    profissional_id,
-    servico_id,
-    data_hora_inicio: inicio.toISOString(),
-    data_hora_fim: fim.toISOString(),
-    status: "pendente",
-    notas,
-  });
+  // Verificar se é agendamento com secado
+  const addSecado = formData.get("add_secado") === "true";
+  const secadoHoraInicio = formData.get("secado_hora_inicio") as string | null;
 
-  if (error) {
+  // Buscar dados do serviço para secado
+  let tempoPausa = 0;
+  let duracaoPospausa = 0;
+  if (addSecado && secadoHoraInicio) {
+    const { data: servicoFull } = await supabase
+      .from("servicos")
+      .select("tempo_pausa_minutos, duracao_pos_pausa_minutos")
+      .eq("id", servico_id)
+      .single();
+
+    const sf = servicoFull as { tempo_pausa_minutos: number | null; duracao_pos_pausa_minutos: number | null } | null;
+    tempoPausa = sf?.tempo_pausa_minutos ?? 0;
+    duracaoPospausa = sf?.duracao_pos_pausa_minutos ?? 0;
+  }
+
+  const tipoEtapa = addSecado && secadoHoraInicio ? "aplicacao" : "unico";
+
+  // Criar agendamento principal
+  const { data: newAgendamento, error } = await supabase
+    .from("agendamentos")
+    .insert({
+      salao_id: salaoId,
+      cliente_id,
+      profissional_id,
+      servico_id,
+      data_hora_inicio: inicio.toISOString(),
+      data_hora_fim: fim.toISOString(),
+      status: "pendente",
+      notas,
+      tipo_etapa: tipoEtapa as "unico" | "aplicacao" | "secado",
+    })
+    .select("id")
+    .single();
+
+  if (error || !newAgendamento) {
     return { error: "Error al crear el turno. Intenta de nuevo." };
+  }
+
+  // Criar secado vinculado se solicitado
+  if (addSecado && secadoHoraInicio && duracaoPospausa > 0) {
+    const secadoInicio = new Date(secadoHoraInicio);
+    const secadoFim = new Date(secadoInicio.getTime() + duracaoPospausa * 60 * 1000);
+
+    // Verificar conflito do secado
+    const { data: secadoConflitos } = await supabase
+      .from("agendamentos")
+      .select("id")
+      .eq("profissional_id", profissional_id)
+      .neq("status", "cancelado")
+      .neq("id", (newAgendamento as { id: string }).id)
+      .lt("data_hora_inicio", secadoFim.toISOString())
+      .gt("data_hora_fim", secadoInicio.toISOString());
+
+    if (secadoConflitos && (secadoConflitos as Array<{ id: string }>).length > 0) {
+      // Conflito no secado - avisar mas manter a aplicação
+      return { error: "Turno creado, pero conflicto de horario en el secado. Ajusta el horario del secado." };
+    }
+
+    const { error: secadoError } = await supabase.from("agendamentos").insert({
+      salao_id: salaoId,
+      cliente_id,
+      profissional_id,
+      servico_id,
+      data_hora_inicio: secadoInicio.toISOString(),
+      data_hora_fim: secadoFim.toISOString(),
+      status: "pendente",
+      notas: notas ? `Secado — ${notas}` : "Secado",
+      tipo_etapa: "secado" as "unico" | "aplicacao" | "secado",
+      agendamento_pai_id: (newAgendamento as { id: string }).id,
+    });
+
+    if (secadoError) {
+      return { error: "Turno principal creado, pero error al crear el secado." };
+    }
   }
 
   revalidatePath("/dashboard/agenda");
@@ -165,7 +229,7 @@ export async function updateAgendamentoStatus(id: string, status: string) {
 
   const { error } = await supabase
     .from("agendamentos")
-    .update({ status, updated_at: new Date().toISOString() })
+    .update({ status: status as "pendente" | "confirmado" | "concluido" | "cancelado", updated_at: new Date().toISOString() })
     .eq("id", id);
 
   if (error) {
@@ -208,5 +272,177 @@ export async function updateAgendamentoStatus(id: string, status: string) {
 }
 
 export async function cancelAgendamento(id: string) {
-  return updateAgendamentoStatus(id, "cancelado");
+  const result = await updateAgendamentoStatus(id, "cancelado");
+
+  // Cancelar secado vinculado em cascata
+  const supabase = await createClient();
+  const { data: filhos } = await supabase
+    .from("agendamentos")
+    .select("id")
+    .eq("agendamento_pai_id", id)
+    .neq("status", "cancelado");
+
+  if (filhos) {
+    for (const filho of filhos as Array<{ id: string }>) {
+      await supabase
+        .from("agendamentos")
+        .update({ status: "cancelado" as "cancelado", updated_at: new Date().toISOString() })
+        .eq("id", filho.id);
+    }
+  }
+
+  return result;
+}
+
+export async function updateAgendamento(id: string, formData: FormData) {
+  const supabase = await createClient();
+  const { salaoId } = await getUserSalaoId(supabase);
+
+  if (!salaoId) {
+    return { error: "No autenticado o salón no encontrado." };
+  }
+
+  const profissional_id = formData.get("profissional_id") as string;
+  const servico_id = formData.get("servico_id") as string;
+  const data_hora_inicio = formData.get("data_hora_inicio") as string;
+  const notas = (formData.get("notas") as string) || null;
+
+  if (!profissional_id || !servico_id || !data_hora_inicio) {
+    return { error: "Profesional, servicio y fecha/hora son obligatorios." };
+  }
+
+  // Buscar duração do serviço
+  const { data: servico } = await supabase
+    .from("servicos")
+    .select("duracao_minutos")
+    .eq("id", servico_id)
+    .single();
+
+  if (!servico) {
+    return { error: "Servicio no encontrado." };
+  }
+
+  const duracao = (servico as { duracao_minutos: number }).duracao_minutos;
+  const inicio = new Date(data_hora_inicio);
+  const fim = new Date(inicio.getTime() + duracao * 60 * 1000);
+
+  // Verificar conflito (excluindo o próprio agendamento)
+  const { data: conflitos } = await supabase
+    .from("agendamentos")
+    .select("id")
+    .eq("profissional_id", profissional_id)
+    .neq("status", "cancelado")
+    .neq("id", id)
+    .lt("data_hora_inicio", fim.toISOString())
+    .gt("data_hora_fim", inicio.toISOString());
+
+  if (conflitos && (conflitos as Array<{ id: string }>).length > 0) {
+    return { error: "Conflicto de horario: el profesional ya tiene un turno en ese horario." };
+  }
+
+  // Verificar bloqueios
+  const { data: bloqueios } = await supabase
+    .from("bloqueios")
+    .select("id")
+    .eq("profissional_id", profissional_id)
+    .lt("data_hora_inicio", fim.toISOString())
+    .gt("data_hora_fim", inicio.toISOString());
+
+  if (bloqueios && (bloqueios as Array<{ id: string }>).length > 0) {
+    return { error: "El profesional tiene un bloqueo de horario en ese periodo." };
+  }
+
+  const { error } = await supabase
+    .from("agendamentos")
+    .update({
+      profissional_id,
+      servico_id,
+      data_hora_inicio: inicio.toISOString(),
+      data_hora_fim: fim.toISOString(),
+      notas,
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+
+  if (error) {
+    return { error: "Error al actualizar el turno." };
+  }
+
+  revalidatePath("/dashboard/agenda");
+  return { success: true };
+}
+
+export async function rescheduleAgendamento(
+  id: string,
+  newStart: string,
+  newEnd: string
+) {
+  const supabase = await createClient();
+  const { salaoId } = await getUserSalaoId(supabase);
+
+  if (!salaoId) {
+    return { error: "No autenticado." };
+  }
+
+  // Buscar dados do agendamento
+  const { data: agendamento } = await supabase
+    .from("agendamentos")
+    .select("profissional_id, status")
+    .eq("id", id)
+    .single();
+
+  if (!agendamento) {
+    return { error: "Turno no encontrado." };
+  }
+
+  const ag = agendamento as { profissional_id: string; status: string };
+
+  if (ag.status === "concluido" || ag.status === "cancelado") {
+    return { error: "No se puede mover un turno completado o cancelado." };
+  }
+
+  const inicio = new Date(newStart);
+  const fim = new Date(newEnd);
+
+  // Verificar conflito (excluindo o próprio)
+  const { data: conflitos } = await supabase
+    .from("agendamentos")
+    .select("id")
+    .eq("profissional_id", ag.profissional_id)
+    .neq("status", "cancelado")
+    .neq("id", id)
+    .lt("data_hora_inicio", fim.toISOString())
+    .gt("data_hora_fim", inicio.toISOString());
+
+  if (conflitos && (conflitos as Array<{ id: string }>).length > 0) {
+    return { error: "Conflicto de horario en el nuevo horario." };
+  }
+
+  // Verificar bloqueios
+  const { data: bloqueios } = await supabase
+    .from("bloqueios")
+    .select("id")
+    .eq("profissional_id", ag.profissional_id)
+    .lt("data_hora_inicio", fim.toISOString())
+    .gt("data_hora_fim", inicio.toISOString());
+
+  if (bloqueios && (bloqueios as Array<{ id: string }>).length > 0) {
+    return { error: "Hay un bloqueo de horario en el nuevo periodo." };
+  }
+
+  const { error } = await supabase
+    .from("agendamentos")
+    .update({
+      data_hora_inicio: inicio.toISOString(),
+      data_hora_fim: fim.toISOString(),
+      updated_at: new Date().toISOString(),
+    })
+    .eq("id", id);
+
+  if (error) {
+    return { error: "Error al mover el turno." };
+  }
+
+  revalidatePath("/dashboard/agenda");
+  return { success: true };
 }

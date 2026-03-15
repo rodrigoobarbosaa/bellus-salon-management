@@ -3,13 +3,13 @@
  * Claude Code Hook: PreCompact Session Digest
  *
  * This hook is registered with Claude Code to trigger before context compact.
- * It delegates to the unified hook runner in aios-core.
+ * It delegates to the unified hook runner in aiox-core.
  *
  * Installation:
  * - Claude Code automatically discovers hooks in .claude/hooks/
  * - Hook naming: {event}-{name}.js (e.g., precompact-session-digest.js)
  *
- * @see .aios-core/hooks/unified/runners/precompact-runner.js
+ * @see .aiox-core/hooks/unified/runners/precompact-runner.js
  * @see Story MIS-3 - Session Digest (PreCompact Hook)
  */
 
@@ -21,7 +21,7 @@ const path = require('path');
 const PROJECT_ROOT = path.resolve(__dirname, '..', '..');
 const runnerPath = path.join(
   PROJECT_ROOT,
-  '.aios-core',
+  '.aiox-core',
   'hooks',
   'unified',
   'runners',

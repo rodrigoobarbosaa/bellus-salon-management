@@ -19,7 +19,7 @@ const _BOOT_TIME = process.hrtime.bigint();
 
 const path = require('path');
 const { resolveHookRuntime, buildHookOutput } = require(
-  path.join(__dirname, '..', '..', '.aios-core', 'core', 'synapse', 'runtime', 'hook-runtime.js'),
+  path.join(__dirname, '..', '..', '.aiox-core', 'core', 'synapse', 'runtime', 'hook-runtime.js'),
 );
 
 /** Safety timeout (ms) — defense-in-depth; Claude Code also manages hook timeout. */
@@ -54,7 +54,7 @@ async function main() {
   if (runtime.sessionId && runtime.sessionsDir) {
     try {
       const { updateSession } = require(
-        path.join(runtime.cwd, '.aios-core', 'core', 'synapse', 'session', 'session-manager.js'),
+        path.join(runtime.cwd, '.aiox-core', 'core', 'synapse', 'session', 'session-manager.js'),
       );
       updateSession(runtime.sessionId, runtime.sessionsDir, {
         context: { last_bracket: result.bracket || 'FRESH' },

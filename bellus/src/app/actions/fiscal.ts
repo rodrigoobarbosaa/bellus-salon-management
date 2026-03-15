@@ -39,7 +39,7 @@ export async function createDespesa(formData: FormData) {
   const { error } = await supabase.from("despesas").insert({
     salao_id: salaoId,
     descricao,
-    categoria,
+    categoria: categoria as "produtos" | "aluguel" | "formacao" | "suprimentos" | "cuota_autonomos" | "outros",
     valor,
     data,
     notas,
