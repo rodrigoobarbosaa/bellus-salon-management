@@ -7,6 +7,18 @@
     {
       "path": "/api/cron/return-reminders",
       "schedule": "0 9 * * *"
+    },
+    {
+      "path": "/api/cron/marketing-triggers",
+      "schedule": "0 8 * * *"
+    },
+    {
+      "path": "/api/cron/marketing-weekly-report",
+      "schedule": "0 10 * * 1"
+    },
+    {
+      "path": "/api/cron/reactivation-check",
+      "schedule": "0 11 * * *"
     }
   ]
 }
