@@ -114,6 +114,7 @@ export async function GET(request: NextRequest) {
       nome_cliente: cl.nome,
       salao: salaoNome,
       link_booking: bookingUrl,
+      link_optout: `${process.env.NEXT_PUBLIC_APP_URL || "https://bellus.app"}/api/opt-out?client_id=${cl.id}`,
     });
 
     await sendNotification({

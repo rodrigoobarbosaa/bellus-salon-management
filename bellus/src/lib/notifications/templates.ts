@@ -16,7 +16,8 @@ Tu cita en *{salao}* ha sido reservada:
 
 Te esperamos. Si necesitas cancelar, contacta al salón.
 
-— {salao}`,
+— {salao}
+_No deseas recibir mensajes? {link_optout}_`,
 
   pt: `Olá {nome_cliente}! 👋
 
@@ -30,7 +31,8 @@ Sua reserva em *{salao}* foi confirmada:
 
 Te esperamos! Se precisar cancelar, entre em contato com o salão.
 
-— {salao}`,
+— {salao}
+_Não quer receber mensagens? {link_optout}_`,
 
   en: `Hi {nome_cliente}! 👋
 
@@ -44,7 +46,8 @@ Your appointment at *{salao}* has been booked:
 
 We look forward to seeing you! To cancel, please contact the salon.
 
-— {salao}`,
+— {salao}
+_Don't want to receive messages? {link_optout}_`,
 
   ru: `Здравствуйте, {nome_cliente}! 👋
 
@@ -58,7 +61,8 @@ We look forward to seeing you! To cancel, please contact the salon.
 
 Ждём вас! Для отмены свяжитесь с салоном.
 
-— {salao}`,
+— {salao}
+_Не хотите получать сообщения? {link_optout}_`,
 };
 
 export const REMINDER_24H_TEMPLATES: Record<string, string> = {
@@ -70,7 +74,8 @@ Te recordamos que mañana tienes cita en *{salao}*:
 📅 {data} a las {hora}
 📍 {endereco}
 
-¡Te esperamos!`,
+¡Te esperamos!
+_No deseas recibir mensajes? {link_optout}_`,
 
   pt: `Olá {nome_cliente} 👋
 
@@ -80,7 +85,8 @@ Lembrete: amanhã você tem reserva em *{salao}*:
 📅 {data} às {hora}
 📍 {endereco}
 
-Te esperamos!`,
+Te esperamos!
+_Não quer receber mensagens? {link_optout}_`,
 
   en: `Hi {nome_cliente} 👋
 
@@ -90,7 +96,8 @@ Reminder: you have an appointment tomorrow at *{salao}*:
 📅 {data} at {hora}
 📍 {endereco}
 
-See you there!`,
+See you there!
+_Don't want to receive messages? {link_optout}_`,
 
   ru: `Здравствуйте, {nome_cliente} 👋
 
@@ -100,7 +107,8 @@ See you there!`,
 📅 {data} в {hora}
 📍 {endereco}
 
-Ждём вас!`,
+Ждём вас!
+_Не хотите получать сообщения? {link_optout}_`,
 };
 
 export const RETURN_REMINDER_TEMPLATES: Record<string, string> = {
@@ -113,7 +121,8 @@ Ha pasado un tiempo desde tu última visita. ¿Quieres agendar tu próxima cita?
 📅 Reserva aquí: {link_booking}
 
 ¡Te esperamos!
-— {salao}`,
+— {salao}
+_No deseas recibir mensajes? {link_optout}_`,
 
   pt: `Olá {nome_cliente} 👋
 
@@ -124,7 +133,8 @@ Já faz um tempo desde sua última visita. Que tal agendar a próxima?
 📅 Reserve aqui: {link_booking}
 
 Te esperamos!
-— {salao}`,
+— {salao}
+_Não quer receber mensagens? {link_optout}_`,
 
   en: `Hi {nome_cliente} 👋
 
@@ -135,7 +145,8 @@ It's been a while since your last visit. Ready to book your next appointment?
 📅 Book here: {link_booking}
 
 See you soon!
-— {salao}`,
+— {salao}
+_Don't want to receive messages? {link_optout}_`,
 
   ru: `Здравствуйте, {nome_cliente} 👋
 
@@ -146,7 +157,8 @@ See you soon!
 📅 Записаться: {link_booking}
 
 Ждём вас!
-— {salao}`,
+— {salao}
+_Не хотите получать сообщения? {link_optout}_`,
 };
 
 /**

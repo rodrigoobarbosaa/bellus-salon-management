@@ -135,6 +135,7 @@ export async function GET(request: NextRequest) {
       hora: timeStr,
       salao: salao?.nome ?? "",
       endereco: salao?.endereco ?? "",
+      link_optout: `${process.env.NEXT_PUBLIC_APP_URL || "https://bellus.app"}/api/opt-out?client_id=${ag.cliente_id}`,
     });
 
     await sendNotification({
