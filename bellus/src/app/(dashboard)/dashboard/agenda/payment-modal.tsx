@@ -125,46 +125,76 @@ export function PaymentModal({
   }
 
   function handleDownloadRecibo() {
-    // Generate simple text receipt for download
-    const lines = [
-      "═══════════════════════════════",
-      "           RECIBO",
-      "═══════════════════════════════",
-      "",
-      `Cliente: ${agendamento.cliente_nome ?? "—"}`,
-      `Servicio: ${agendamento.servico_nome ?? servico?.nome ?? "—"}`,
-      `Profesional: ${agendamento.profissional_nome ?? "—"}`,
-      `Fecha: ${new Date().toLocaleDateString("es-ES")}`,
-      "",
-      "───────────────────────────────",
-      `Precio base:     ${formatCurrency(precoBase)}`,
-    ];
+    import("jspdf").then(({ jsPDF }) => {
+      const doc = new jsPDF({ unit: "mm", format: [80, 160] });
+      const w = 80;
+      const fecha = new Date().toLocaleDateString("es-ES");
+      let y = 10;
 
-    if (tipoDesconto && parseFloat(valorDesconto) > 0) {
-      const descLabel = tipoDesconto === "percentual"
-        ? `Descuento (${valorDesconto}%):`
-        : "Descuento:";
-      lines.push(`${descLabel.padEnd(17)} -${formatCurrency(precoBase - valorFinal)}`);
-    }
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(14);
+      doc.text("RECIBO", w / 2, y, { align: "center" });
+      y += 8;
 
-    lines.push(
-      "───────────────────────────────",
-      `TOTAL:           ${formatCurrency(valorFinal)}`,
-      `Forma de pago:   ${FORMAS_PAGAMENTO.find(f => f.value === formaPagamento)?.label ?? formaPagamento}`,
-      "",
-      "═══════════════════════════════",
-      "         ¡Gracias!",
-      "═══════════════════════════════",
-    );
+      doc.setDrawColor(180);
+      doc.line(5, y, w - 5, y);
+      y += 6;
 
-    const text = lines.join("\n");
-    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement("a");
-    a.href = url;
-    a.download = `recibo-${new Date().toISOString().slice(0, 10)}.txt`;
-    a.click();
-    URL.revokeObjectURL(url);
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      const info = [
+        ["Cliente", agendamento.cliente_nome ?? "—"],
+        ["Servicio", agendamento.servico_nome ?? servico?.nome ?? "—"],
+        ["Profesional", agendamento.profissional_nome ?? "—"],
+        ["Fecha", fecha],
+      ];
+      for (const [label, value] of info) {
+        doc.setFont("helvetica", "bold");
+        doc.text(`${label}:`, 5, y);
+        doc.setFont("helvetica", "normal");
+        doc.text(value, 30, y);
+        y += 5;
+      }
+
+      y += 3;
+      doc.line(5, y, w - 5, y);
+      y += 6;
+
+      doc.setFontSize(9);
+      doc.text("Precio base:", 5, y);
+      doc.text(formatCurrency(precoBase), w - 5, y, { align: "right" });
+      y += 5;
+
+      if (tipoDesconto && parseFloat(valorDesconto) > 0) {
+        const descLabel = tipoDesconto === "percentual"
+          ? `Descuento (${valorDesconto}%):`
+          : "Descuento:";
+        doc.text(descLabel, 5, y);
+        doc.text(`-${formatCurrency(precoBase - valorFinal)}`, w - 5, y, { align: "right" });
+        y += 5;
+      }
+
+      y += 2;
+      doc.setDrawColor(0);
+      doc.line(5, y, w - 5, y);
+      y += 6;
+
+      doc.setFont("helvetica", "bold");
+      doc.setFontSize(12);
+      doc.text("TOTAL:", 5, y);
+      doc.text(formatCurrency(valorFinal), w - 5, y, { align: "right" });
+      y += 6;
+
+      doc.setFont("helvetica", "normal");
+      doc.setFontSize(9);
+      doc.text(`Pago: ${FORMAS_PAGAMENTO.find(f => f.value === formaPagamento)?.label ?? formaPagamento}`, 5, y);
+      y += 10;
+
+      doc.setFontSize(10);
+      doc.text("¡Gracias por su visita!", w / 2, y, { align: "center" });
+
+      doc.save(`recibo-${new Date().toISOString().slice(0, 10)}.pdf`);
+    });
   }
 
   if (success) {

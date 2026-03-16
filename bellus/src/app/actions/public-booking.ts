@@ -210,6 +210,7 @@ export async function createPublicBooking(formData: FormData) {
       hora,
       salao: salaoNome,
       endereco: salaoEndereco,
+      link_optout: `${process.env.NEXT_PUBLIC_APP_URL || "https://bellus.app"}/api/opt-out?client_id=${clienteId}`,
     },
   }).catch((err) => {
     console.error("Error sending confirmation:", err);
