@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { signUp } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 export default function RegisterPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const t = useTranslations("auth");
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -22,7 +24,7 @@ export default function RegisterPage() {
     const confirmPassword = formData.get("confirmPassword") as string;
 
     if (password !== confirmPassword) {
-      setError("Las contraseñas no coinciden.");
+      setError(t("passwordMismatch"));
       setIsLoading(false);
       return;
     }
@@ -38,20 +40,20 @@ export default function RegisterPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-center text-xl">Crear cuenta</CardTitle>
+        <CardTitle className="text-center text-xl">{t("register")}</CardTitle>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">{error}</div>}
           <div className="space-y-2">
             <label htmlFor="nome" className="text-sm font-medium text-stone-700">
-              Nombre completo
+              {t("name")}
             </label>
             <Input
               id="nome"
               name="nome"
               type="text"
-              placeholder="Tu nombre"
+              placeholder={t("namePlaceholder")}
               required
               autoComplete="name"
               disabled={isLoading}
@@ -59,20 +61,20 @@ export default function RegisterPage() {
           </div>
           <div className="space-y-2">
             <label htmlFor="salonName" className="text-sm font-medium text-stone-700">
-              Nombre del salón
+              {t("salonName")}
             </label>
             <Input
               id="salonName"
               name="salonName"
               type="text"
-              placeholder="Mi Salón de Belleza"
+              placeholder={t("salonNamePlaceholder")}
               required
               disabled={isLoading}
             />
           </div>
           <div className="space-y-2">
             <label htmlFor="email" className="text-sm font-medium text-stone-700">
-              Correo electrónico
+              {t("email")}
             </label>
             <Input
               id="email"
@@ -86,7 +88,7 @@ export default function RegisterPage() {
           </div>
           <div className="space-y-2">
             <label htmlFor="password" className="text-sm font-medium text-stone-700">
-              Contraseña
+              {t("password")}
             </label>
             <Input
               id="password"
@@ -101,7 +103,7 @@ export default function RegisterPage() {
           </div>
           <div className="space-y-2">
             <label htmlFor="confirmPassword" className="text-sm font-medium text-stone-700">
-              Confirmar contraseña
+              {t("confirmPassword")}
             </label>
             <Input
               id="confirmPassword"
@@ -117,10 +119,10 @@ export default function RegisterPage() {
         </CardContent>
         <CardFooter className="flex flex-col gap-3">
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Creando cuenta..." : "Crear cuenta"}
+            {isLoading ? t("creating") : t("register")}
           </Button>
           <Link href="/login" className="text-sm text-stone-500 hover:text-stone-700">
-            ¿Ya tienes cuenta? Iniciar sesión
+            {t("hasAccount")}
           </Link>
         </CardFooter>
       </form>

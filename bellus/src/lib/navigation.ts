@@ -14,41 +14,41 @@ import {
 
 export interface NavItem {
   href: string;
-  label: string;
+  labelKey: string;
   icon: LucideIcon;
 }
 
 export const menuItems: Record<"proprietario" | "profissional", NavItem[]> = {
   proprietario: [
-    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/dashboard/agenda", label: "Agenda", icon: Calendar },
-    { href: "/dashboard/clientes", label: "Clientes", icon: Users },
-    { href: "/dashboard/servicos", label: "Servicios", icon: Scissors },
-    { href: "/dashboard/caixa", label: "Caja", icon: CreditCard },
-    { href: "/dashboard/fiscal", label: "Fiscal", icon: Receipt },
-    { href: "/dashboard/marketing", label: "Marketing", icon: Megaphone },
-    { href: "/dashboard/notificacoes", label: "Notificaciones", icon: Bell },
-    { href: "/dashboard/equipe", label: "Equipo", icon: UserCog },
-    { href: "/dashboard/configuracoes", label: "Ajustes", icon: Settings },
+    { href: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
+    { href: "/dashboard/agenda", labelKey: "nav.agenda", icon: Calendar },
+    { href: "/dashboard/clientes", labelKey: "nav.clientes", icon: Users },
+    { href: "/dashboard/servicos", labelKey: "nav.servicos", icon: Scissors },
+    { href: "/dashboard/caixa", labelKey: "nav.caixa", icon: CreditCard },
+    { href: "/dashboard/fiscal", labelKey: "nav.fiscal", icon: Receipt },
+    { href: "/dashboard/marketing", labelKey: "nav.marketing", icon: Megaphone },
+    { href: "/dashboard/notificacoes", labelKey: "nav.notificacoes", icon: Bell },
+    { href: "/dashboard/equipe", labelKey: "nav.equipe", icon: UserCog },
+    { href: "/dashboard/configuracoes", labelKey: "nav.configuracoes", icon: Settings },
   ],
   profissional: [
-    { href: "/dashboard", label: "Dashboard", icon: LayoutDashboard },
-    { href: "/dashboard/agenda", label: "Mi Agenda", icon: Calendar },
-    { href: "/dashboard/atendimentos", label: "Mis Citas", icon: Scissors },
+    { href: "/dashboard", labelKey: "nav.dashboard", icon: LayoutDashboard },
+    { href: "/dashboard/agenda", labelKey: "nav.minhaAgenda", icon: Calendar },
+    { href: "/dashboard/atendimentos", labelKey: "nav.atendimentos", icon: Scissors },
   ],
 };
 
 export const mobileNavItems: Record<"proprietario" | "profissional", NavItem[]> = {
   proprietario: [
-    { href: "/dashboard", label: "Inicio", icon: LayoutDashboard },
-    { href: "/dashboard/agenda", label: "Agenda", icon: Calendar },
-    { href: "/dashboard/clientes", label: "Clientes", icon: Users },
-    { href: "/dashboard/caixa", label: "Caja", icon: CreditCard },
-    { href: "/dashboard/configuracoes", label: "Más", icon: Settings },
+    { href: "/dashboard", labelKey: "nav.inicio", icon: LayoutDashboard },
+    { href: "/dashboard/agenda", labelKey: "nav.agenda", icon: Calendar },
+    { href: "/dashboard/clientes", labelKey: "nav.clientes", icon: Users },
+    { href: "/dashboard/caixa", labelKey: "nav.caixa", icon: CreditCard },
+    { href: "/dashboard/configuracoes", labelKey: "nav.mas", icon: Settings },
   ],
   profissional: [
-    { href: "/dashboard", label: "Inicio", icon: LayoutDashboard },
-    { href: "/dashboard/agenda", label: "Agenda", icon: Calendar },
-    { href: "/dashboard/atendimentos", label: "Citas", icon: Scissors },
+    { href: "/dashboard", labelKey: "nav.inicio", icon: LayoutDashboard },
+    { href: "/dashboard/agenda", labelKey: "nav.agenda", icon: Calendar },
+    { href: "/dashboard/atendimentos", labelKey: "nav.citas", icon: Scissors },
   ],
 };

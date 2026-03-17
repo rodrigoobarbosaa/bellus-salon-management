@@ -10,7 +10,8 @@
     "lint:fix": "eslint --fix",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "i18n:check": "npx tsx scripts/check-i18n.ts"
   },
   "dependencies": {
     "@fullcalendar/core": "^6.1.20",

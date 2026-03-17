@@ -10,7 +10,11 @@
     "configuracoes": "Ajustes",
     "marketing": "Marketing",
     "atendimentos": "Mis Citas",
-    "minhaAgenda": "Mi Agenda"
+    "minhaAgenda": "Mi Agenda",
+    "notificacoes": "Notificaciones",
+    "inicio": "Inicio",
+    "citas": "Citas",
+    "mas": "Más"
   },
   "auth": {
     "login": "Iniciar sesión",
@@ -22,11 +26,29 @@
     "name": "Nombre completo",
     "forgotPassword": "¿Olvidaste tu contraseña?",
     "hasAccount": "¿Ya tienes cuenta? Iniciar sesión",
-    "noAccount": "¿No tienes cuenta? Crear cuenta",
+    "noAccount": "¿No tienes cuenta? Regístrate",
     "loading": "Entrando...",
     "creating": "Creando cuenta...",
     "invalidCredentials": "Credenciales incorrectas. Intenta de nuevo.",
-    "passwordMismatch": "Las contraseñas no coinciden."
+    "passwordMismatch": "Las contraseñas no coinciden.",
+    "salonName": "Nombre del salón",
+    "salonNamePlaceholder": "Mi Salón de Belleza",
+    "namePlaceholder": "Tu nombre",
+    "resetPassword": "Recuperar contraseña",
+    "resetDescription": "Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.",
+    "sendLink": "Enviar enlace",
+    "sending": "Enviando...",
+    "emailSent": "Correo enviado",
+    "emailSentDescription": "Se ha enviado un correo de recuperación. Revisa tu bandeja de entrada.",
+    "backToLogin": "Volver al inicio de sesión",
+    "newPassword": "Nueva contraseña",
+    "updating": "Actualizando...",
+    "updatePassword": "Actualizar contraseña",
+    "salonSubtitle": "Gestión de salón de belleza",
+    "role": {
+      "proprietario": "Propietario",
+      "profissional": "Profesional"
+    }
   },
   "dashboard": {
     "welcome": "Bienvenido a {salonName}",

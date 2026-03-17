@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { updatePassword } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +10,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 export default function ResetPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const t = useTranslations("auth");
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -19,7 +21,7 @@ export default function ResetPasswordPage() {
     const confirmPassword = formData.get("confirmPassword") as string;
 
     if (password !== confirmPassword) {
-      setError("Las contraseñas no coinciden.");
+      setError(t("passwordMismatch"));
       return;
     }
 
@@ -35,14 +37,14 @@ export default function ResetPasswordPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-center text-xl">Nueva contraseña</CardTitle>
+        <CardTitle className="text-center text-xl">{t("newPassword")}</CardTitle>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">{error}</div>}
           <div className="space-y-2">
             <label htmlFor="password" className="text-sm font-medium text-stone-700">
-              Nueva contraseña
+              {t("newPassword")}
             </label>
             <Input
               id="password"
@@ -57,7 +59,7 @@ export default function ResetPasswordPage() {
           </div>
           <div className="space-y-2">
             <label htmlFor="confirmPassword" className="text-sm font-medium text-stone-700">
-              Confirmar contraseña
+              {t("confirmPassword")}
             </label>
             <Input
               id="confirmPassword"
@@ -73,7 +75,7 @@ export default function ResetPasswordPage() {
         </CardContent>
         <CardFooter>
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Actualizando..." : "Actualizar contraseña"}
+            {isLoading ? t("updating") : t("updatePassword")}
           </Button>
         </CardFooter>
       </form>

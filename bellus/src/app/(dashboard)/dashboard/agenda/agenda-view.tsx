@@ -1,6 +1,6 @@
 "use client";
 
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import FullCalendar from "@fullcalendar/react";
 import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
@@ -96,6 +96,7 @@ export function AgendaView({
   const [selectedBloqueio, setSelectedBloqueio] = useState<Bloqueio | null>(null);
   const [filteredProfIds, setFilteredProfIds] = useState<Set<string> | null>(null);
   const [currentRange, setCurrentRange] = useState<{ start: string; end: string } | null>(null);
+  const [, startTransition] = useTransition();
 
   const supabase = useMemo(() => createClient(), []);
 
@@ -173,9 +174,11 @@ export function AgendaView({
   // Refetch quando range muda
   useEffect(() => {
     if (currentRange) {
-      fetchData(currentRange.start, currentRange.end);
+      startTransition(() => {
+        fetchData(currentRange.start, currentRange.end);
+      });
     }
-  }, [currentRange, fetchData]);
+  }, [currentRange, fetchData, startTransition]);
 
   // Supabase Realtime
   useEffect(() => {

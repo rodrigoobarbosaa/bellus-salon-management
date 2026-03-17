@@ -1,29 +1,35 @@
 "use client";
 
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { LanguageSwitcher } from "@/components/shared/language-switcher";
 
 interface DashboardHeaderProps {
   userName: string;
 }
 
-const routeLabels: Record<string, string> = {
-  "/dashboard": "Dashboard",
-  "/dashboard/agenda": "Agenda",
-  "/dashboard/clientes": "Clientes",
-  "/dashboard/servicos": "Servicios",
-  "/dashboard/caixa": "Caja",
-  "/dashboard/fiscal": "Fiscal",
-  "/dashboard/equipe": "Equipo",
-  "/dashboard/configuracoes": "Ajustes",
-  "/dashboard/atendimentos": "Mis Citas",
+const routeLabelKeys: Record<string, string> = {
+  "/dashboard": "nav.dashboard",
+  "/dashboard/agenda": "nav.agenda",
+  "/dashboard/clientes": "nav.clientes",
+  "/dashboard/servicos": "nav.servicos",
+  "/dashboard/caixa": "nav.caixa",
+  "/dashboard/fiscal": "nav.fiscal",
+  "/dashboard/equipe": "nav.equipe",
+  "/dashboard/configuracoes": "nav.configuracoes",
+  "/dashboard/atendimentos": "nav.atendimentos",
+  "/dashboard/marketing": "nav.marketing",
+  "/dashboard/notificacoes": "nav.notificacoes",
 };
 
 export function DashboardHeader({ userName }: DashboardHeaderProps) {
   const pathname = usePathname();
+  const t = useTranslations();
 
-  const currentLabel =
-    routeLabels[pathname] ?? pathname.split("/").pop()?.replace(/-/g, " ") ?? "Dashboard";
+  const labelKey = routeLabelKeys[pathname];
+  const currentLabel = labelKey
+    ? t(labelKey)
+    : pathname.split("/").pop()?.replace(/-/g, " ") ?? "Dashboard";
 
   return (
     <header className="flex h-16 items-center justify-between border-b border-stone-200 bg-white px-4 md:px-6">
@@ -42,7 +48,7 @@ export function DashboardHeader({ userName }: DashboardHeaderProps) {
         <LanguageSwitcher />
         <div
           className="bg-bellus-gold/20 text-bellus-gold flex size-8 items-center justify-center rounded-full text-sm font-semibold"
-          aria-label={`Perfil de ${userName}`}
+          aria-label={userName}
         >
           {userName.charAt(0).toUpperCase()}
         </div>

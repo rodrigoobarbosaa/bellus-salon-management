@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { signIn } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,6 +11,7 @@ import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/componen
 export default function LoginPage() {
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const t = useTranslations("auth");
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -28,14 +30,14 @@ export default function LoginPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-center text-xl">Iniciar sesión</CardTitle>
+        <CardTitle className="text-center text-xl">{t("login")}</CardTitle>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">{error}</div>}
           <div className="space-y-2">
             <label htmlFor="email" className="text-sm font-medium text-stone-700">
-              Correo electrónico
+              {t("email")}
             </label>
             <Input
               id="email"
@@ -49,7 +51,7 @@ export default function LoginPage() {
           </div>
           <div className="space-y-2">
             <label htmlFor="password" className="text-sm font-medium text-stone-700">
-              Contraseña
+              {t("password")}
             </label>
             <Input
               id="password"
@@ -65,14 +67,14 @@ export default function LoginPage() {
         </CardContent>
         <CardFooter className="flex flex-col gap-3">
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Entrando..." : "Iniciar sesión"}
+            {isLoading ? t("loading") : t("login")}
           </Button>
           <div className="flex flex-col items-center gap-2">
             <Link href="/register" className="text-sm text-bellus-gold hover:text-bellus-gold/80 font-medium">
-              ¿No tienes cuenta? Regístrate
+              {t("noAccount")}
             </Link>
             <Link href="/forgot-password" className="text-sm text-stone-500 hover:text-stone-700">
-              ¿Olvidaste tu contraseña?
+              {t("forgotPassword")}
             </Link>
           </div>
         </CardFooter>

@@ -286,7 +286,7 @@ export async function cancelAgendamento(id: string) {
     for (const filho of filhos as Array<{ id: string }>) {
       await supabase
         .from("agendamentos")
-        .update({ status: "cancelado" as "cancelado", updated_at: new Date().toISOString() })
+        .update({ status: "cancelado" as const, updated_at: new Date().toISOString() })
         .eq("id", filho.id);
     }
   }

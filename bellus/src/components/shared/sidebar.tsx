@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { useTranslations } from "next-intl";
 import { LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { menuItems, type NavItem } from "@/lib/navigation";
@@ -15,6 +16,7 @@ interface SidebarProps {
 
 export function Sidebar({ userName, userRole }: SidebarProps) {
   const pathname = usePathname();
+  const t = useTranslations();
   const items: NavItem[] = menuItems[userRole] ?? menuItems.profissional;
 
   return (
@@ -25,7 +27,7 @@ export function Sidebar({ userName, userRole }: SidebarProps) {
         </Link>
       </div>
 
-      <nav className="flex-1 space-y-1 px-3 py-4" aria-label="Menu principal">
+      <nav className="flex-1 space-y-1 px-3 py-4" aria-label={t("nav.dashboard")}>
         {items.map((item) => {
           const isActive =
             item.href === "/dashboard" ? pathname === "/dashboard" : pathname.startsWith(item.href);
@@ -43,7 +45,7 @@ export function Sidebar({ userName, userRole }: SidebarProps) {
               )}
             >
               <item.icon className="size-5 shrink-0" />
-              {item.label}
+              {t(item.labelKey)}
             </Link>
           );
         })}
@@ -57,7 +59,7 @@ export function Sidebar({ userName, userRole }: SidebarProps) {
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-medium text-white">{userName}</p>
             <p className="text-xs text-stone-500">
-              {userRole === "proprietario" ? "Propietario" : "Profesional"}
+              {t(`auth.role.${userRole}`)}
             </p>
           </div>
         </div>
@@ -65,10 +67,10 @@ export function Sidebar({ userName, userRole }: SidebarProps) {
           <button
             type="submit"
             className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-sm text-stone-400 transition-colors hover:bg-stone-800 hover:text-white"
-            aria-label="Cerrar sesión"
+            aria-label={t("auth.logout")}
           >
             <LogOut className="size-4" />
-            Cerrar sesión
+            {t("auth.logout")}
           </button>
         </form>
       </div>

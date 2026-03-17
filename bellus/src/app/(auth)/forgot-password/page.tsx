@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import Link from "next/link";
+import { useTranslations } from "next-intl";
 import { resetPassword } from "@/app/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +12,7 @@ export default function ForgotPasswordPage() {
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const t = useTranslations("auth");
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
     event.preventDefault();
@@ -32,16 +34,14 @@ export default function ForgotPasswordPage() {
     return (
       <Card>
         <CardHeader>
-          <CardTitle className="text-center text-xl">Correo enviado</CardTitle>
+          <CardTitle className="text-center text-xl">{t("emailSent")}</CardTitle>
         </CardHeader>
         <CardContent className="text-center">
-          <p className="text-sm text-stone-600">
-            Se ha enviado un correo de recuperación. Revisa tu bandeja de entrada.
-          </p>
+          <p className="text-sm text-stone-600">{t("emailSentDescription")}</p>
         </CardContent>
         <CardFooter className="justify-center">
           <Link href="/login" className="text-sm text-stone-500 hover:text-stone-700">
-            Volver al inicio de sesión
+            {t("backToLogin")}
           </Link>
         </CardFooter>
       </Card>
@@ -51,17 +51,15 @@ export default function ForgotPasswordPage() {
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-center text-xl">Recuperar contraseña</CardTitle>
+        <CardTitle className="text-center text-xl">{t("resetPassword")}</CardTitle>
       </CardHeader>
       <form onSubmit={handleSubmit}>
         <CardContent className="space-y-4">
           {error && <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">{error}</div>}
-          <p className="text-sm text-stone-600">
-            Ingresa tu correo electrónico y te enviaremos un enlace para restablecer tu contraseña.
-          </p>
+          <p className="text-sm text-stone-600">{t("resetDescription")}</p>
           <div className="space-y-2">
             <label htmlFor="email" className="text-sm font-medium text-stone-700">
-              Correo electrónico
+              {t("email")}
             </label>
             <Input
               id="email"
@@ -76,10 +74,10 @@ export default function ForgotPasswordPage() {
         </CardContent>
         <CardFooter className="flex flex-col gap-3">
           <Button type="submit" className="w-full" disabled={isLoading}>
-            {isLoading ? "Enviando..." : "Enviar enlace"}
+            {isLoading ? t("sending") : t("sendLink")}
           </Button>
           <Link href="/login" className="text-sm text-stone-500 hover:text-stone-700">
-            Volver al inicio de sesión
+            {t("backToLogin")}
           </Link>
         </CardFooter>
       </form>

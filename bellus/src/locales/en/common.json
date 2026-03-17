@@ -10,7 +10,11 @@
     "configuracoes": "Settings",
     "marketing": "Marketing",
     "atendimentos": "My Appointments",
-    "minhaAgenda": "My Schedule"
+    "minhaAgenda": "My Schedule",
+    "notificacoes": "Notifications",
+    "inicio": "Home",
+    "citas": "Appointments",
+    "mas": "More"
   },
   "auth": {
     "login": "Sign in",
@@ -26,7 +30,25 @@
     "loading": "Signing in...",
     "creating": "Creating account...",
     "invalidCredentials": "Invalid credentials. Please try again.",
-    "passwordMismatch": "Passwords do not match."
+    "passwordMismatch": "Passwords do not match.",
+    "salonName": "Salon name",
+    "salonNamePlaceholder": "My Beauty Salon",
+    "namePlaceholder": "Your name",
+    "resetPassword": "Reset password",
+    "resetDescription": "Enter your email address and we'll send you a link to reset your password.",
+    "sendLink": "Send link",
+    "sending": "Sending...",
+    "emailSent": "Email sent",
+    "emailSentDescription": "A recovery email has been sent. Check your inbox.",
+    "backToLogin": "Back to sign in",
+    "newPassword": "New password",
+    "updating": "Updating...",
+    "updatePassword": "Update password",
+    "salonSubtitle": "Beauty salon management",
+    "role": {
+      "proprietario": "Owner",
+      "profissional": "Professional"
+    }
   },
   "dashboard": {
     "welcome": "Welcome to {salonName}",
