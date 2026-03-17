@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useRef } from "react";
+import { useTranslations } from "next-intl";
 import { updateSalonSettings, getSalonSettings, uploadSalonLogo } from "@/app/actions/settings";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -38,6 +39,7 @@ const defaultSettings: SalonSettings = {
 };
 
 export default function ConfiguracoesPage() {
+  const t = useTranslations("settings");
   const [settings, setSettings] = useState<SalonSettings>(defaultSettings);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -309,7 +311,7 @@ export default function ConfiguracoesPage() {
 
             <Button type="submit" disabled={isSaving} className="w-full">
               <Save className="mr-2 h-4 w-4" />
-              {isSaving ? "Guardando..." : "Guardar configuraciones"}
+              {isSaving ? t("saving") : t("save")}
             </Button>
           </form>
         </CardContent>
