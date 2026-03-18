@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { useRouter } from "next/navigation";
 import Link from "next/link";
 import {
@@ -85,6 +86,8 @@ export function ClienteFicha({
   totalSpent,
   salaoSlug,
 }: ClienteFichaProps) {
+  const t = useTranslations("clients");
+  const tc = useTranslations("common");
   const router = useRouter();
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -172,7 +175,7 @@ export function ClienteFicha({
         <div className="flex-1">
           <h1 className="text-2xl font-bold">{cliente.nome}</h1>
           <p className="text-sm text-muted-foreground">
-            Cliente desde {formatDate(cliente.created_at)}
+            {t("clientSince")} {formatDate(cliente.created_at)}
           </p>
         </div>
         {!editing ? (
@@ -181,7 +184,7 @@ export function ClienteFicha({
             className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50 transition-colors"
           >
             <Edit2 className="h-4 w-4" />
-            Editar
+            {tc("edit")}
           </button>
         ) : (
           <div className="flex gap-2">
@@ -190,7 +193,7 @@ export function ClienteFicha({
               className="flex items-center gap-2 px-4 py-2 border rounded-lg hover:bg-gray-50 transition-colors"
             >
               <X className="h-4 w-4" />
-              Cancelar
+              {tc("cancel")}
             </button>
             <button
               onClick={handleSave}
@@ -198,7 +201,7 @@ export function ClienteFicha({
               className="flex items-center gap-2 px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors disabled:opacity-50"
             >
               <Save className="h-4 w-4" />
-              {saving ? "Guardando..." : "Guardar"}
+              {saving ? t("saving") : tc("save")}
             </button>
           </div>
         )}
@@ -215,21 +218,21 @@ export function ClienteFicha({
         <div className="bg-white border rounded-xl p-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
             <Calendar className="h-4 w-4" />
-            Visitas
+            {t("visits")}
           </div>
           <p className="text-2xl font-bold">{totalVisitas}</p>
         </div>
         <div className="bg-white border rounded-xl p-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
             <DollarSign className="h-4 w-4" />
-            Total gastado
+            {t("totalSpent")}
           </div>
           <p className="text-2xl font-bold">{formatCurrency(totalSpent)}</p>
         </div>
         <div className="bg-white border rounded-xl p-4">
           <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
             <Clock className="h-4 w-4" />
-            Próximo retorno
+            {t("nextReturn")}
           </div>
           {cliente.proximo_retorno ? (
             <p className={`text-2xl font-bold ${isReturnOverdue ? "text-red-600" : ""}`}>
@@ -246,11 +249,11 @@ export function ClienteFicha({
 
       {/* Client Info */}
       <div className="bg-white border rounded-xl p-6">
-        <h2 className="text-lg font-semibold mb-4">Información del cliente</h2>
+        <h2 className="text-lg font-semibold mb-4">{t("clientInfo")}</h2>
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {/* Nome */}
           <div>
-            <label className="text-sm font-medium text-muted-foreground">Nombre</label>
+            <label className="text-sm font-medium text-muted-foreground">{t("name")}</label>
             {editing ? (
               <input
                 type="text"
@@ -266,7 +269,7 @@ export function ClienteFicha({
           {/* Telefone */}
           <div>
             <label className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-              <Phone className="h-3 w-3" /> Teléfono
+              <Phone className="h-3 w-3" /> {t("phone")}
             </label>
             {editing ? (
               <input
@@ -304,7 +307,7 @@ export function ClienteFicha({
           {/* Idioma */}
           <div>
             <label className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-              <Globe className="h-3 w-3" /> Idioma
+              <Globe className="h-3 w-3" /> {t("language")}
             </label>
             {editing ? (
               <select
@@ -325,7 +328,7 @@ export function ClienteFicha({
           {/* Intervalo retorno */}
           <div>
             <label className="text-sm font-medium text-muted-foreground flex items-center gap-1">
-              <Clock className="h-3 w-3" /> Intervalo de retorno (días)
+              <Clock className="h-3 w-3" /> {t("returnInterval")}
             </label>
             {editing ? (
               <input
@@ -333,7 +336,7 @@ export function ClienteFicha({
                 min="1"
                 value={intervaloRetorno}
                 onChange={(e) => setIntervaloRetorno(e.target.value)}
-                placeholder="ej: 30"
+                placeholder={t("returnIntervalPlaceholder")}
                 className="w-full mt-1 px-3 py-2 border rounded-lg"
               />
             ) : (
@@ -347,7 +350,7 @@ export function ClienteFicha({
 
           {/* Notificações */}
           <div>
-            <label className="text-sm font-medium text-muted-foreground">Notificaciones</label>
+            <label className="text-sm font-medium text-muted-foreground">{t("notifications")}</label>
             <p className="mt-1 flex items-center gap-1">
               {cliente.opt_out_notificacoes ? (
                 <>
@@ -357,7 +360,7 @@ export function ClienteFicha({
               ) : (
                 <>
                   <Bell className="h-4 w-4 text-green-500" />
-                  <span className="text-green-600">Activas</span>
+                  <span className="text-green-600">{t("active")}</span>
                 </>
               )}
             </p>
@@ -365,7 +368,7 @@ export function ClienteFicha({
 
           {/* Notas - full width */}
           <div className="md:col-span-2">
-            <label className="text-sm font-medium text-muted-foreground">Notas</label>
+            <label className="text-sm font-medium text-muted-foreground">{t("notes")}</label>
             {editing ? (
               <textarea
                 value={notas}
@@ -388,7 +391,7 @@ export function ClienteFicha({
               className="inline-flex items-center gap-2 text-sm text-primary hover:underline"
             >
               <ExternalLink className="h-4 w-4" />
-              Abrir enlace de reserva
+              {t("bookingLink")}
             </Link>
           </div>
         )}
@@ -396,10 +399,10 @@ export function ClienteFicha({
 
       {/* Visit History */}
       <div className="bg-white border rounded-xl p-6">
-        <h2 className="text-lg font-semibold mb-4">Historial de visitas</h2>
+        <h2 className="text-lg font-semibold mb-4">{t("visitHistory")}</h2>
         {visitas.length === 0 ? (
           <p className="text-muted-foreground text-center py-8">
-            Sin visitas registradas
+            {t("noVisits")}
           </p>
         ) : (
           <div className="space-y-3">

@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import {
   Banknote,
@@ -44,12 +45,7 @@ const FORMA_ICONS: Record<string, typeof Banknote> = {
   transferencia: Building2,
 };
 
-const FORMA_LABELS: Record<string, string> = {
-  efectivo: "Efectivo",
-  tarjeta: "Tarjeta",
-  bizum: "Bizum",
-  transferencia: "Transferencia",
-};
+// FORMA_LABELS moved inside component for i18n access
 
 const FORMA_COLORS: Record<string, string> = {
   efectivo: "bg-green-50 border-green-200 text-green-700",
@@ -70,6 +66,16 @@ function formatDate(d: Date) {
 }
 
 export function CaixaView({ salaoId, profissionais, servicos }: CaixaViewProps) {
+  const t = useTranslations("cashier");
+  const tc = useTranslations("common");
+
+  const FORMA_LABELS: Record<string, string> = {
+    efectivo: t("paymentLabels.efectivo"),
+    tarjeta: t("paymentLabels.tarjeta"),
+    bizum: t("paymentLabels.bizum"),
+    transferencia: t("paymentLabels.transferencia"),
+  };
+
   const [tab, setTab] = useState<"dia" | "historico">("dia");
   const [selectedDate, setSelectedDate] = useState(formatDate(new Date()));
   const [transacoes, setTransacoes] = useState<Transacao[]>([]);
@@ -193,7 +199,7 @@ export function CaixaView({ salaoId, profissionais, servicos }: CaixaViewProps) 
             tab === "dia" ? "bg-white shadow-sm" : "hover:bg-gray-200"
           }`}
         >
-          Cierre del día
+          {t("dailyClose")}
         </button>
         <button
           onClick={() => setTab("historico")}
@@ -201,7 +207,7 @@ export function CaixaView({ salaoId, profissionais, servicos }: CaixaViewProps) 
             tab === "historico" ? "bg-white shadow-sm" : "hover:bg-gray-200"
           }`}
         >
-          Historial
+          {t("history")}
         </button>
       </div>
 
@@ -231,7 +237,7 @@ export function CaixaView({ salaoId, profissionais, servicos }: CaixaViewProps) 
         <div className="space-y-3">
           <div className="flex flex-wrap items-center gap-3">
             <div className="flex items-center gap-2">
-              <label className="text-sm text-muted-foreground">Desde:</label>
+              <label className="text-sm text-muted-foreground">{t("from")}</label>
               <input
                 type="date"
                 value={dateFrom}
@@ -240,7 +246,7 @@ export function CaixaView({ salaoId, profissionais, servicos }: CaixaViewProps) 
               />
             </div>
             <div className="flex items-center gap-2">
-              <label className="text-sm text-muted-foreground">Hasta:</label>
+              <label className="text-sm text-muted-foreground">{t("to")}</label>
               <input
                 type="date"
                 value={dateTo}
@@ -255,40 +261,40 @@ export function CaixaView({ salaoId, profissionais, servicos }: CaixaViewProps) 
               }`}
             >
               <Filter className="h-4 w-4" />
-              Filtros
+              {t("filters")}
             </button>
             <button
               onClick={handleExport}
               className="flex items-center gap-2 px-3 py-2 border rounded-lg text-sm hover:bg-gray-50 ml-auto"
             >
               <Download className="h-4 w-4" />
-              Exportar CSV
+              {t("exportCsv")}
             </button>
           </div>
 
           {showFilters && (
             <div className="flex flex-wrap gap-3 p-3 bg-gray-50 rounded-lg">
               <div>
-                <label className="text-xs text-muted-foreground">Profesional</label>
+                <label className="text-xs text-muted-foreground">{t("professional")}</label>
                 <select
                   value={filterProf}
                   onChange={(e) => setFilterProf(e.target.value)}
                   className="block mt-1 border rounded-lg px-3 py-2 text-sm"
                 >
-                  <option value="">Todos</option>
+                  <option value="">{t("allProfessionals")}</option>
                   {profissionais.map((p) => (
                     <option key={p.id} value={p.id}>{p.nome}</option>
                   ))}
                 </select>
               </div>
               <div>
-                <label className="text-xs text-muted-foreground">Forma de pago</label>
+                <label className="text-xs text-muted-foreground">{t("paymentMethod")}</label>
                 <select
                   value={filterForma}
                   onChange={(e) => setFilterForma(e.target.value)}
                   className="block mt-1 border rounded-lg px-3 py-2 text-sm"
                 >
-                  <option value="">Todas</option>
+                  <option value="">{t("all")}</option>
                   {Object.entries(FORMA_LABELS).map(([v, l]) => (
                     <option key={v} value={v}>{l}</option>
                   ))}
@@ -303,9 +309,9 @@ export function CaixaView({ salaoId, profissionais, servicos }: CaixaViewProps) 
       <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
         {/* Total */}
         <div className="col-span-2 sm:col-span-1 bg-white border-2 border-gray-900 rounded-xl p-4">
-          <p className="text-xs text-muted-foreground">Total</p>
+          <p className="text-xs text-muted-foreground">{t("total")}</p>
           <p className="text-2xl font-bold">{formatCurrency(totalAmount)}</p>
-          <p className="text-xs text-muted-foreground">{totalCount} transacciones</p>
+          <p className="text-xs text-muted-foreground">{totalCount} {t("transactions")}</p>
         </div>
 
         {/* Per forma */}
@@ -321,7 +327,7 @@ export function CaixaView({ salaoId, profissionais, servicos }: CaixaViewProps) 
                 <span className="text-xs font-medium">{FORMA_LABELS[forma]}</span>
               </div>
               <p className="text-lg font-bold">{formatCurrency(total)}</p>
-              <p className="text-xs opacity-70">{count} pagos</p>
+              <p className="text-xs opacity-70">{count} {t("payments")}</p>
             </div>
           );
         })}
@@ -331,15 +337,15 @@ export function CaixaView({ salaoId, profissionais, servicos }: CaixaViewProps) 
       <div className="bg-white border rounded-xl">
         <div className="p-4 border-b">
           <h2 className="font-semibold">
-            {tab === "dia" ? "Transacciones del día" : "Historial de transacciones"}
+            {tab === "dia" ? t("dailyTransactions") : t("transactionHistory")}
           </h2>
         </div>
 
         {loading ? (
-          <div className="p-8 text-center text-muted-foreground">Cargando...</div>
+          <div className="p-8 text-center text-muted-foreground">{tc("loading")}</div>
         ) : transacoes.length === 0 ? (
           <div className="p-8 text-center text-muted-foreground">
-            Sin transacciones {tab === "dia" ? "para este día" : "en este período"}
+            {t("noTransactions")} {tab === "dia" ? t("forThisDay") : t("inThisPeriod")}
           </div>
         ) : (
           <div className="divide-y">

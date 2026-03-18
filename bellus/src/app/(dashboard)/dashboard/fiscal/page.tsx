@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { FiscalView } from "./fiscal-view";
@@ -69,9 +70,11 @@ export default async function FiscalPage() {
 
   const salaoNome = (salao as { nome: string } | null)?.nome ?? "";
 
+  const t = await getTranslations("fiscal");
+
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Módulo Fiscal</h1>
+      <h1 className="text-2xl font-bold">{t("title")}</h1>
       <FiscalView
         salaoId={salaoId}
         salaoNome={salaoNome}

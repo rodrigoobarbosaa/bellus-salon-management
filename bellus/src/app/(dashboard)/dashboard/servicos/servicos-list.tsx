@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Pencil, Plus, ToggleLeft, ToggleRight } from "lucide-react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { toggleServicoAtivo } from "@/app/actions/servicos";
@@ -61,6 +62,17 @@ export function ServicosList({
   servicosProfissionais,
   isProprietario,
 }: ServicosListProps) {
+  const t = useTranslations("services");
+  const tc = useTranslations("common");
+
+  const CATEGORIA_LABELS_I18N: Record<string, string> = {
+    corte: t("categories.corte"),
+    coloracao: t("categories.coloracao"),
+    mechas: t("categories.mechas"),
+    tratamento: t("categories.tratamento"),
+    outro: t("categories.outro"),
+  };
+
   const [createOpen, setCreateOpen] = useState(false);
   const [editServico, setEditServico] = useState<Servico | null>(null);
   const [profDialogServico, setProfDialogServico] = useState<Servico | null>(null);
@@ -84,15 +96,15 @@ export function ServicosList({
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-2xl font-bold text-stone-900">Servicios</h2>
+          <h2 className="text-2xl font-bold text-stone-900">{t("title")}</h2>
           <p className="mt-1 text-sm text-stone-500">
-            {servicos.length} servicio{servicos.length !== 1 ? "s" : ""} en el catálogo
+            {t("count", { count: servicos.length })}
           </p>
         </div>
         {isProprietario && (
           <Button onClick={() => setCreateOpen(true)} className="gap-2">
             <Plus className="size-4" />
-            Nuevo servicio
+            {t("newService")}
           </Button>
         )}
       </div>
@@ -108,7 +120,7 @@ export function ServicosList({
                 : "bg-stone-100 text-stone-600 hover:bg-stone-200"
             }`}
           >
-            Todos
+            {tc("all")}
           </button>
           {categorias.map((cat) => (
             <button
@@ -120,7 +132,7 @@ export function ServicosList({
                   : `${CATEGORIA_COLORS[cat] ?? "bg-stone-100 text-stone-600"} hover:opacity-80`
               }`}
             >
-              {CATEGORIA_LABELS[cat] ?? cat}
+              {CATEGORIA_LABELS_I18N[cat] ?? cat}
             </button>
           ))}
         </div>
@@ -132,8 +144,8 @@ export function ServicosList({
           <CardContent className="py-12 text-center">
             <p className="text-stone-500">
               {servicos.length === 0
-                ? "No hay servicios registrados. ¡Crea tu primer servicio!"
-                : "No hay servicios en esta categoría."}
+                ? t("noServices")
+                : t("noServicesCategory")}
             </p>
           </CardContent>
         </Card>
@@ -159,7 +171,7 @@ export function ServicosList({
                         </h3>
                         {!servico.ativo && (
                           <span className="rounded bg-stone-200 px-1.5 py-0.5 text-[10px] font-medium text-stone-500">
-                            INACTIVO
+                            {t("inactive")}
                           </span>
                         )}
                       </div>
@@ -168,7 +180,7 @@ export function ServicosList({
                           CATEGORIA_COLORS[servico.categoria] ?? "bg-stone-100 text-stone-600"
                         }`}
                       >
-                        {CATEGORIA_LABELS[servico.categoria] ?? servico.categoria}
+                        {CATEGORIA_LABELS_I18N[servico.categoria] ?? servico.categoria}
                       </span>
                     </div>
 
@@ -178,7 +190,7 @@ export function ServicosList({
                           variant="ghost"
                           size="icon-xs"
                           onClick={() => setEditServico(servico)}
-                          title="Editar"
+                          title={tc("edit")}
                         >
                           <Pencil className="size-3.5" />
                         </Button>
@@ -187,7 +199,7 @@ export function ServicosList({
                           size="icon-xs"
                           onClick={() => handleToggle(servico.id, servico.ativo)}
                           disabled={togglingId === servico.id}
-                          title={servico.ativo ? "Desactivar" : "Activar"}
+                          title={servico.ativo ? t("deactivate") : t("activate")}
                         >
                           {servico.ativo ? (
                             <ToggleRight className="size-3.5 text-green-600" />
@@ -233,14 +245,14 @@ export function ServicosList({
                         ))}
                       </div>
                     ) : (
-                      <p className="text-[11px] text-stone-400">Sin profesionales asignados</p>
+                      <p className="text-[11px] text-stone-400">{t("noProfessionals")}</p>
                     )}
                     {isProprietario && (
                       <button
                         onClick={() => setProfDialogServico(servico)}
                         className="mt-1 text-[11px] font-medium text-bellus-gold hover:underline"
                       >
-                        {profs.length > 0 ? "Gestionar" : "Asignar profesionales"}
+                        {profs.length > 0 ? t("manage") : t("assignProfessionals")}
                       </button>
                     )}
                   </div>

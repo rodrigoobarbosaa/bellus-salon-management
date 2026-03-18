@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useState } from "react";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import {
   Calculator,
@@ -46,16 +47,7 @@ interface FiscalViewProps {
   configFiscal: ConfigFiscal;
 }
 
-const TRIMESTRE_LABELS = ["T1 (Ene-Mar)", "T2 (Abr-Jun)", "T3 (Jul-Sep)", "T4 (Oct-Dic)"];
-
-const CATEGORIA_LABELS: Record<string, string> = {
-  produtos: "Productos",
-  aluguel: "Alquiler",
-  formacao: "Formación",
-  suprimentos: "Suministros",
-  cuota_autonomos: "Cuota autónomos",
-  outros: "Otros",
-};
+// TRIMESTRE_LABELS and CATEGORIA_LABELS moved inside component for i18n access
 
 // AEAT deadline dates
 const DEADLINES = [
@@ -82,6 +74,20 @@ function getTrimestreDates(year: number, trimestre: number) {
 }
 
 export function FiscalView({ salaoId, salaoNome, configFiscal }: FiscalViewProps) {
+  const t = useTranslations("fiscal");
+  const tc = useTranslations("common");
+
+  const TRIMESTRE_LABELS = ["T1 (Ene-Mar)", "T2 (Abr-Jun)", "T3 (Jul-Sep)", "T4 (Oct-Dic)"];
+
+  const CATEGORIA_LABELS: Record<string, string> = {
+    produtos: t("categories.produtos"),
+    aluguel: t("categories.aluguel"),
+    formacao: t("categories.formacao"),
+    suprimentos: t("categories.suprimentos"),
+    cuota_autonomos: t("categories.cuota_autonomos"),
+    outros: t("categories.outros"),
+  };
+
   const [tab, setTab] = useState<"resumo" | "despesas" | "config">("resumo");
   const [year, setYear] = useState(new Date().getFullYear());
   const [trimestre, setTrimestre] = useState(getCurrentTrimestre());
@@ -191,7 +197,7 @@ export function FiscalView({ salaoId, salaoNome, configFiscal }: FiscalViewProps
     if (result.error) {
       setConfigMsg(result.error);
     } else {
-      setConfigMsg("Configuración guardada correctamente.");
+      setConfigMsg(t("savedOk"));
     }
   }
 
@@ -248,11 +254,11 @@ export function FiscalView({ salaoId, salaoNome, configFiscal }: FiscalViewProps
           <AlertTriangle className="h-5 w-5 text-amber-600 shrink-0" />
           <div>
             <p className="font-medium text-amber-800">
-              Próximo vencimiento fiscal ({nextDeadline.label})
+              {t("nextDeadline")} ({nextDeadline.label})
             </p>
             <p className="text-sm text-amber-700">
-              Fecha límite: 20/{(DEADLINES.indexOf(nextDeadline) * 3 + 1).toString().padStart(2, "0")}/{year}.
-              Recuerda presentar los Modelos 303 y 130.
+              {t("deadlineDate")}: 20/{(DEADLINES.indexOf(nextDeadline) * 3 + 1).toString().padStart(2, "0")}/{year}.
+              {" "}{t("deadlineReminder")}
             </p>
           </div>
         </div>
@@ -260,15 +266,15 @@ export function FiscalView({ salaoId, salaoNome, configFiscal }: FiscalViewProps
 
       {/* Tabs */}
       <div className="flex gap-1 rounded-lg bg-gray-100 p-1 w-fit">
-        {(["resumo", "despesas", "config"] as const).map((t) => (
+        {(["resumo", "despesas", "config"] as const).map((tabKey) => (
           <button
-            key={t}
-            onClick={() => setTab(t)}
+            key={tabKey}
+            onClick={() => setTab(tabKey)}
             className={`px-4 py-2 rounded-md text-sm font-medium transition-colors ${
-              tab === t ? "bg-white shadow-sm" : "hover:bg-gray-200"
+              tab === tabKey ? "bg-white shadow-sm" : "hover:bg-gray-200"
             }`}
           >
-            {t === "resumo" ? "Resumen trimestral" : t === "despesas" ? "Gastos" : "Configuración"}
+            {tabKey === "resumo" ? t("quarterlySummary") : tabKey === "despesas" ? t("expenses") : t("configuration")}
           </button>
         ))}
       </div>
@@ -307,7 +313,7 @@ export function FiscalView({ salaoId, salaoNome, configFiscal }: FiscalViewProps
       {tab === "resumo" && (
         <div className="space-y-6">
           {loading ? (
-            <div className="p-8 text-center text-muted-foreground">Cargando...</div>
+            <div className="p-8 text-center text-muted-foreground">{tc("loading")}</div>
           ) : (
             <>
               {/* Summary cards */}
@@ -315,7 +321,7 @@ export function FiscalView({ salaoId, salaoNome, configFiscal }: FiscalViewProps
                 <div className="bg-white border rounded-xl p-4">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
                     <TrendingUp className="h-4 w-4 text-green-500" />
-                    Ingresos
+                    {t("income")}
                   </div>
                   <p className="text-2xl font-bold text-green-600">{formatCurrency(ingresos)}</p>
                 </div>
@@ -323,7 +329,7 @@ export function FiscalView({ salaoId, salaoNome, configFiscal }: FiscalViewProps
                 <div className="bg-white border rounded-xl p-4">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
                     <TrendingDown className="h-4 w-4 text-red-500" />
-                    Gastos
+                    {t("expenses")}
                   </div>
                   <p className="text-2xl font-bold text-red-600">{formatCurrency(gastos)}</p>
                 </div>
@@ -331,7 +337,7 @@ export function FiscalView({ salaoId, salaoNome, configFiscal }: FiscalViewProps
                 <div className="bg-white border rounded-xl p-4">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
                     <Receipt className="h-4 w-4 text-blue-500" />
-                    IVA a liquidar
+                    {t("ivaToSettle")}
                   </div>
                   <p className={`text-2xl font-bold ${ivaLiquidar >= 0 ? "text-blue-600" : "text-green-600"}`}>
                     {formatCurrency(ivaLiquidar)}
@@ -341,7 +347,7 @@ export function FiscalView({ salaoId, salaoNome, configFiscal }: FiscalViewProps
                 <div className="bg-white border rounded-xl p-4">
                   <div className="flex items-center gap-2 text-sm text-muted-foreground mb-1">
                     <Calculator className="h-4 w-4 text-purple-500" />
-                    IRPF pago fraccionado
+                    {t("irpfInstallment")}
                   </div>
                   <p className="text-2xl font-bold text-purple-600">{formatCurrency(irpfPagar)}</p>
                 </div>
@@ -349,36 +355,36 @@ export function FiscalView({ salaoId, salaoNome, configFiscal }: FiscalViewProps
 
               {/* Detailed breakdown */}
               <div className="bg-white border rounded-xl p-6">
-                <h2 className="font-semibold mb-4">Desglose — {TRIMESTRE_LABELS[trimestre - 1]} {year}</h2>
+                <h2 className="font-semibold mb-4">{t("breakdown")} — {TRIMESTRE_LABELS[trimestre - 1]} {year}</h2>
                 <div className="space-y-3 text-sm">
                   <div className="flex justify-between py-2 border-b">
-                    <span>Ingresos brutos (servicios)</span>
+                    <span>{t("grossIncome")}</span>
                     <span className="font-medium">{formatCurrency(ingresos)}</span>
                   </div>
                   <div className="flex justify-between py-2 border-b">
-                    <span>IVA repercutido ({configFiscal.iva_pct}%)</span>
+                    <span>{t("ivaCollected")} ({configFiscal.iva_pct}%)</span>
                     <span className="font-medium">{formatCurrency(ivaRepercutido)}</span>
                   </div>
                   <div className="flex justify-between py-2 border-b">
-                    <span>Gastos deducibles</span>
+                    <span>{t("deductibleExpenses")}</span>
                     <span className="font-medium text-red-600">-{formatCurrency(gastos)}</span>
                   </div>
                   <div className="flex justify-between py-2 border-b">
-                    <span>IVA soportado ({configFiscal.iva_pct}%)</span>
+                    <span>{t("ivaDeductible")} ({configFiscal.iva_pct}%)</span>
                     <span className="font-medium text-red-600">-{formatCurrency(ivaSoportado)}</span>
                   </div>
                   <div className="flex justify-between py-2 border-b font-semibold">
-                    <span>Diferencia IVA (Modelo 303)</span>
+                    <span>{t("ivaBalance")}</span>
                     <span className={ivaLiquidar >= 0 ? "text-blue-600" : "text-green-600"}>
                       {formatCurrency(ivaLiquidar)}
                     </span>
                   </div>
                   <div className="flex justify-between py-2 border-b">
-                    <span>Rendimiento neto</span>
+                    <span>{t("netIncome")}</span>
                     <span className="font-medium">{formatCurrency(rendimientoNeto)}</span>
                   </div>
                   <div className="flex justify-between py-2 font-semibold">
-                    <span>Pago fraccionado IRPF {configFiscal.irpf_pct}% (Modelo 130)</span>
+                    <span>{t("irpfPayment")} {configFiscal.irpf_pct}% (Modelo 130)</span>
                     <span className="text-purple-600">{formatCurrency(irpfPagar)}</span>
                   </div>
                 </div>
@@ -388,11 +394,11 @@ export function FiscalView({ salaoId, salaoNome, configFiscal }: FiscalViewProps
               <div className="flex flex-wrap gap-3">
                 <Button onClick={exportModelo303} variant="outline" className="gap-2">
                   <Download className="h-4 w-4" />
-                  Exportar Modelo 303
+                  {t("exportModelo303")}
                 </Button>
                 <Button onClick={exportModelo130} variant="outline" className="gap-2">
                   <Download className="h-4 w-4" />
-                  Exportar Modelo 130
+                  {t("exportModelo130")}
                 </Button>
               </div>
             </>
@@ -404,24 +410,24 @@ export function FiscalView({ salaoId, salaoNome, configFiscal }: FiscalViewProps
       {tab === "despesas" && (
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <h2 className="font-semibold">Gastos deducibles — {TRIMESTRE_LABELS[trimestre - 1]} {year}</h2>
+            <h2 className="font-semibold">{t("deductibleExpenses")} — {TRIMESTRE_LABELS[trimestre - 1]} {year}</h2>
             <Button onClick={() => setShowDespesaForm(true)} className="gap-2">
               <Plus className="h-4 w-4" />
-              Nuevo gasto
+              {t("newExpense")}
             </Button>
           </div>
 
           {configFiscal.cuota_autonomos_mensual > 0 && (
             <div className="bg-blue-50 border border-blue-200 rounded-lg p-3 text-sm text-blue-700">
-              Cuota autónomos: {formatCurrency(configFiscal.cuota_autonomos_mensual)}/mes ×3 = {formatCurrency(configFiscal.cuota_autonomos_mensual * 3)} (incluido automáticamente)
+              {t("cuotaAutonomos")}: {formatCurrency(configFiscal.cuota_autonomos_mensual)}/mes ×3 = {formatCurrency(configFiscal.cuota_autonomos_mensual * 3)} ({t("includedAutomatically")})
             </div>
           )}
 
           {loading ? (
-            <div className="p-8 text-center text-muted-foreground">Cargando...</div>
+            <div className="p-8 text-center text-muted-foreground">{tc("loading")}</div>
           ) : despesas.length === 0 ? (
             <div className="bg-white border rounded-xl p-8 text-center text-muted-foreground">
-              Sin gastos registrados para este trimestre
+              {t("noExpenses")}
             </div>
           ) : (
             <div className="bg-white border rounded-xl divide-y">
@@ -445,7 +451,7 @@ export function FiscalView({ salaoId, salaoNome, configFiscal }: FiscalViewProps
                 </div>
               ))}
               <div className="flex justify-between p-4 bg-gray-50 font-semibold">
-                <span>Total gastos registrados</span>
+                <span>{t("totalRegistered")}</span>
                 <span>{formatCurrency(despesas.reduce((sum, d) => sum + d.valor, 0))}</span>
               </div>
             </div>
@@ -455,21 +461,21 @@ export function FiscalView({ salaoId, salaoNome, configFiscal }: FiscalViewProps
           <Dialog open={showDespesaForm} onOpenChange={setShowDespesaForm}>
             <DialogContent className="sm:max-w-md">
               <DialogHeader>
-                <DialogTitle>Nuevo gasto deducible</DialogTitle>
+                <DialogTitle>{t("newDeductibleExpense")}</DialogTitle>
               </DialogHeader>
               <form onSubmit={handleCreateDespesa} className="space-y-4">
                 <div>
-                  <label className="text-sm font-medium">Descripción</label>
+                  <label className="text-sm font-medium">{t("expenseDescription")}</label>
                   <input
                     name="descricao"
                     required
                     className="w-full mt-1 border rounded-lg px-3 py-2 text-sm"
-                    placeholder="ej: Productos para coloración"
+                    placeholder={t("descriptionPlaceholder")}
                   />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="text-sm font-medium">Categoría</label>
+                    <label className="text-sm font-medium">{t("expenseCategory")}</label>
                     <select name="categoria" required className="w-full mt-1 border rounded-lg px-3 py-2 text-sm">
                       {Object.entries(CATEGORIA_LABELS).map(([v, l]) => (
                         <option key={v} value={v}>{l}</option>
@@ -477,7 +483,7 @@ export function FiscalView({ salaoId, salaoNome, configFiscal }: FiscalViewProps
                     </select>
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Valor (€)</label>
+                    <label className="text-sm font-medium">{t("valueEur")}</label>
                     <input
                       name="valor"
                       type="number"
@@ -489,7 +495,7 @@ export function FiscalView({ salaoId, salaoNome, configFiscal }: FiscalViewProps
                   </div>
                 </div>
                 <div>
-                  <label className="text-sm font-medium">Fecha</label>
+                  <label className="text-sm font-medium">{t("date")}</label>
                   <input
                     name="data"
                     type="date"
@@ -499,19 +505,19 @@ export function FiscalView({ salaoId, salaoNome, configFiscal }: FiscalViewProps
                   />
                 </div>
                 <div>
-                  <label className="text-sm font-medium">Notas (opcional)</label>
+                  <label className="text-sm font-medium">{t("notesOptional")}</label>
                   <input
                     name="notas"
                     className="w-full mt-1 border rounded-lg px-3 py-2 text-sm"
-                    placeholder="Detalles adicionales..."
+                    placeholder={t("notesPlaceholder")}
                   />
                 </div>
                 <DialogFooter>
                   <Button type="button" variant="outline" onClick={() => setShowDespesaForm(false)}>
-                    Cancelar
+                    {tc("cancel")}
                   </Button>
                   <Button type="submit" disabled={saving}>
-                    {saving ? "Guardando..." : "Guardar"}
+                    {saving ? tc("saving") : tc("save")}
                   </Button>
                 </DialogFooter>
               </form>
@@ -525,31 +531,31 @@ export function FiscalView({ salaoId, salaoNome, configFiscal }: FiscalViewProps
         <div className="bg-white border rounded-xl p-6 max-w-lg">
           <div className="flex items-center gap-2 mb-6">
             <Settings className="h-5 w-5" />
-            <h2 className="font-semibold">Configuración fiscal</h2>
+            <h2 className="font-semibold">{t("fiscalConfig")}</h2>
           </div>
 
           <div className="space-y-4">
             <div>
-              <label className="text-sm font-medium">NIF</label>
+              <label className="text-sm font-medium">{t("nif")}</label>
               <input
                 value={nif}
                 onChange={(e) => setNif(e.target.value)}
                 className="w-full mt-1 border rounded-lg px-3 py-2 text-sm"
-                placeholder="12345678A"
+                placeholder={t("nifPlaceholder")}
               />
             </div>
             <div>
-              <label className="text-sm font-medium">Nombre fiscal</label>
+              <label className="text-sm font-medium">{t("fiscalName")}</label>
               <input
                 value={nombreFiscal}
                 onChange={(e) => setNombreFiscal(e.target.value)}
                 className="w-full mt-1 border rounded-lg px-3 py-2 text-sm"
-                placeholder="Nombre o razón social"
+                placeholder={t("fiscalNamePlaceholder")}
               />
             </div>
             <div className="grid grid-cols-3 gap-3">
               <div>
-                <label className="text-sm font-medium">IVA %</label>
+                <label className="text-sm font-medium">{t("ivaPct")}</label>
                 <input
                   type="number"
                   step="0.01"
@@ -559,7 +565,7 @@ export function FiscalView({ salaoId, salaoNome, configFiscal }: FiscalViewProps
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">IRPF %</label>
+                <label className="text-sm font-medium">{t("irpfPct")}</label>
                 <input
                   type="number"
                   step="0.01"
@@ -569,7 +575,7 @@ export function FiscalView({ salaoId, salaoNome, configFiscal }: FiscalViewProps
                 />
               </div>
               <div>
-                <label className="text-sm font-medium">Cuota autónomos/mes</label>
+                <label className="text-sm font-medium">{t("cuotaMonthly")}</label>
                 <input
                   type="number"
                   step="0.01"
@@ -587,7 +593,7 @@ export function FiscalView({ salaoId, salaoNome, configFiscal }: FiscalViewProps
             )}
 
             <Button onClick={handleSaveConfig} disabled={configSaving}>
-              {configSaving ? "Guardando..." : "Guardar configuración"}
+              {configSaving ? tc("saving") : t("saveConfig")}
             </Button>
           </div>
         </div>

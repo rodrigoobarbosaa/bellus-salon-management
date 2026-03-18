@@ -6,6 +6,7 @@ import dayGridPlugin from "@fullcalendar/daygrid";
 import timeGridPlugin from "@fullcalendar/timegrid";
 import interactionPlugin from "@fullcalendar/interaction";
 import type { EventClickArg, DateSelectArg, DatesSetArg, EventDropArg } from "@fullcalendar/core";
+import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Plus, Ban } from "lucide-react";
@@ -85,6 +86,8 @@ export function AgendaView({
   userRole,
   currentProfissionalId,
 }: AgendaViewProps) {
+  const t = useTranslations("agenda");
+  const tc = useTranslations("common");
   const calendarRef = useRef<FullCalendar>(null);
   const isMobile = typeof window !== "undefined" && window.innerWidth < 768;
   const [agendamentos, setAgendamentos] = useState<Agendamento[]>([]);
@@ -157,9 +160,9 @@ export function AgendaView({
           notas: a.notas,
           tipo_etapa: a.tipo_etapa ?? "unico",
           agendamento_pai_id: a.agendamento_pai_id ?? null,
-          cliente_nome: a.clientes?.nome ?? "Cliente",
-          servico_nome: servicoMap.get(a.servico_id)?.nome ?? "Servicio",
-          profissional_nome: profMap.get(a.profissional_id)?.nome ?? "Profesional",
+          cliente_nome: a.clientes?.nome ?? t("client"),
+          servico_nome: servicoMap.get(a.servico_id)?.nome ?? t("service"),
+          profissional_nome: profMap.get(a.profissional_id)?.nome ?? t("professional"),
         }));
         setAgendamentos(mapped);
       }
@@ -168,7 +171,7 @@ export function AgendaView({
         setBloqueios(blResult.data as unknown as Bloqueio[]);
       }
     },
-    [supabase, userRole, currentProfissionalId, servicoMap, profMap]
+    [supabase, userRole, currentProfissionalId, servicoMap, profMap, t]
   );
 
   // Refetch quando range muda
@@ -244,7 +247,7 @@ export function AgendaView({
         const profNome = prof?.nome.split(" ")[0] ?? "";
         return {
           id: `bloqueio-${b.id}`,
-          title: b.motivo ? `🚫 ${b.motivo} (${profNome})` : `🚫 Bloqueado (${profNome})`,
+          title: b.motivo ? `🚫 ${b.motivo} (${profNome})` : `🚫 ${t("block")} (${profNome})`,
           start: b.data_hora_inicio,
           end: b.data_hora_fim,
           display: "background" as const,
@@ -340,10 +343,10 @@ export function AgendaView({
       {/* Header */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="flex items-center gap-3">
-          <h2 className="text-2xl font-bold text-stone-900">Agenda</h2>
+          <h2 className="text-2xl font-bold text-stone-900">{t("title")}</h2>
           {todayCount > 0 && (
             <span className="inline-flex items-center rounded-full bg-bellus-gold/15 px-2.5 py-0.5 text-xs font-semibold text-bellus-gold">
-              {todayCount} turno{todayCount !== 1 ? "s" : ""} hoy
+              {t("shiftsToday", { count: todayCount })}
             </span>
           )}
         </div>
@@ -355,12 +358,12 @@ export function AgendaView({
               className="gap-2"
             >
               <Ban className="size-4" />
-              Bloquear
+              {t("block")}
             </Button>
           )}
           <Button onClick={() => { setSelectedDate(new Date()); setCreateOpen(true); }} className="gap-2">
             <Plus className="size-4" />
-            Nuevo turno
+            {t("newShift")}
           </Button>
         </div>
       </div>
@@ -376,7 +379,7 @@ export function AgendaView({
                 : "bg-stone-100 text-stone-600 hover:bg-stone-200"
             }`}
           >
-            Todos
+            {tc("all")}
           </button>
           {profissionais.map((prof) => (
             <button
@@ -439,9 +442,9 @@ export function AgendaView({
           slotLabelFormat={{ hour: "2-digit", minute: "2-digit", hour12: false }}
           eventTimeFormat={{ hour: "2-digit", minute: "2-digit", hour12: false }}
           buttonText={{
-            today: "Hoy",
-            week: "Semana",
-            day: "Día",
+            today: t("today"),
+            week: t("week"),
+            day: t("day"),
           }}
         />
       </div>
@@ -497,35 +500,35 @@ export function AgendaView({
         >
           <DialogContent className="sm:max-w-xs">
             <DialogHeader>
-              <DialogTitle>Bloqueo de horario</DialogTitle>
+              <DialogTitle>{t("blockTitle")}</DialogTitle>
             </DialogHeader>
             <div className="space-y-2 text-sm">
               <p>
-                <span className="font-medium">Profesional:</span>{" "}
+                <span className="font-medium">{t("professional")}:</span>{" "}
                 {profMap.get(selectedBloqueio.profissional_id)?.nome ?? "—"}
               </p>
               <p>
-                <span className="font-medium">Motivo:</span>{" "}
-                {selectedBloqueio.motivo ?? "Sin motivo"}
+                <span className="font-medium">{t("reason")}:</span>{" "}
+                {selectedBloqueio.motivo ?? t("noReason")}
               </p>
               <p>
-                <span className="font-medium">Periodo:</span>{" "}
+                <span className="font-medium">{t("period")}:</span>{" "}
                 {selectedBloqueio.dia_inteiro
                   ? new Date(selectedBloqueio.data_hora_inicio).toLocaleDateString("es-ES")
-                  + " (día completo)"
+                  + ` (${t("fullDay")})`
                   : `${new Date(selectedBloqueio.data_hora_inicio).toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" })} — ${new Date(selectedBloqueio.data_hora_fim).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}`}
               </p>
             </div>
             {userRole === "proprietario" && (
               <DialogFooter>
                 <Button variant="outline" onClick={() => setSelectedBloqueio(null)}>
-                  Cerrar
+                  {t("close")}
                 </Button>
                 <Button
                   onClick={handleDeleteBloqueio}
                   className="bg-red-600 hover:bg-red-700"
                 >
-                  Eliminar bloqueo
+                  {t("deleteBlock")}
                 </Button>
               </DialogFooter>
             )}

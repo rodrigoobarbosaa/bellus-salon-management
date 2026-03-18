@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -18,6 +19,8 @@ interface ClienteFormProps {
 }
 
 export function ClienteForm({ open, onOpenChange }: ClienteFormProps) {
+  const t = useTranslations("clients");
+  const tc = useTranslations("common");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -43,7 +46,7 @@ export function ClienteForm({ open, onOpenChange }: ClienteFormProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-sm">
         <DialogHeader>
-          <DialogTitle>Nuevo cliente</DialogTitle>
+          <DialogTitle>{t("newClient")}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -52,22 +55,22 @@ export function ClienteForm({ open, onOpenChange }: ClienteFormProps) {
           )}
 
           <div className="space-y-2">
-            <label htmlFor="nome" className="text-sm font-medium text-stone-700">Nombre *</label>
+            <label htmlFor="nome" className="text-sm font-medium text-stone-700">{t("name")}</label>
             <Input id="nome" name="nome" required disabled={isLoading} />
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="telefone" className="text-sm font-medium text-stone-700">Teléfono *</label>
+            <label htmlFor="telefone" className="text-sm font-medium text-stone-700">{t("phone")}</label>
             <Input id="telefone" name="telefone" type="tel" required disabled={isLoading} placeholder="+34 600 000 000" />
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="email" className="text-sm font-medium text-stone-700">Email</label>
+            <label htmlFor="email" className="text-sm font-medium text-stone-700">{t("email")}</label>
             <Input id="email" name="email" type="email" disabled={isLoading} />
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="idioma_preferido" className="text-sm font-medium text-stone-700">Idioma</label>
+            <label htmlFor="idioma_preferido" className="text-sm font-medium text-stone-700">{t("language")}</label>
             <select
               id="idioma_preferido"
               name="idioma_preferido"
@@ -83,23 +86,23 @@ export function ClienteForm({ open, onOpenChange }: ClienteFormProps) {
           </div>
 
           <div className="space-y-2">
-            <label htmlFor="notas" className="text-sm font-medium text-stone-700">Notas</label>
+            <label htmlFor="notas" className="text-sm font-medium text-stone-700">{t("notes")}</label>
             <textarea
               id="notas"
               name="notas"
               rows={2}
               disabled={isLoading}
               className="w-full rounded-md border border-stone-200 p-2 text-sm"
-              placeholder="Preferencias, alergias, etc."
+              placeholder={t("notesPlaceholder")}
             />
           </div>
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
-              Cancelar
+              {tc("cancel")}
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Creando..." : "Crear cliente"}
+              {isLoading ? t("creating") : t("createClient")}
             </Button>
           </DialogFooter>
         </form>

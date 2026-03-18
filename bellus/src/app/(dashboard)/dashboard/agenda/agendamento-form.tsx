@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -43,6 +44,7 @@ export function AgendamentoForm({
   defaultDate,
   currentProfissionalId,
 }: AgendamentoFormProps) {
+  const t = useTranslations("agenda");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [clienteSearch, setClienteSearch] = useState("");
@@ -110,7 +112,7 @@ export function AgendamentoForm({
     } else if (selectedCliente) {
       formData.set("cliente_id", selectedCliente.id);
     } else {
-      setError("Selecciona un cliente o crea uno nuevo.");
+      setError(t("selectClient"));
       setIsLoading(false);
       return;
     }
@@ -157,7 +159,7 @@ export function AgendamentoForm({
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>Nuevo turno</DialogTitle>
+          <DialogTitle>{t("newShift")}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -167,7 +169,7 @@ export function AgendamentoForm({
 
           {/* Cliente */}
           <div className="space-y-2">
-            <label className="text-sm font-medium text-stone-700">Cliente *</label>
+            <label className="text-sm font-medium text-stone-700">{t("clientRequired")}</label>
             {!showNewCliente ? (
               <>
                 {selectedCliente ? (
@@ -178,14 +180,14 @@ export function AgendamentoForm({
                       onClick={() => { setSelectedCliente(null); setClienteSearch(""); }}
                       className="text-xs text-stone-500 hover:text-stone-700"
                     >
-                      Cambiar
+                      {t("change")}
                     </button>
                   </div>
                 ) : (
                   <>
                     <Input
                       type="text"
-                      placeholder="Buscar cliente por nombre..."
+                      placeholder={t("searchClient")}
                       value={clienteSearch}
                       onChange={(e) => setClienteSearch(e.target.value)}
                       disabled={isLoading}
@@ -216,7 +218,7 @@ export function AgendamentoForm({
                       onClick={() => setShowNewCliente(true)}
                       className="text-xs font-medium text-bellus-gold hover:underline"
                     >
-                      + Crear nuevo cliente
+                      {t("createNewClient")}
                     </button>
                   </>
                 )}
@@ -224,26 +226,26 @@ export function AgendamentoForm({
             ) : (
               <div className="space-y-2 rounded-md border border-stone-200 p-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-stone-500">Nuevo cliente</span>
+                  <span className="text-xs font-medium text-stone-500">{t("newClient")}</span>
                   <button
                     type="button"
                     onClick={() => setShowNewCliente(false)}
                     className="text-xs text-stone-400 hover:text-stone-600"
                   >
-                    Cancelar
+                    {t("close")}
                   </button>
                 </div>
                 <Input
                   name="new_cliente_nome"
                   type="text"
-                  placeholder="Nombre del cliente *"
+                  placeholder={t("clientNameRequired")}
                   required={showNewCliente}
                   disabled={isLoading}
                 />
                 <Input
                   name="new_cliente_telefone"
                   type="tel"
-                  placeholder="Teléfono (opcional)"
+                  placeholder={t("phoneOptional")}
                   disabled={isLoading}
                 />
               </div>
@@ -253,7 +255,7 @@ export function AgendamentoForm({
           {/* Serviço */}
           <div className="space-y-2">
             <label htmlFor="servico_id" className="text-sm font-medium text-stone-700">
-              Servicio *
+              {t("serviceRequired")}
             </label>
             <select
               id="servico_id"
@@ -264,7 +266,7 @@ export function AgendamentoForm({
               onChange={(e) => setSelectedServico(e.target.value)}
               className="border-input bg-background flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-xs transition-colors focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <option value="">Seleccionar servicio...</option>
+              <option value="">{t("selectService")}</option>
               {servicos.map((s) => (
                 <option key={s.id} value={s.id}>
                   {s.nome} ({s.duracao_minutos} min)
@@ -272,14 +274,14 @@ export function AgendamentoForm({
               ))}
             </select>
             {duracao > 0 && (
-              <p className="text-xs text-stone-400">Duración: {duracao} minutos</p>
+              <p className="text-xs text-stone-400">{t("duration")}: {duracao} {t("minutes")}</p>
             )}
           </div>
 
           {/* Profissional */}
           <div className="space-y-2">
             <label htmlFor="profissional_id" className="text-sm font-medium text-stone-700">
-              Profesional *
+              {t("professionalRequired")}
             </label>
             <select
               id="profissional_id"
@@ -289,7 +291,7 @@ export function AgendamentoForm({
               defaultValue={currentProfissionalId ?? ""}
               className="border-input bg-background flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-xs transition-colors focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             >
-              <option value="">Seleccionar profesional...</option>
+              <option value="">{t("selectProfessional")}</option>
               {profissionais.map((p) => (
                 <option key={p.id} value={p.id}>
                   {p.nome}
@@ -301,7 +303,7 @@ export function AgendamentoForm({
           {/* Data/hora */}
           <div className="space-y-2">
             <label htmlFor="data_hora_inicio" className="text-sm font-medium text-stone-700">
-              Fecha y hora *
+              {t("dateTime")}
             </label>
             <Input
               id="data_hora_inicio"
@@ -316,13 +318,13 @@ export function AgendamentoForm({
           {/* Notas */}
           <div className="space-y-2">
             <label htmlFor="notas" className="text-sm font-medium text-stone-700">
-              Notas
+              {t("notes")}
             </label>
             <Input
               id="notas"
               name="notas"
               type="text"
-              placeholder="Notas opcionales..."
+              placeholder={t("notesOptional")}
               disabled={isLoading}
             />
           </div>
@@ -351,17 +353,17 @@ export function AgendamentoForm({
                   className="size-4 rounded border-stone-300 accent-bellus-gold"
                 />
                 <label htmlFor="add_secado_check" className="text-sm font-medium text-amber-700">
-                  Añadir secado/acabado
+                  {t("addDrying")}
                 </label>
               </div>
               {addSecado && (
                 <>
                   <p className="text-xs text-amber-600">
-                    Pausa de procesamiento: {selectedServicoObj.tempo_pausa_minutos} min · Secado: {selectedServicoObj.duracao_pos_pausa_minutos} min
+                    {t("processingPause")}: {selectedServicoObj.tempo_pausa_minutos} min · {t("drying")}: {selectedServicoObj.duracao_pos_pausa_minutos} min
                   </p>
                   <div className="space-y-1">
                     <label htmlFor="secado_hora" className="text-xs font-medium text-stone-700">
-                      Hora del secado
+                      {t("dryingTime")}
                     </label>
                     <Input
                       id="secado_hora"
@@ -371,7 +373,7 @@ export function AgendamentoForm({
                       disabled={isLoading}
                     />
                     <p className="text-xs text-stone-400">
-                      Puedes ajustar el horario libremente — la profesional queda libre durante la pausa
+                      {t("dryingHint")}
                     </p>
                   </div>
                 </>
@@ -381,10 +383,10 @@ export function AgendamentoForm({
 
           <DialogFooter>
             <Button type="button" variant="outline" onClick={() => handleOpenChange(false)} disabled={isLoading}>
-              Cancelar
+              {t("close")}
             </Button>
             <Button type="submit" disabled={isLoading}>
-              {isLoading ? "Creando..." : "Crear turno"}
+              {isLoading ? t("creating") : t("createShift")}
             </Button>
           </DialogFooter>
         </form>

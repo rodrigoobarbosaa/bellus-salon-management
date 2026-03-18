@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -12,13 +13,7 @@ import {
 } from "@/components/ui/dialog";
 import { createServico, updateServico } from "@/app/actions/servicos";
 
-const CATEGORIAS = [
-  { value: "corte", label: "Corte" },
-  { value: "coloracao", label: "Coloración" },
-  { value: "mechas", label: "Mechas" },
-  { value: "tratamento", label: "Tratamiento" },
-  { value: "outro", label: "Otro" },
-];
+const CATEGORIA_KEYS = ["corte", "coloracao", "mechas", "tratamento", "outro"] as const;
 
 interface Servico {
   id: string;
@@ -42,6 +37,8 @@ interface ServicoFormProps {
 }
 
 export function ServicoForm({ open, onOpenChange, servico }: ServicoFormProps) {
+  const t = useTranslations("services");
+  const tc = useTranslations("common");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [categoria, setCategoria] = useState(servico?.categoria ?? "corte");
@@ -72,7 +69,7 @@ export function ServicoForm({ open, onOpenChange, servico }: ServicoFormProps) {
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent className="sm:max-w-md">
         <DialogHeader>
-          <DialogTitle>{isEditing ? "Editar servicio" : "Nuevo servicio"}</DialogTitle>
+          <DialogTitle>{isEditing ? t("editService") : t("newService")}</DialogTitle>
         </DialogHeader>
 
         <form onSubmit={handleSubmit} className="space-y-4">
@@ -84,13 +81,13 @@ export function ServicoForm({ open, onOpenChange, servico }: ServicoFormProps) {
 
           <div className="space-y-2">
             <label htmlFor="nome" className="text-sm font-medium text-stone-700">
-              Nombre *
+              {t("name")}
             </label>
             <Input
               id="nome"
               name="nome"
               type="text"
-              placeholder="Ej: Corte masculino"
+              placeholder={t("namePlaceholder")}
               required
               disabled={isLoading}
               defaultValue={servico?.nome ?? ""}
@@ -99,13 +96,13 @@ export function ServicoForm({ open, onOpenChange, servico }: ServicoFormProps) {
 
           <div className="space-y-2">
             <label htmlFor="descricao" className="text-sm font-medium text-stone-700">
-              Descripción
+              {t("description")}
             </label>
             <Input
               id="descricao"
               name="descricao"
               type="text"
-              placeholder="Descripción opcional"
+              placeholder={t("descriptionPlaceholder")}
               disabled={isLoading}
               defaultValue={servico?.descricao ?? ""}
             />
@@ -114,7 +111,7 @@ export function ServicoForm({ open, onOpenChange, servico }: ServicoFormProps) {
           <div className="grid grid-cols-2 gap-3">
             <div className="space-y-2">
               <label htmlFor="duracao_minutos" className="text-sm font-medium text-stone-700">
-                Duración (min) *
+                {t("durationMin")}
               </label>
               <Input
                 id="duracao_minutos"
@@ -130,7 +127,7 @@ export function ServicoForm({ open, onOpenChange, servico }: ServicoFormProps) {
 
             <div className="space-y-2">
               <label htmlFor="preco_base" className="text-sm font-medium text-stone-700">
-                Precio (€) *
+                {t("priceEur")}
               </label>
               <Input
                 id="preco_base"
@@ -148,7 +145,7 @@ export function ServicoForm({ open, onOpenChange, servico }: ServicoFormProps) {
 
           <div className="space-y-2">
             <label htmlFor="categoria" className="text-sm font-medium text-stone-700">
-              Categoría *
+              {t("category")}
             </label>
             <select
               id="categoria"
@@ -159,9 +156,9 @@ export function ServicoForm({ open, onOpenChange, servico }: ServicoFormProps) {
               onChange={(e) => setCategoria(e.target.value)}
               className="border-input bg-background flex h-9 w-full rounded-md border px-3 py-1 text-sm shadow-xs transition-colors focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px] focus-visible:outline-none disabled:cursor-not-allowed disabled:opacity-50"
             >
-              {CATEGORIAS.map((cat) => (
-                <option key={cat.value} value={cat.value}>
-                  {cat.label}
+              {CATEGORIA_KEYS.map((cat) => (
+                <option key={cat} value={cat}>
+                  {t(`categories.${cat}`)}
                 </option>
               ))}
             </select>
@@ -171,15 +168,15 @@ export function ServicoForm({ open, onOpenChange, servico }: ServicoFormProps) {
           {showPausaFields && (
             <div className="space-y-3 rounded-lg border border-amber-200 bg-amber-50 p-3">
               <p className="text-xs font-semibold text-amber-700">
-                Configuración de etapas (opcional)
+                {t("stagesConfig")}
               </p>
               <p className="text-xs text-amber-600">
-                Para servicios con tiempo de procesamiento (ej: coloración). Permite agendar el secado por separado.
+                {t("stagesHint")}
               </p>
               <div className="grid grid-cols-2 gap-3">
                 <div className="space-y-1">
                   <label htmlFor="tempo_pausa_minutos" className="text-xs font-medium text-stone-700">
-                    Pausa/procesamiento (min)
+                    {t("pauseMin")}
                   </label>
                   <Input
                     id="tempo_pausa_minutos"
@@ -193,7 +190,7 @@ export function ServicoForm({ open, onOpenChange, servico }: ServicoFormProps) {
                 </div>
                 <div className="space-y-1">
                   <label htmlFor="duracao_pos_pausa_minutos" className="text-xs font-medium text-stone-700">
-                    Duración secado (min)
+                    {t("dryingMin")}
                   </label>
                   <Input
                     id="duracao_pos_pausa_minutos"
@@ -211,19 +208,19 @@ export function ServicoForm({ open, onOpenChange, servico }: ServicoFormProps) {
 
           <div className="space-y-2">
             <label htmlFor="intervalo_retorno_dias" className="text-sm font-medium text-stone-700">
-              Intervalo de retorno (días)
+              {t("returnInterval")}
             </label>
             <Input
               id="intervalo_retorno_dias"
               name="intervalo_retorno_dias"
               type="number"
               min={1}
-              placeholder="Ej: 30 (para recordatorio)"
+              placeholder={t("returnIntervalPlaceholder")}
               disabled={isLoading}
               defaultValue={servico?.intervalo_retorno_dias ?? ""}
             />
             <p className="text-xs text-stone-400">
-              Días hasta recordar al cliente que vuelva
+              {t("returnIntervalHint")}
             </p>
           </div>
 
@@ -234,16 +231,16 @@ export function ServicoForm({ open, onOpenChange, servico }: ServicoFormProps) {
               onClick={() => onOpenChange(false)}
               disabled={isLoading}
             >
-              Cancelar
+              {tc("cancel")}
             </Button>
             <Button type="submit" disabled={isLoading}>
               {isLoading
                 ? isEditing
-                  ? "Guardando..."
-                  : "Creando..."
+                  ? t("saving")
+                  : t("creating")
                 : isEditing
-                  ? "Guardar cambios"
-                  : "Crear servicio"}
+                  ? t("saveChanges")
+                  : t("createService")}
             </Button>
           </DialogFooter>
         </form>

@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { getTranslations } from "next-intl/server";
 import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { CaixaView } from "./caixa-view";
@@ -40,9 +41,11 @@ export default async function CaixaPage() {
 
   const servicos = (rawServicos ?? []) as Array<{ id: string; nome: string }>;
 
+  const t = await getTranslations("cashier");
+
   return (
     <div className="space-y-6">
-      <h1 className="text-2xl font-bold">Caja</h1>
+      <h1 className="text-2xl font-bold">{t("title")}</h1>
       <CaixaView
         salaoId={salaoId}
         profissionais={profissionais}

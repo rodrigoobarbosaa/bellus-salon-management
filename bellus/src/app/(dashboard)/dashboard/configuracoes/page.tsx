@@ -81,7 +81,7 @@ export default function ConfiguracoesPage() {
     if (result.error) {
       setMessage({ type: "error", text: result.error });
     } else {
-      setMessage({ type: "success", text: "Configuraciones guardadas correctamente" });
+      setMessage({ type: "success", text: t("saved") });
     }
     setIsSaving(false);
   }
@@ -98,21 +98,21 @@ export default function ConfiguracoesPage() {
       setMessage({ type: "error", text: result.error });
     } else if (result.data) {
       setSettings((prev) => ({ ...prev, logo_url: result.data!.url }));
-      setMessage({ type: "success", text: "Logo actualizado" });
+      setMessage({ type: "success", text: t("logoUpdated") });
     }
   }
 
   if (isLoading) {
     return (
       <div className="flex items-center justify-center p-8">
-        <div className="text-stone-500">Cargando configuraciones...</div>
+        <div className="text-stone-500">{t("loadingSettings")}</div>
       </div>
     );
   }
 
   return (
     <div className="mx-auto max-w-2xl space-y-6">
-      <h1 className="text-2xl font-bold text-stone-900">Configuración del Salón</h1>
+      <h1 className="text-2xl font-bold text-stone-900">{t("title")}</h1>
 
       {message && (
         <div
@@ -127,7 +127,7 @@ export default function ConfiguracoesPage() {
       {/* Logo Upload */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Logo del Salón</CardTitle>
+          <CardTitle className="text-lg">{t("logo")}</CardTitle>
         </CardHeader>
         <CardContent className="flex items-center gap-4">
           <div
@@ -137,7 +137,7 @@ export default function ConfiguracoesPage() {
             {settings.logo_url ? (
               <Image
                 src={settings.logo_url}
-                alt="Logo del salón"
+                alt={t("logoAlt")}
                 width={80}
                 height={80}
                 className="h-full w-full object-cover"
@@ -149,9 +149,9 @@ export default function ConfiguracoesPage() {
           </div>
           <div>
             <Button variant="outline" size="sm" onClick={() => fileInputRef.current?.click()}>
-              {settings.logo_url ? "Cambiar logo" : "Subir logo"}
+              {settings.logo_url ? t("changeLogo") : t("uploadLogo")}
             </Button>
-            <p className="mt-1 text-xs text-stone-500">JPG o PNG, máximo 2MB</p>
+            <p className="mt-1 text-xs text-stone-500">{t("logoHint")}</p>
           </div>
           <input
             ref={fileInputRef}
@@ -166,13 +166,13 @@ export default function ConfiguracoesPage() {
       {/* Settings Form */}
       <Card>
         <CardHeader>
-          <CardTitle className="text-lg">Información General</CardTitle>
+          <CardTitle className="text-lg">{t("general")}</CardTitle>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             <div className="space-y-2">
               <label htmlFor="nome" className="text-sm font-medium text-stone-700">
-                Nombre del salón *
+                {t("salonNameRequired")}
               </label>
               <Input
                 id="nome"
@@ -186,7 +186,7 @@ export default function ConfiguracoesPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label htmlFor="whatsapp" className="text-sm font-medium text-stone-700">
-                  WhatsApp Business *
+                  {t("whatsappRequired")}
                 </label>
                 <Input
                   id="whatsapp"
@@ -199,7 +199,7 @@ export default function ConfiguracoesPage() {
               </div>
               <div className="space-y-2">
                 <label htmlFor="telefone" className="text-sm font-medium text-stone-700">
-                  Teléfono
+                  {t("phone")}
                 </label>
                 <Input
                   id="telefone"
@@ -213,20 +213,20 @@ export default function ConfiguracoesPage() {
 
             <div className="space-y-2">
               <label htmlFor="endereco" className="text-sm font-medium text-stone-700">
-                Dirección
+                {t("address")}
               </label>
               <Input
                 id="endereco"
                 name="endereco"
                 value={settings.endereco}
                 onChange={(e) => setSettings((p) => ({ ...p, endereco: e.target.value }))}
-                placeholder="Calle, número, ciudad"
+                placeholder={t("addressPlaceholder")}
               />
             </div>
 
             <div className="space-y-2">
               <label htmlFor="cor_primaria" className="text-sm font-medium text-stone-700">
-                Color primario del salón
+                {t("primaryColor")}
               </label>
               <div className="flex items-center gap-3">
                 <input
@@ -249,7 +249,7 @@ export default function ConfiguracoesPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label htmlFor="instagram_url" className="text-sm font-medium text-stone-700">
-                  Instagram
+                  {t("instagram")}
                 </label>
                 <Input
                   id="instagram_url"
@@ -261,7 +261,7 @@ export default function ConfiguracoesPage() {
               </div>
               <div className="space-y-2">
                 <label htmlFor="google_maps_url" className="text-sm font-medium text-stone-700">
-                  Google Maps
+                  {t("googleMaps")}
                 </label>
                 <Input
                   id="google_maps_url"
@@ -276,7 +276,7 @@ export default function ConfiguracoesPage() {
             <div className="grid grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label htmlFor="moeda" className="text-sm font-medium text-stone-700">
-                  Moneda
+                  {t("currency")}
                 </label>
                 <select
                   id="moeda"
@@ -292,7 +292,7 @@ export default function ConfiguracoesPage() {
               </div>
               <div className="space-y-2">
                 <label htmlFor="timezone" className="text-sm font-medium text-stone-700">
-                  Zona horaria
+                  {t("timezone")}
                 </label>
                 <select
                   id="timezone"

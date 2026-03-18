@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useMemo } from "react";
+import { useTranslations } from "next-intl";
 import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -36,6 +37,7 @@ interface ClientesListProps {
 const IDIOMA_LABELS: Record<string, string> = { es: "ES", pt: "PT", en: "EN", ru: "RU" };
 
 export function ClientesList({ clientes, totalClientes, pendingReturn, returnNotifs }: ClientesListProps) {
+  const t = useTranslations("clients");
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [filtroIdioma, setFiltroIdioma] = useState<string | null>(null);
@@ -76,11 +78,11 @@ export function ClientesList({ clientes, totalClientes, pendingReturn, returnNot
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-2xl font-bold text-stone-800">Clientes</h1>
-          <p className="text-sm text-stone-500">{totalClientes} clientes registrados</p>
+          <h1 className="text-2xl font-bold text-stone-800">{t("title")}</h1>
+          <p className="text-sm text-stone-500">{t("registered", { count: totalClientes })}</p>
         </div>
         <Button onClick={() => setShowForm(true)}>
-          <Plus className="mr-1 h-4 w-4" /> Nuevo cliente
+          <Plus className="mr-1 h-4 w-4" /> {t("newClient")}
         </Button>
       </div>
 
@@ -93,7 +95,7 @@ export function ClientesList({ clientes, totalClientes, pendingReturn, returnNot
             </div>
             <div>
               <p className="text-2xl font-bold text-stone-800">{totalClientes}</p>
-              <p className="text-xs text-stone-500">Total</p>
+              <p className="text-xs text-stone-500">{t("total")}</p>
             </div>
           </CardContent>
         </Card>
@@ -104,7 +106,7 @@ export function ClientesList({ clientes, totalClientes, pendingReturn, returnNot
             </div>
             <div>
               <p className="text-2xl font-bold text-stone-800">{pendingReturn}</p>
-              <p className="text-xs text-stone-500">Retorno pendiente</p>
+              <p className="text-xs text-stone-500">{t("pendingReturn")}</p>
             </div>
           </CardContent>
         </Card>
@@ -115,7 +117,7 @@ export function ClientesList({ clientes, totalClientes, pendingReturn, returnNot
             </div>
             <div>
               <p className="text-2xl font-bold text-stone-800">{conversionRate}%</p>
-              <p className="text-xs text-stone-500">Conversión retorno</p>
+              <p className="text-xs text-stone-500">{t("returnConversion")}</p>
             </div>
           </CardContent>
         </Card>
@@ -125,7 +127,7 @@ export function ClientesList({ clientes, totalClientes, pendingReturn, returnNot
       <div className="relative">
         <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-stone-400" />
         <Input
-          placeholder="Buscar por nombre, teléfono o email..."
+          placeholder={t("searchPlaceholder")}
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           className="pl-10"
@@ -169,7 +171,7 @@ export function ClientesList({ clientes, totalClientes, pendingReturn, returnNot
               : "bg-stone-100 text-stone-500 hover:bg-stone-200"
           }`}
         >
-          Retorno pendiente
+          {t("pendingReturn")}
         </button>
         {/* Clear filters */}
         {(filtroIdioma || filtroOptOut !== null || filtroRetorno) && (
@@ -177,7 +179,7 @@ export function ClientesList({ clientes, totalClientes, pendingReturn, returnNot
             onClick={() => { setFiltroIdioma(null); setFiltroOptOut(null); setFiltroRetorno(false); }}
             className="rounded-full px-3 py-1 text-xs font-medium text-stone-400 hover:text-stone-600"
           >
-            Limpiar filtros
+            {t("clearFilters")}
           </button>
         )}
       </div>
@@ -186,7 +188,7 @@ export function ClientesList({ clientes, totalClientes, pendingReturn, returnNot
       <div className="divide-y divide-stone-100 rounded-xl border border-stone-200 bg-white">
         {filtered.length === 0 ? (
           <div className="p-8 text-center text-sm text-stone-400">
-            {search ? "No se encontraron clientes." : "Aún no hay clientes registrados."}
+            {search ? t("noResults") : t("noClients")}
           </div>
         ) : (
           filtered.map((c) => {
@@ -209,7 +211,7 @@ export function ClientesList({ clientes, totalClientes, pendingReturn, returnNot
                       </span>
                       {isOverdue && (
                         <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
-                          Retorno
+                          {t("return")}
                         </span>
                       )}
                       {c.opt_out_notificacoes && (
