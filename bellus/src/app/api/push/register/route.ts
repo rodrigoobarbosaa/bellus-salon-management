@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
+import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
@@ -8,6 +9,13 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  * Stores the Expo push token for a client.
  */
 export async function POST(request: NextRequest) {
+  // Auth check
+  const supabaseAuth = await createClient();
+  const { data: { user } } = await supabaseAuth.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   try {
     const body = await request.json();
     const { clienteId, pushToken, platform } = body;

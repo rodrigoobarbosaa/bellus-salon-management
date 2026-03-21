@@ -196,12 +196,10 @@ export async function createAgendamento(formData: FormData) {
 
 export async function updateAgendamentoStatus(id: string, status: string) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const { salaoId } = await getUserSalaoId(supabase);
 
-  if (!user) {
-    return { error: "No autenticado." };
+  if (!salaoId) {
+    return { error: "No autenticado o salón no encontrado." };
   }
 
   // Validar transições válidas
@@ -214,6 +212,7 @@ export async function updateAgendamentoStatus(id: string, status: string) {
     .from("agendamentos")
     .select("status")
     .eq("id", id)
+    .eq("salao_id", salaoId)
     .single();
 
   if (!current) {
@@ -230,7 +229,8 @@ export async function updateAgendamentoStatus(id: string, status: string) {
   const { error } = await supabase
     .from("agendamentos")
     .update({ status: status as "pendente" | "confirmado" | "concluido" | "cancelado", updated_at: new Date().toISOString() })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("salao_id", salaoId);
 
   if (error) {
     return { error: "Error al actualizar el estado." };
@@ -242,6 +242,7 @@ export async function updateAgendamentoStatus(id: string, status: string) {
       .from("agendamentos")
       .select("cliente_id")
       .eq("id", id)
+      .eq("salao_id", salaoId)
       .single();
 
     if (agendamento) {
@@ -362,7 +363,8 @@ export async function updateAgendamento(id: string, formData: FormData) {
       notas,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("salao_id", salaoId);
 
   if (error) {
     return { error: "Error al actualizar el turno." };

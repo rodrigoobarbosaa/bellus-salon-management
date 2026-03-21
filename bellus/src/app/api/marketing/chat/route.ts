@@ -1,8 +1,16 @@
-import { NextRequest } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { env } from "@/lib/env";
 import { getSalonContext } from "@/app/actions/marketing";
+import { createClient } from "@/lib/supabase/server";
 
 export async function POST(request: NextRequest) {
+  // Auth check
+  const supabase = await createClient();
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) {
+    return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+  }
+
   const apiKey = env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     return new Response(

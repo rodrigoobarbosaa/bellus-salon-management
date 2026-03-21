@@ -1,16 +1,32 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { verifyOptOutToken } from "@/lib/opt-out-token";
 
 /**
- * GET /api/opt-out?client_id=X
+ * GET /api/opt-out?client_id=X&token=Y
  * Public endpoint for clients to opt out of notifications via link.
+ * Requires a valid HMAC token to prevent IDOR attacks.
  */
 export async function GET(request: NextRequest) {
   const clientId = request.nextUrl.searchParams.get("client_id");
+  const token = request.nextUrl.searchParams.get("token");
 
-  if (!clientId) {
+  if (!clientId || !token) {
     return new NextResponse(optOutPage("error", "Enlace inválido."), {
+      headers: { "Content-Type": "text/html" },
+    });
+  }
+
+  // Verify HMAC token to prevent unauthorized opt-out of arbitrary clients
+  try {
+    if (!verifyOptOutToken(clientId, token)) {
+      return new NextResponse(optOutPage("error", "Enlace inválido o expirado."), {
+        headers: { "Content-Type": "text/html" },
+      });
+    }
+  } catch {
+    return new NextResponse(optOutPage("error", "Enlace inválido o expirado."), {
       headers: { "Content-Type": "text/html" },
     });
   }

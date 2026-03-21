@@ -140,18 +140,17 @@ export async function updateServico(formData: FormData) {
 
 export async function toggleServicoAtivo(id: string, ativo: boolean) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const salaoId = await getSalaoId(supabase);
 
-  if (!user) {
-    return { error: "No autenticado." };
+  if (!salaoId) {
+    return { error: "No autenticado o salón no encontrado." };
   }
 
   const { error } = await supabase
     .from("servicos")
     .update({ ativo, updated_at: new Date().toISOString() })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("salao_id", salaoId);
 
   if (error) {
     return { error: "Error al cambiar el estado del servicio." };
@@ -166,12 +165,22 @@ export async function updateServicoProfissionais(
   profissionais: { profissional_id: string; preco_override: number | null }[]
 ) {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  const salaoId = await getSalaoId(supabase);
 
-  if (!user) {
-    return { error: "No autenticado." };
+  if (!salaoId) {
+    return { error: "No autenticado o salón no encontrado." };
+  }
+
+  // Verificar que el servicio pertenece al salón del usuario
+  const { data: servico } = await supabase
+    .from("servicos")
+    .select("id")
+    .eq("id", servicoId)
+    .eq("salao_id", salaoId)
+    .single();
+
+  if (!servico) {
+    return { error: "Servicio no encontrado o no pertenece a tu salón." };
   }
 
   // Remover associações existentes

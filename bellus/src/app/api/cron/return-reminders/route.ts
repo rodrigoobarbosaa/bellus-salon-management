@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { sendNotification } from "@/lib/notifications/send-notification";
 import { getReturnReminderTemplate, renderTemplate } from "@/lib/notifications/templates";
+import { generateOptOutToken } from "@/lib/opt-out-token";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
@@ -11,10 +12,9 @@ import type { SupabaseClient } from "@supabase/supabase-js";
  * Protected by CRON_SECRET header.
  */
 export async function GET(request: NextRequest) {
+  // Verify cron secret (fail-closed: reject if secret is missing or mismatched)
   const cronSecret = process.env.CRON_SECRET;
-  const authHeader = request.headers.get("authorization");
-
-  if (cronSecret && authHeader !== `Bearer ${cronSecret}`) {
+  if (!cronSecret || request.headers.get("authorization") !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
@@ -114,7 +114,7 @@ export async function GET(request: NextRequest) {
       nome_cliente: cl.nome,
       salao: salaoNome,
       link_booking: bookingUrl,
-      link_optout: `${process.env.NEXT_PUBLIC_APP_URL || "https://bellus.app"}/api/opt-out?client_id=${cl.id}`,
+      link_optout: `${process.env.NEXT_PUBLIC_APP_URL || "https://bellus.app"}/api/opt-out?client_id=${cl.id}&token=${generateOptOutToken(cl.id)}`,
     });
 
     await sendNotification({

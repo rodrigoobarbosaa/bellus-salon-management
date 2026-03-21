@@ -3,6 +3,7 @@
 import { createServiceClient } from "@/lib/supabase/service";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { sendBookingConfirmation } from "@/lib/notifications/send-notification";
+import { generateOptOutToken } from "@/lib/opt-out-token";
 
 /**
  * Public booking creation — no auth required.
@@ -210,7 +211,7 @@ export async function createPublicBooking(formData: FormData) {
       hora,
       salao: salaoNome,
       endereco: salaoEndereco,
-      link_optout: `${process.env.NEXT_PUBLIC_APP_URL || "https://bellus.app"}/api/opt-out?client_id=${clienteId}`,
+      link_optout: `${process.env.NEXT_PUBLIC_APP_URL || "https://bellus.app"}/api/opt-out?client_id=${clienteId}&token=${generateOptOutToken(clienteId)}`,
     },
   }).catch((err) => {
     console.error("Error sending confirmation:", err);

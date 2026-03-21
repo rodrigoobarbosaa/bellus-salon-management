@@ -20,7 +20,7 @@ export async function createClient() {
               cookieStore.set(name, value, options)
             );
           } catch {
-            // Server Component — cookies são read-only, middleware lida com refresh
+            // Server Component — cookies são read-only, proxy lida com refresh
           }
         },
       },
