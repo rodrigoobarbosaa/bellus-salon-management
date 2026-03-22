@@ -38,6 +38,24 @@ export async function createProfissional(formData: FormData) {
     return { error: "Nome e email são obrigatórios." };
   }
 
+  if (nome.length > 100) {
+    return { error: "Nome muito longo (máximo 100 caracteres)." };
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return { error: "Email inválido." };
+  }
+
+  if (telefone && telefone.length > 20) {
+    return { error: "Telefone muito longo (máximo 20 caracteres)." };
+  }
+
+  const validRoles = ["proprietario", "profissional"] as const;
+  if (!validRoles.includes(role as (typeof validRoles)[number])) {
+    return { error: "Cargo inválido." };
+  }
+
   const { error } = await supabase.from("profissionais").insert({
     user_id: crypto.randomUUID(),
     salao_id: salaoId,
@@ -73,6 +91,24 @@ export async function updateProfissional(formData: FormData) {
 
   if (!id || !nome || !email) {
     return { error: "Dados incompletos." };
+  }
+
+  if (nome.length > 100) {
+    return { error: "Nome muito longo (máximo 100 caracteres)." };
+  }
+
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    return { error: "Email inválido." };
+  }
+
+  if (telefone && telefone.length > 20) {
+    return { error: "Telefone muito longo (máximo 20 caracteres)." };
+  }
+
+  const validRoles = ["proprietario", "profissional"] as const;
+  if (!validRoles.includes(role as (typeof validRoles)[number])) {
+    return { error: "Cargo inválido." };
   }
 
   const { error } = await supabase
@@ -139,6 +175,27 @@ export async function updateProfissionalServicos(
 
   if (!prof) {
     return { error: "Profissional não encontrado ou não pertence ao salão." };
+  }
+
+  // Validar que todos os serviços pertencem ao mesmo salão
+  if (servicos.length > 0) {
+    const servicoIds = servicos.map((s) => s.servico_id);
+    const { data: validServicos } = await supabase
+      .from("servicos")
+      .select("id")
+      .eq("salao_id", salaoId)
+      .in("id", servicoIds);
+
+    if ((validServicos as Array<{ id: string }> | null)?.length !== servicoIds.length) {
+      return { error: "Alguns serviços não pertencem a este salão." };
+    }
+
+    // Validar preco_override >= 0
+    for (const s of servicos) {
+      if (s.preco_override !== null && s.preco_override < 0) {
+        return { error: "Preço override não pode ser negativo." };
+      }
+    }
   }
 
   // Remover associações existentes

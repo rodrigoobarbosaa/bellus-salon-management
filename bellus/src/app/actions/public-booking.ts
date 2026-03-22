@@ -26,11 +26,12 @@ export async function createPublicBooking(formData: FormData) {
 
   const supabase = createServiceClient();
 
-  // Fetch service duration
+  // Fetch service duration (validate belongs to this salon)
   const { data: servico } = await supabase
     .from("servicos")
     .select("duracao_minutos, nome")
     .eq("id", servicoId)
+    .eq("salao_id", salaoId)
     .single();
 
   if (!servico) {
@@ -44,6 +45,22 @@ export async function createPublicBooking(formData: FormData) {
 
   // Resolve professional — if not specified, pick first available
   let resolvedProfId = profissionalId;
+
+  // Validate specified professional belongs to this salon
+  if (resolvedProfId) {
+    const { data: profCheck } = await supabase
+      .from("profissionais")
+      .select("id")
+      .eq("id", resolvedProfId)
+      .eq("salao_id", salaoId)
+      .eq("ativo", true)
+      .single();
+
+    if (!profCheck) {
+      return { error: "Profesional no encontrado o no disponible." };
+    }
+  }
+
   if (!resolvedProfId) {
     // Get professionals for this service
     const { data: sps } = await supabase

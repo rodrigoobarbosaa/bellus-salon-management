@@ -128,7 +128,8 @@ export async function updateServico(formData: FormData) {
       duracao_pos_pausa_minutos,
       updated_at: new Date().toISOString(),
     })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("salao_id", salaoId);
 
   if (error) {
     return { error: "Error al actualizar el servicio." };
@@ -181,6 +182,27 @@ export async function updateServicoProfissionais(
 
   if (!servico) {
     return { error: "Servicio no encontrado o no pertenece a tu salón." };
+  }
+
+  // Validar que todos os profissionais pertencem ao mesmo salão
+  if (profissionais.length > 0) {
+    const profIds = profissionais.map((p) => p.profissional_id);
+    const { data: validProfs } = await supabase
+      .from("profissionais")
+      .select("id")
+      .eq("salao_id", salaoId)
+      .in("id", profIds);
+
+    if ((validProfs as Array<{ id: string }> | null)?.length !== profIds.length) {
+      return { error: "Algunos profesionales no pertenecen a este salón." };
+    }
+
+    // Validar preco_override >= 0
+    for (const p of profissionais) {
+      if (p.preco_override !== null && p.preco_override < 0) {
+        return { error: "El precio override no puede ser negativo." };
+      }
+    }
   }
 
   // Remover associações existentes

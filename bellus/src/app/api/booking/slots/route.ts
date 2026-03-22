@@ -2,11 +2,41 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
+// In-memory rate limiting (30 req/min per IP)
+const rateLimit = new Map<string, { count: number; resetAt: number }>();
+
+function checkRateLimit(ip: string, limit = 30, windowMs = 60_000): boolean {
+  const now = Date.now();
+  const entry = rateLimit.get(ip);
+  if (!entry || now > entry.resetAt) {
+    rateLimit.set(ip, { count: 1, resetAt: now + windowMs });
+    return true;
+  }
+  entry.count++;
+  return entry.count <= limit;
+}
+
+// Cleanup stale entries every 5 minutes
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, entry] of rateLimit) {
+    if (now > entry.resetAt) rateLimit.delete(ip);
+  }
+}, 300_000);
+
 /**
  * GET /api/booking/slots?salao_id=X&date=YYYY-MM-DD&profissional_id=Y&duration=Z
  * Returns busy time slots for the given date and professional.
  */
 export async function GET(request: NextRequest) {
+  const ip = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "unknown";
+  if (!checkRateLimit(ip)) {
+    return NextResponse.json(
+      { error: "Too many requests. Try again later." },
+      { status: 429 }
+    );
+  }
+
   const { searchParams } = request.nextUrl;
   const salaoId = searchParams.get("salao_id");
   const date = searchParams.get("date");

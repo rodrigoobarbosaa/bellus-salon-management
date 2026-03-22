@@ -277,18 +277,24 @@ export async function cancelAgendamento(id: string) {
 
   // Cancelar secado vinculado em cascata
   const supabase = await createClient();
-  const { data: filhos } = await supabase
-    .from("agendamentos")
-    .select("id")
-    .eq("agendamento_pai_id", id)
-    .neq("status", "cancelado");
+  const { salaoId } = await getUserSalaoId(supabase);
 
-  if (filhos) {
-    for (const filho of filhos as Array<{ id: string }>) {
-      await supabase
-        .from("agendamentos")
-        .update({ status: "cancelado" as const, updated_at: new Date().toISOString() })
-        .eq("id", filho.id);
+  if (salaoId) {
+    const { data: filhos } = await supabase
+      .from("agendamentos")
+      .select("id")
+      .eq("agendamento_pai_id", id)
+      .eq("salao_id", salaoId)
+      .neq("status", "cancelado");
+
+    if (filhos) {
+      for (const filho of filhos as Array<{ id: string }>) {
+        await supabase
+          .from("agendamentos")
+          .update({ status: "cancelado" as const, updated_at: new Date().toISOString() })
+          .eq("id", filho.id)
+          .eq("salao_id", salaoId);
+      }
     }
   }
 
@@ -386,11 +392,12 @@ export async function rescheduleAgendamento(
     return { error: "No autenticado." };
   }
 
-  // Buscar dados do agendamento
+  // Buscar dados do agendamento (com filtro salao_id)
   const { data: agendamento } = await supabase
     .from("agendamentos")
     .select("profissional_id, status")
     .eq("id", id)
+    .eq("salao_id", salaoId)
     .single();
 
   if (!agendamento) {
@@ -439,7 +446,8 @@ export async function rescheduleAgendamento(
       data_hora_fim: fim.toISOString(),
       updated_at: new Date().toISOString(),
     })
-    .eq("id", id);
+    .eq("id", id)
+    .eq("salao_id", salaoId);
 
   if (error) {
     return { error: "Error al mover el turno." };
