@@ -136,6 +136,7 @@ export function ServicosDialog({
                     type="checkbox"
                     checked={state.selected}
                     onChange={() => toggleServico(servico.id)}
+                    aria-label={servico.nome}
                     className="size-4 rounded border-stone-300 text-bellus-gold accent-bellus-gold"
                   />
                   <div className="flex-1 min-w-0">

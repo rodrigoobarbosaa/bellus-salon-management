@@ -1,6 +1,7 @@
 "use client";
 
 import { useState } from "react";
+import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -43,6 +44,7 @@ export function ProfissionaisDialog({
   profissionais,
   currentAssociations,
 }: ProfissionaisDialogProps) {
+  const tc = useTranslations("common");
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -132,6 +134,7 @@ export function ProfissionaisDialog({
                     type="checkbox"
                     checked={state.selected}
                     onChange={() => toggleProf(prof.id)}
+                    aria-label={prof.nome}
                     className="size-4 rounded border-stone-300 text-bellus-gold accent-bellus-gold"
                   />
                   <span className="flex-1 text-sm font-medium text-stone-700">
@@ -156,10 +159,10 @@ export function ProfissionaisDialog({
 
         <DialogFooter>
           <Button variant="outline" onClick={() => onOpenChange(false)} disabled={isLoading}>
-            Cancelar
+            {tc("cancel")}
           </Button>
           <Button onClick={handleSave} disabled={isLoading}>
-            {isLoading ? "Guardando..." : "Guardar"}
+            {isLoading ? tc("saving") : tc("save")}
           </Button>
         </DialogFooter>
       </DialogContent>

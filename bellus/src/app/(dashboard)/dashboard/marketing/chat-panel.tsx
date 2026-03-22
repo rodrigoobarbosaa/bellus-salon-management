@@ -195,7 +195,7 @@ export function ChatPanel() {
               disabled={isLoading}
               className="flex-1"
             />
-            <Button type="submit" size="icon" disabled={isLoading || !input.trim()}>
+            <Button type="submit" size="icon" disabled={isLoading || !input.trim()} title="Send">
               <Send className="size-4" />
             </Button>
           </form>

@@ -5,10 +5,15 @@ export async function proxy(request: NextRequest) {
   const { supabaseResponse, user } = await updateSession(request);
   const { pathname } = request.nextUrl;
 
-  // Redirecionar / para /dashboard (autenticado) ou /login (não autenticado)
+  // Redirecionar / para /dashboard (autenticado) ou /site (não autenticado)
   if (pathname === "/") {
-    const redirectUrl = user ? new URL("/dashboard", request.url) : new URL("/login", request.url);
+    const redirectUrl = user ? new URL("/dashboard", request.url) : new URL("/site", request.url);
     return NextResponse.redirect(redirectUrl);
+  }
+
+  // Landing page pública — não exige autenticação
+  if (pathname === "/site") {
+    return supabaseResponse;
   }
 
   // Proteger rotas /dashboard — redirecionar não-autenticados para /login

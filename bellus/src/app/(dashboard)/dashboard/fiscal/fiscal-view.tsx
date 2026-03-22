@@ -264,6 +264,12 @@ export function FiscalView({ salaoId, salaoNome, configFiscal }: FiscalViewProps
         </div>
       )}
 
+      {/* Disclaimer */}
+      <div className="rounded-md border border-amber-200 bg-amber-50 p-3 text-sm text-amber-800">
+        <AlertTriangle className="mr-2 inline size-4" />
+        {t("disclaimer")}
+      </div>
+
       {/* Tabs */}
       <div className="flex gap-1 rounded-lg bg-gray-100 p-1 w-fit">
         {(["resumo", "despesas", "config"] as const).map((tabKey) => (
@@ -401,6 +407,7 @@ export function FiscalView({ salaoId, salaoNome, configFiscal }: FiscalViewProps
                   {t("exportModelo130")}
                 </Button>
               </div>
+              <p className="text-xs text-stone-400 italic">{t("exportDisclaimer")}</p>
             </>
           )}
         </div>

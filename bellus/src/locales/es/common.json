@@ -293,6 +293,8 @@
     "saveConfig": "Guardar configuración",
     "savedOk": "Configuración guardada correctamente.",
     "totalRegistered": "Total gastos registrados",
+    "disclaimer": "Este módulo es una herramienta de referencia. Las exportaciones no son aceptadas directamente por la AEAT. Consulta a tu asesor fiscal.",
+    "exportDisclaimer": "Documento de referencia — no sustituye la declaración oficial",
     "categories": {
       "produtos": "Productos",
       "aluguel": "Alquiler",
@@ -393,7 +395,9 @@
     "days": "dias",
     "loading": "Cargando...",
     "noInactiveClients": "Todos los clientes estan activos!",
-    "sendReminder": "Enviar"
+    "sendReminder": "Enviar",
+    "comingSoon": "Próximamente",
+    "connectDisabled": "Integración disponible próximamente"
   },
   "team": {
     "title": "Equipo",

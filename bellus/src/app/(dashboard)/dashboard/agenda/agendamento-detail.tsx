@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -15,7 +15,10 @@ import {
   updateAgendamento,
   cancelAgendamento,
 } from "@/app/actions/agendamentos";
-import { Clock, User, Scissors, Calendar, FileText, Pencil } from "lucide-react";
+import { Clock, User, Scissors, Calendar, FileText, Pencil, MessageCircle } from "lucide-react";
+import { useTranslations } from "next-intl";
+import { createClient } from "@/lib/supabase/client";
+import { buildWhatsAppLink } from "@/lib/whatsapp-link";
 import { PaymentModal } from "./payment-modal";
 
 interface Agendamento {
@@ -79,11 +82,40 @@ export function AgendamentoDetail({
   userRole,
   currentProfissionalId,
 }: AgendamentoDetailProps) {
+  const t = useTranslations("agenda");
   const [isLoading, setIsLoading] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
+  const [clientePhone, setClientePhone] = useState<string | null>(null);
+  const [clienteIdioma, setClienteIdioma] = useState<"pt" | "es" | "en" | "ru">("es");
+  const [salonName, setSalonName] = useState("");
+
+  useEffect(() => {
+    if (!open) return;
+    const supabase = createClient();
+
+    async function fetchClientAndSalon() {
+      const [{ data: cliente }, { data: salao }] = await Promise.all([
+        supabase
+          .from("clientes")
+          .select("telefone, idioma_preferido")
+          .eq("id", agendamento.cliente_id)
+          .single(),
+        supabase
+          .from("saloes")
+          .select("nome")
+          .limit(1)
+          .single(),
+      ]);
+      setClientePhone(cliente?.telefone ?? null);
+      setClienteIdioma(cliente?.idioma_preferido ?? "es");
+      setSalonName(salao?.nome ?? "");
+    }
+
+    fetchClientAndSalon();
+  }, [open, agendamento.cliente_id]);
 
   // Edit form state
   const [editServico, setEditServico] = useState(agendamento.servico_id);
@@ -376,6 +408,30 @@ export function AgendamentoDetail({
             )}
 
             <DialogFooter className="gap-2">
+              {!isTerminal && clientePhone && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const inicio = new Date(agendamento.data_hora_inicio);
+                    const link = buildWhatsAppLink({
+                      telefone: clientePhone,
+                      nome_cliente: agendamento.cliente_nome ?? "",
+                      servico: agendamento.servico_nome ?? "",
+                      profissional: agendamento.profissional_nome ?? "",
+                      data: inicio.toLocaleDateString(clienteIdioma === "en" ? "en-US" : clienteIdioma === "ru" ? "ru-RU" : clienteIdioma === "pt" ? "pt-BR" : "es-ES", { weekday: "long", day: "numeric", month: "long" }),
+                      hora: inicio.toLocaleTimeString(clienteIdioma === "en" ? "en-US" : "es-ES", { hour: "2-digit", minute: "2-digit", hour12: false }),
+                      salao: salonName,
+                      idioma: clienteIdioma,
+                    });
+                    window.open(link, "_blank");
+                  }}
+                  className="gap-2 border-green-300 text-green-700 hover:bg-green-50 hover:text-green-800"
+                  title={t("sendWhatsApp")}
+                >
+                  <MessageCircle className="size-3.5" />
+                  {t("sendWhatsApp")}
+                </Button>
+              )}
               {canEdit && !isTerminal && (
                 <Button
                   variant="outline"

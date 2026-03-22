@@ -293,6 +293,8 @@
     "saveConfig": "Save configuration",
     "savedOk": "Configuration saved successfully.",
     "totalRegistered": "Total registered expenses",
+    "disclaimer": "This module is a reference tool. Exports are not accepted directly by the AEAT. Consult your tax advisor.",
+    "exportDisclaimer": "Reference document — does not replace an official filing",
     "categories": {
       "produtos": "Products",
       "aluguel": "Rent",
@@ -393,7 +395,9 @@
     "days": "days",
     "loading": "Loading...",
     "noInactiveClients": "All clients are active!",
-    "sendReminder": "Send"
+    "sendReminder": "Send",
+    "comingSoon": "Coming Soon",
+    "connectDisabled": "Integration available soon"
   },
   "team": {
     "title": "Team",
