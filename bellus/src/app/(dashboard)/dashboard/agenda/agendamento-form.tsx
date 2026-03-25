@@ -47,6 +47,8 @@ export function AgendamentoForm({
   const t = useTranslations("agenda");
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [conflictMessage, setConflictMessage] = useState<string | null>(null);
+  const [pendingFormData, setPendingFormData] = useState<FormData | null>(null);
   const [clienteSearch, setClienteSearch] = useState("");
   const [clientes, setClientes] = useState<Array<{ id: string; nome: string; telefone: string | null }>>([]);
   const [selectedCliente, setSelectedCliente] = useState<{ id: string; nome: string } | null>(null);
@@ -99,31 +101,16 @@ export function AgendamentoForm({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [clienteSearch]);
 
-  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    setError(null);
+  async function submitForm(formData: FormData) {
     setIsLoading(true);
+    const result = await createAgendamento(formData);
 
-    const formData = new FormData(event.currentTarget);
-
-    // Se é novo cliente, adicionar flag
-    if (showNewCliente) {
-      formData.set("new_cliente", "true");
-    } else if (selectedCliente) {
-      formData.set("cliente_id", selectedCliente.id);
-    } else {
-      setError(t("selectClient"));
+    if (result && "conflict" in result && result.conflict) {
+      setConflictMessage(result.message as string);
+      setPendingFormData(formData);
       setIsLoading(false);
       return;
     }
-
-    // Secado
-    if (addSecado && secadoHorario) {
-      formData.set("add_secado", "true");
-      formData.set("secado_hora_inicio", new Date(secadoHorario).toISOString());
-    }
-
-    const result = await createAgendamento(formData);
 
     if (result?.error) {
       setError(result.error);
@@ -139,12 +126,49 @@ export function AgendamentoForm({
     setSelectedServico("");
     setAddSecado(false);
     setSecadoHorario("");
+    setConflictMessage(null);
+    setPendingFormData(null);
     onOpenChange(false);
+  }
+
+  async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    setError(null);
+    setConflictMessage(null);
+
+    const formData = new FormData(event.currentTarget);
+
+    // Se é novo cliente, adicionar flag
+    if (showNewCliente) {
+      formData.set("new_cliente", "true");
+    } else if (selectedCliente) {
+      formData.set("cliente_id", selectedCliente.id);
+    } else {
+      setError(t("selectClient"));
+      return;
+    }
+
+    // Secado
+    if (addSecado && secadoHorario) {
+      formData.set("add_secado", "true");
+      formData.set("secado_hora_inicio", new Date(secadoHorario).toISOString());
+    }
+
+    await submitForm(formData);
+  }
+
+  async function handleForceOverlap() {
+    if (!pendingFormData) return;
+    pendingFormData.set("force_overlap", "true");
+    setConflictMessage(null);
+    await submitForm(pendingFormData);
   }
 
   function handleOpenChange(open: boolean) {
     if (!open) {
       setError(null);
+      setConflictMessage(null);
+      setPendingFormData(null);
       setSelectedCliente(null);
       setClienteSearch("");
       setShowNewCliente(false);
@@ -165,6 +189,31 @@ export function AgendamentoForm({
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">{error}</div>
+          )}
+
+          {conflictMessage && (
+            <div className="rounded-md border border-amber-300 bg-amber-50 p-3 space-y-2">
+              <p className="text-sm font-medium text-amber-800">⚠ {conflictMessage}</p>
+              <div className="flex gap-2">
+                <Button
+                  type="button"
+                  size="sm"
+                  variant="outline"
+                  onClick={() => { setConflictMessage(null); setPendingFormData(null); }}
+                >
+                  {t("close")}
+                </Button>
+                <Button
+                  type="button"
+                  size="sm"
+                  onClick={handleForceOverlap}
+                  disabled={isLoading}
+                  className="bg-amber-600 hover:bg-amber-700"
+                >
+                  {isLoading ? t("creating") : t("confirmOverlap")}
+                </Button>
+              </div>
+            </div>
           )}
 
           {/* Cliente */}

@@ -144,6 +144,7 @@
     "dryingHint": "Вы можете свободно изменить время — специалист свободен во время паузы",
     "creating": "Создание...",
     "createShift": "Создать запись",
+    "confirmOverlap": "Записать всё равно",
     "sendWhatsApp": "WhatsApp",
     "whatsAppNotAvailable": "У клиента нет телефона"
   },

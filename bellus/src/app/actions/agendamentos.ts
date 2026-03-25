@@ -36,6 +36,7 @@ export async function createAgendamento(formData: FormData) {
   const data_hora_inicio = formData.get("data_hora_inicio") as string;
   const notas = (formData.get("notas") as string) || null;
   const isNewCliente = formData.get("new_cliente") === "true";
+  const forceOverlap = formData.get("force_overlap") === "true";
 
   if (!profissional_id || !servico_id || !data_hora_inicio) {
     return { error: "Profesional, servicio y fecha/hora son obligatorios." };
@@ -86,16 +87,18 @@ export async function createAgendamento(formData: FormData) {
   }
 
   // Verificar conflito de horário com agendamentos
-  const { data: conflitos } = await supabase
-    .from("agendamentos")
-    .select("id")
-    .eq("profissional_id", profissional_id)
-    .neq("status", "cancelado")
-    .lt("data_hora_inicio", fim.toISOString())
-    .gt("data_hora_fim", inicio.toISOString());
+  if (!forceOverlap) {
+    const { data: conflitos } = await supabase
+      .from("agendamentos")
+      .select("id")
+      .eq("profissional_id", profissional_id)
+      .neq("status", "cancelado")
+      .lt("data_hora_inicio", fim.toISOString())
+      .gt("data_hora_fim", inicio.toISOString());
 
-  if (conflitos && (conflitos as Array<{ id: string }>).length > 0) {
-    return { error: "Conflicto de horario: el profesional ya tiene un turno en ese horario." };
+    if (conflitos && (conflitos as Array<{ id: string }>).length > 0) {
+      return { conflict: true, message: "El profesional ya tiene un turno en ese horario. ¿Deseas agendar de todas formas?" };
+    }
   }
 
   // Verificar conflito com bloqueios

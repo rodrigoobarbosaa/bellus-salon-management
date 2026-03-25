@@ -144,6 +144,7 @@
     "dryingHint": "Você pode ajustar o horário livremente — a profissional fica livre durante a pausa",
     "creating": "Criando...",
     "createShift": "Criar atendimento",
+    "confirmOverlap": "Agendar mesmo assim",
     "sendWhatsApp": "WhatsApp",
     "whatsAppNotAvailable": "Cliente sem telefone"
   },
