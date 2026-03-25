@@ -57,7 +57,6 @@ export async function createProfissional(formData: FormData) {
   }
 
   const { error } = await supabase.from("profissionais").insert({
-    user_id: crypto.randomUUID(),
     salao_id: salaoId,
     nome,
     email,
@@ -67,7 +66,8 @@ export async function createProfissional(formData: FormData) {
   });
 
   if (error) {
-    return { error: "Erro ao criar profissional. Tente novamente." };
+    console.error("createProfissional error:", error.message, error.code, error.details);
+    return { error: `Erro ao criar profissional: ${error.message}` };
   }
 
   revalidatePath("/dashboard/equipe");
