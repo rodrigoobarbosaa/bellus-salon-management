@@ -71,7 +71,8 @@ export async function createServico(formData: FormData) {
   });
 
   if (error) {
-    return { error: "Error al crear el servicio. Intenta de nuevo." };
+    console.error("createServico error:", error.message, error.code, error.details);
+    return { error: `Error al crear el servicio: ${error.message}` };
   }
 
   revalidatePath("/dashboard/servicos");
