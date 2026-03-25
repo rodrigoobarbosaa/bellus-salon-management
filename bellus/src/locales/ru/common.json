@@ -310,6 +310,8 @@
     "goodAfternoon": "Добрый день",
     "goodEvening": "Добрый вечер",
     "todayAgenda": "Записи на сегодня",
+    "todayForecast": "Ожидаемый доход сегодня",
+    "appointments": "записей",
     "noAppointments": "Нет записей на сегодня",
     "more": "ещё",
     "viewFullAgenda": "Смотреть расписание",

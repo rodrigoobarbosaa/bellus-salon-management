@@ -108,6 +108,14 @@ export interface FiscalSummary {
   daysUntilDeadline: number;
 }
 
+export interface TodayForecast {
+  total: number;
+  confirmed: number;
+  pending: number;
+  completed: number;
+  appointmentCount: number;
+}
+
 export async function getDashboardData() {
   const supabase = await createClient();
   const salaoId = await getUserSalaoId(supabase);
@@ -130,7 +138,7 @@ export async function getDashboardData() {
     .select(
       "id, data_hora_inicio, status, " +
       "cliente:clientes(nome), " +
-      "servico:servicos(nome), " +
+      "servico:servicos(nome, preco_base), " +
       "profissional:profissionais(nome)"
     )
     .eq("salao_id", salaoId)
@@ -144,13 +152,13 @@ export async function getDashboardData() {
     data_hora_inicio: string;
     status: string;
     cliente: { nome: string } | null;
-    servico: { nome: string } | null;
+    servico: { nome: string; preco_base: number } | null;
     profissional: { nome: string } | null;
   };
 
-  const todayAppointments: TodayAppointment[] = (
-    (rawAppointments as unknown as RawAppointment[]) || []
-  ).map((a) => ({
+  const rawList = (rawAppointments as unknown as RawAppointment[]) || [];
+
+  const todayAppointments: TodayAppointment[] = rawList.map((a) => ({
     id: a.id,
     data_hora_inicio: a.data_hora_inicio,
     status: a.status,
@@ -158,6 +166,25 @@ export async function getDashboardData() {
     servico_nome: a.servico?.nome ?? "—",
     profissional_nome: a.profissional?.nome ?? "—",
   }));
+
+  // --- Today's forecast (predicted income) ---
+  let forecastConfirmed = 0;
+  let forecastPending = 0;
+  let forecastCompleted = 0;
+  for (const a of rawList) {
+    const preco = a.servico?.preco_base ?? 0;
+    if (a.status === "concluido") forecastCompleted += preco;
+    else if (a.status === "confirmado") forecastConfirmed += preco;
+    else if (a.status === "pendente") forecastPending += preco;
+  }
+
+  const todayForecast: TodayForecast = {
+    total: Math.round((forecastConfirmed + forecastPending + forecastCompleted) * 100) / 100,
+    confirmed: Math.round(forecastConfirmed * 100) / 100,
+    pending: Math.round(forecastPending * 100) / 100,
+    completed: Math.round(forecastCompleted * 100) / 100,
+    appointmentCount: rawList.length,
+  };
 
   // --- Revenue ---
   type Transacao = { valor_final: number; created_at: string };
@@ -379,6 +406,7 @@ export async function getDashboardData() {
 
   return {
     todayAppointments,
+    todayForecast,
     revenue,
     clientData,
     topServices,

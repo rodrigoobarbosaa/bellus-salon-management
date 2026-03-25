@@ -310,6 +310,8 @@
     "goodAfternoon": "Good afternoon",
     "goodEvening": "Good evening",
     "todayAgenda": "Today's agenda",
+    "todayForecast": "Expected income today",
+    "appointments": "appointments",
     "noAppointments": "No appointments for today",
     "more": "more",
     "viewFullAgenda": "View full agenda",

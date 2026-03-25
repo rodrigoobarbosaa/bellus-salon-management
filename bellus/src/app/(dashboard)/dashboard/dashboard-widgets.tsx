@@ -17,6 +17,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import type {
   TodayAppointment,
+  TodayForecast,
   RevenueData,
   ClientData,
   TopService,
@@ -112,6 +113,58 @@ export function TodayAgendaCard({ appointments }: { appointments: TodayAppointme
           {t("viewFullAgenda")} <ArrowRight className="size-3" />
         </Link>
       </CardFooter>
+    </Card>
+  );
+}
+
+// --- 1b. Today Forecast Card ---
+
+export function TodayForecastCard({ forecast }: { forecast: TodayForecast }) {
+  const t = useTranslations("kpi");
+  const fmt = (v: number) =>
+    new Intl.NumberFormat("es-ES", { style: "currency", currency: "EUR" }).format(v);
+
+  return (
+    <Card>
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <CardTitle className="text-sm font-medium text-stone-600">{t("todayForecast")}</CardTitle>
+        <TrendingUp className="text-bellus-gold size-4" />
+      </CardHeader>
+      <CardContent>
+        <p className="text-2xl font-bold text-stone-900">{fmt(forecast.total)}</p>
+        <p className="text-xs text-stone-400">
+          {forecast.appointmentCount} {t("appointments")}
+        </p>
+        <div className="mt-3 space-y-1.5">
+          {forecast.completed > 0 && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="flex items-center gap-1.5">
+                <span className="size-2 rounded-full bg-green-500" />
+                <span className="text-stone-500">{t("statusCompleted")}</span>
+              </span>
+              <span className="font-medium text-green-700">{fmt(forecast.completed)}</span>
+            </div>
+          )}
+          {forecast.confirmed > 0 && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="flex items-center gap-1.5">
+                <span className="size-2 rounded-full bg-blue-500" />
+                <span className="text-stone-500">{t("statusConfirmed")}</span>
+              </span>
+              <span className="font-medium text-blue-700">{fmt(forecast.confirmed)}</span>
+            </div>
+          )}
+          {forecast.pending > 0 && (
+            <div className="flex items-center justify-between text-sm">
+              <span className="flex items-center gap-1.5">
+                <span className="size-2 rounded-full bg-amber-500" />
+                <span className="text-stone-500">{t("statusPending")}</span>
+              </span>
+              <span className="font-medium text-amber-700">{fmt(forecast.pending)}</span>
+            </div>
+          )}
+        </div>
+      </CardContent>
     </Card>
   );
 }

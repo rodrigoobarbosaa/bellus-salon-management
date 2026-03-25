@@ -4,6 +4,7 @@ import { getTranslations } from "next-intl/server";
 import { getDashboardData } from "@/app/actions/dashboard";
 import {
   TodayAgendaCard,
+  TodayForecastCard,
   RevenueKPICard,
   ClientKPICard,
   TopServicesCard,
@@ -57,6 +58,7 @@ export default async function DashboardPage() {
       {dashboardData ? (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           <TodayAgendaCard appointments={dashboardData.todayAppointments} />
+          <TodayForecastCard forecast={dashboardData.todayForecast} />
           <RevenueKPICard revenue={dashboardData.revenue} />
           <ClientKPICard data={dashboardData.clientData} />
           <TopServicesCard services={dashboardData.topServices} />

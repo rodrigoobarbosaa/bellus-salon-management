@@ -310,6 +310,8 @@
     "goodAfternoon": "Buenas tardes",
     "goodEvening": "Buenas noches",
     "todayAgenda": "Citas de hoy",
+    "todayForecast": "Ingresos previstos hoy",
+    "appointments": "citas",
     "noAppointments": "No hay citas para hoy",
     "more": "mas",
     "viewFullAgenda": "Ver agenda completa",
