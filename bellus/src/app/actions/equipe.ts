@@ -56,12 +56,12 @@ export async function createProfissional(formData: FormData) {
     return { error: "Cargo inválido." };
   }
 
-  const { error } = await supabase.from("profissionais").insert({
+  const { error } = await supabase.from("profissionais" as string).insert({
     salao_id: salaoId,
     nome,
     email,
     telefone,
-    role: role as "proprietario" | "profissional",
+    role,
     cor_agenda,
   });
 
