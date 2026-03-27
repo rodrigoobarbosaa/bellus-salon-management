@@ -93,6 +93,8 @@ export type Database = {
           telefone: string | null;
           role: "proprietario" | "profissional";
           cor_agenda: string;
+          comissao_salao_pct: number;
+          meta_comissao_salao: number;
           ativo: boolean;
           created_at: string;
           updated_at: string;
@@ -106,6 +108,8 @@ export type Database = {
           telefone?: string | null;
           role?: "proprietario" | "profissional";
           cor_agenda?: string;
+          comissao_salao_pct?: number;
+          meta_comissao_salao?: number;
           ativo?: boolean;
           created_at?: string;
           updated_at?: string;
@@ -119,6 +123,8 @@ export type Database = {
           telefone?: string | null;
           role?: "proprietario" | "profissional";
           cor_agenda?: string;
+          comissao_salao_pct?: number;
+          meta_comissao_salao?: number;
           ativo?: boolean;
           created_at?: string;
           updated_at?: string;
