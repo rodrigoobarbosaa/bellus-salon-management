@@ -12,6 +12,7 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { createAgendamento } from "@/app/actions/agendamentos";
+import { toMadridDatetimeLocal, madridToISO } from "@/lib/timezone";
 
 interface Profissional {
   id: string;
@@ -58,11 +59,9 @@ export function AgendamentoForm({
   const [secadoHorario, setSecadoHorario] = useState("");
   const [searchTimeout, setSearchTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
 
-  // Formatar data para input datetime-local
+  // Formatar data para input datetime-local (sempre em horário de Madrid)
   const defaultDateTime = defaultDate
-    ? new Date(defaultDate.getTime() - defaultDate.getTimezoneOffset() * 60000)
-        .toISOString()
-        .slice(0, 16)
+    ? toMadridDatetimeLocal(defaultDate)
     : "";
 
   // Calcular hora fim baseado no serviço
@@ -138,12 +137,6 @@ export function AgendamentoForm({
 
     const formData = new FormData(event.currentTarget);
 
-    // Convert datetime-local to UTC ISO string (client knows the real timezone)
-    const rawDT = formData.get("data_hora_inicio") as string;
-    if (rawDT && !rawDT.endsWith("Z")) {
-      formData.set("data_hora_inicio", new Date(rawDT).toISOString());
-    }
-
     // Se é novo cliente, adicionar flag
     if (showNewCliente) {
       formData.set("new_cliente", "true");
@@ -154,10 +147,10 @@ export function AgendamentoForm({
       return;
     }
 
-    // Secado
+    // Secado — enviar como naive datetime (servidor converte com madridToISO)
     if (addSecado && secadoHorario) {
       formData.set("add_secado", "true");
-      formData.set("secado_hora_inicio", new Date(secadoHorario).toISOString());
+      formData.set("secado_hora_inicio", secadoHorario);
     }
 
     await submitForm(formData);
@@ -395,14 +388,11 @@ export function AgendamentoForm({
                   onChange={(e) => {
                     setAddSecado(e.target.checked);
                     if (e.target.checked && defaultDateTime) {
-                      // Auto-sugestão: início + duração aplicação + pausa
-                      const inicioDate = new Date(defaultDateTime);
-                      const sugerido = new Date(
-                        inicioDate.getTime() +
-                          (selectedServicoObj.duracao_minutos + (selectedServicoObj.tempo_pausa_minutos ?? 0)) * 60 * 1000
-                      );
-                      const local = new Date(sugerido.getTime() - sugerido.getTimezoneOffset() * 60000);
-                      setSecadoHorario(local.toISOString().slice(0, 16));
+                      // Auto-sugestão: início + duração aplicação + pausa (em Madrid)
+                      const inicioUTC = new Date(madridToISO(defaultDateTime));
+                      const totalMinutes = selectedServicoObj.duracao_minutos + (selectedServicoObj.tempo_pausa_minutos ?? 0);
+                      const sugerido = new Date(inicioUTC.getTime() + totalMinutes * 60 * 1000);
+                      setSecadoHorario(toMadridDatetimeLocal(sugerido));
                     }
                   }}
                   className="size-4 rounded border-stone-300 accent-bellus-gold"

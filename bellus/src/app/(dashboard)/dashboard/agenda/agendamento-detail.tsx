@@ -19,6 +19,7 @@ import { Clock, User, Scissors, Calendar, FileText, Pencil, MessageCircle } from
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { buildWhatsAppLink } from "@/lib/whatsapp-link";
+import { toMadridDatetimeLocal, SALON_TZ } from "@/lib/timezone";
 import { PaymentModal } from "./payment-modal";
 
 interface Agendamento {
@@ -121,9 +122,7 @@ export function AgendamentoDetail({
   const [editServico, setEditServico] = useState(agendamento.servico_id);
   const [editProfissional, setEditProfissional] = useState(agendamento.profissional_id);
   const [editInicio, setEditInicio] = useState(
-    new Date(new Date(agendamento.data_hora_inicio).getTime() - new Date(agendamento.data_hora_inicio).getTimezoneOffset() * 60000)
-      .toISOString()
-      .slice(0, 16)
+    toMadridDatetimeLocal(new Date(agendamento.data_hora_inicio))
   );
   const [editNotas, setEditNotas] = useState(agendamento.notas ?? "");
 
@@ -140,9 +139,10 @@ export function AgendamentoDetail({
     weekday: "long",
     day: "numeric",
     month: "long",
+    timeZone: SALON_TZ,
   });
 
-  const timeStr = `${inicio.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", hour12: false })} - ${fim.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", hour12: false })}`;
+  const timeStr = `${inicio.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: SALON_TZ })} - ${fim.toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: SALON_TZ })}`;
 
   const selectedServico = servicos.find((s) => s.id === editServico);
 
@@ -168,7 +168,7 @@ export function AgendamentoDetail({
     const fd = new FormData();
     fd.set("profissional_id", editProfissional);
     fd.set("servico_id", editServico);
-    fd.set("data_hora_inicio", new Date(editInicio).toISOString());
+    fd.set("data_hora_inicio", editInicio);
     fd.set("notas", editNotas);
 
     const result = await updateAgendamento(agendamento.id, fd);
@@ -418,8 +418,8 @@ export function AgendamentoDetail({
                       nome_cliente: agendamento.cliente_nome ?? "",
                       servico: agendamento.servico_nome ?? "",
                       profissional: agendamento.profissional_nome ?? "",
-                      data: inicio.toLocaleDateString(clienteIdioma === "en" ? "en-US" : clienteIdioma === "ru" ? "ru-RU" : clienteIdioma === "pt" ? "pt-BR" : "es-ES", { weekday: "long", day: "numeric", month: "long" }),
-                      hora: inicio.toLocaleTimeString(clienteIdioma === "en" ? "en-US" : "es-ES", { hour: "2-digit", minute: "2-digit", hour12: false }),
+                      data: inicio.toLocaleDateString(clienteIdioma === "en" ? "en-US" : clienteIdioma === "ru" ? "ru-RU" : clienteIdioma === "pt" ? "pt-BR" : "es-ES", { weekday: "long", day: "numeric", month: "long", timeZone: SALON_TZ }),
+                      hora: inicio.toLocaleTimeString(clienteIdioma === "en" ? "en-US" : "es-ES", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: SALON_TZ }),
                       salao: salonName,
                       idioma: clienteIdioma,
                     });

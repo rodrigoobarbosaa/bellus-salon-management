@@ -4,6 +4,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { sendBookingConfirmation } from "@/lib/notifications/send-notification";
 import { generateOptOutToken } from "@/lib/opt-out-token";
+import { madridToISO } from "@/lib/timezone";
 
 /**
  * Public booking creation — no auth required.
@@ -40,7 +41,7 @@ export async function createPublicBooking(formData: FormData) {
 
   const { duracao_minutos, nome: servicoNome } = servico as { duracao_minutos: number; nome: string };
 
-  const inicio = new Date(`${date}T${hora}:00`);
+  const inicio = new Date(madridToISO(`${date}T${hora}`));
   const fim = new Date(inicio.getTime() + duracao_minutos * 60 * 1000);
 
   // Resolve professional — if not specified, pick first available

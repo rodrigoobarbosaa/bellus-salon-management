@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { madridToISO } from "@/lib/timezone";
 
 // In-memory rate limiting (30 req/min per IP)
 const rateLimit = new Map<string, { count: number; resetAt: number }>();
@@ -49,8 +50,8 @@ export async function GET(request: NextRequest) {
 
   const supabase = createServiceClient();
 
-  const dayStart = `${date}T00:00:00`;
-  const dayEnd = `${date}T23:59:59`;
+  const dayStart = madridToISO(`${date}T00:00`);
+  const dayEnd = madridToISO(`${date}T23:59`);
 
   // Build query for appointments
   let agendaQuery = supabase
@@ -96,12 +97,13 @@ export async function GET(request: NextRequest) {
     // Mark all 30-min slots that would overlap with this event
     // A slot at HH:MM is busy if [HH:MM, HH:MM+duration] overlaps [start, end]
     for (let m = 0; m < 24 * 60; m += 30) {
-      const slotStart = new Date(`${date}T${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}:00`);
+      const hh = String(Math.floor(m / 60)).padStart(2, "0");
+      const mm = String(m % 60).padStart(2, "0");
+      const slotStart = new Date(madridToISO(`${date}T${hh}:${mm}`));
       const slotEnd = new Date(slotStart.getTime() + duration * 60 * 1000);
 
       if (slotStart < end && slotEnd > start) {
-        const timeStr = `${String(Math.floor(m / 60)).padStart(2, "0")}:${String(m % 60).padStart(2, "0")}`;
-        busySlots.add(timeStr);
+        busySlots.add(`${hh}:${mm}`);
       }
     }
   }

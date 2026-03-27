@@ -3,6 +3,7 @@
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { madridToISO } from "@/lib/timezone";
 
 async function getUserSalaoId(supabase: SupabaseClient) {
   const {
@@ -54,7 +55,7 @@ export async function createAgendamento(formData: FormData) {
   }
 
   const duracao = (servico as { duracao_minutos: number }).duracao_minutos;
-  const inicio = new Date(data_hora_inicio);
+  const inicio = new Date(madridToISO(data_hora_inicio));
   const fim = new Date(inicio.getTime() + duracao * 60 * 1000);
 
   // Resolver cliente
@@ -157,7 +158,7 @@ export async function createAgendamento(formData: FormData) {
 
   // Criar secado vinculado se solicitado
   if (addSecado && secadoHoraInicio && duracaoPospausa > 0) {
-    const secadoInicio = new Date(secadoHoraInicio);
+    const secadoInicio = new Date(madridToISO(secadoHoraInicio));
     const secadoFim = new Date(secadoInicio.getTime() + duracaoPospausa * 60 * 1000);
 
     // Verificar conflito do secado
@@ -333,7 +334,7 @@ export async function updateAgendamento(id: string, formData: FormData) {
   }
 
   const duracao = (servico as { duracao_minutos: number }).duracao_minutos;
-  const inicio = new Date(data_hora_inicio);
+  const inicio = new Date(madridToISO(data_hora_inicio));
   const fim = new Date(inicio.getTime() + duracao * 60 * 1000);
 
   // Verificar conflito (excluindo o próprio agendamento)
@@ -413,8 +414,8 @@ export async function rescheduleAgendamento(
     return { error: "No se puede mover un turno completado o cancelado." };
   }
 
-  const inicio = new Date(newStart);
-  const fim = new Date(newEnd);
+  const inicio = new Date(madridToISO(newStart));
+  const fim = new Date(madridToISO(newEnd));
 
   // Verificar conflito (excluindo o próprio)
   const { data: conflitos } = await supabase
