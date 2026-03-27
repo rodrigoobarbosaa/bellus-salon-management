@@ -73,4 +73,17 @@ export function toMadridDatetimeLocal(date: Date): string {
   return `${get("year")}-${get("month")}-${get("day")}T${hour}:${get("minute")}`;
 }
 
+/**
+ * Ensure a timestamptz string from Supabase includes UTC indicator.
+ * Supabase may return timestamptz without offset (e.g. "2026-03-27T11:00:00").
+ * Without it, FullCalendar and new Date() interpret it as local time — wrong.
+ */
+export function ensureUTC(ts: string): string {
+  if (!ts) return ts;
+  // Already has Z or +/-offset → fine
+  if (ts.endsWith("Z") || /[+-]\d{2}(:\d{2})?$/.test(ts)) return ts;
+  // timestamptz from Supabase without explicit offset → append Z
+  return ts + "Z";
+}
+
 export { SALON_TZ };

@@ -15,6 +15,7 @@ import { AgendamentoDetail } from "./agendamento-detail";
 import { BloqueioForm } from "./bloqueio-form";
 import { deleteBloqueio } from "@/app/actions/bloqueios";
 import { rescheduleAgendamento } from "@/app/actions/agendamentos";
+import { ensureUTC } from "@/lib/timezone";
 import {
   Dialog,
   DialogContent,
@@ -154,8 +155,8 @@ export function AgendaView({
           cliente_id: a.cliente_id,
           profissional_id: a.profissional_id,
           servico_id: a.servico_id,
-          data_hora_inicio: a.data_hora_inicio,
-          data_hora_fim: a.data_hora_fim,
+          data_hora_inicio: ensureUTC(a.data_hora_inicio),
+          data_hora_fim: ensureUTC(a.data_hora_fim),
           status: a.status,
           notas: a.notas,
           tipo_etapa: a.tipo_etapa ?? "unico",
@@ -168,7 +169,12 @@ export function AgendaView({
       }
 
       if (blResult.data) {
-        setBloqueios(blResult.data as unknown as Bloqueio[]);
+        const blMapped = (blResult.data as unknown as Bloqueio[]).map((b) => ({
+          ...b,
+          data_hora_inicio: ensureUTC(b.data_hora_inicio),
+          data_hora_fim: ensureUTC(b.data_hora_fim),
+        }));
+        setBloqueios(blMapped);
       }
     },
     [supabase, userRole, currentProfissionalId, servicoMap, profMap, t]
