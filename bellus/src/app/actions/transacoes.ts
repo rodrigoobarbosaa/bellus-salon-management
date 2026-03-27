@@ -45,9 +45,13 @@ export async function createTransacao(formData: FormData) {
     return { error: "Datos incompletos para registrar el pago." };
   }
 
-  // Calculate final value
+  // Calculate final value (accept client override for custom price / courtesy)
+  const valorFinalOverride = formData.get("valor_final") ? parseFloat(formData.get("valor_final") as string) : null;
+
   let valorFinal = valor;
-  if (tipoDesconto === "percentual" && valorDesconto > 0) {
+  if (valorFinalOverride !== null && !isNaN(valorFinalOverride)) {
+    valorFinal = Math.max(0, valorFinalOverride);
+  } else if (tipoDesconto === "percentual" && valorDesconto > 0) {
     valorFinal = valor - (valor * valorDesconto) / 100;
   } else if (tipoDesconto === "fixo" && valorDesconto > 0) {
     valorFinal = valor - valorDesconto;

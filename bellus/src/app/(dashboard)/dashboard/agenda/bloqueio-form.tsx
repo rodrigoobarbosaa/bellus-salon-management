@@ -54,6 +54,24 @@ export function BloqueioForm({
     const formData = new FormData(event.currentTarget);
     formData.set("dia_inteiro", diaInteiro ? "true" : "false");
 
+    // Convert datetime-local to UTC ISO string (client knows the real timezone)
+    if (diaInteiro) {
+      const fecha = formData.get("fecha") as string;
+      if (fecha) {
+        formData.set("data_hora_inicio", new Date(`${fecha}T00:00:00`).toISOString());
+        formData.set("data_hora_fim", new Date(`${fecha}T23:59:59`).toISOString());
+      }
+    } else {
+      const rawInicio = formData.get("data_hora_inicio") as string;
+      const rawFim = formData.get("data_hora_fim") as string;
+      if (rawInicio && !rawInicio.endsWith("Z")) {
+        formData.set("data_hora_inicio", new Date(rawInicio).toISOString());
+      }
+      if (rawFim && !rawFim.endsWith("Z")) {
+        formData.set("data_hora_fim", new Date(rawFim).toISOString());
+      }
+    }
+
     const result = await createBloqueio(formData);
 
     if (result?.error) {

@@ -138,6 +138,12 @@ export function AgendamentoForm({
 
     const formData = new FormData(event.currentTarget);
 
+    // Convert datetime-local to UTC ISO string (client knows the real timezone)
+    const rawDT = formData.get("data_hora_inicio") as string;
+    if (rawDT && !rawDT.endsWith("Z")) {
+      formData.set("data_hora_inicio", new Date(rawDT).toISOString());
+    }
+
     // Se é novo cliente, adicionar flag
     if (showNewCliente) {
       formData.set("new_cliente", "true");
