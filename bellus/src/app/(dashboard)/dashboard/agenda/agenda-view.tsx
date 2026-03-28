@@ -426,7 +426,7 @@ export function AgendaView({
             right: "timeGridWeek,timeGridDay",
           }}
           locale="es"
-          timeZone="Europe/Madrid"
+          timeZone="local"
           slotMinTime="08:00:00"
           slotMaxTime="21:00:00"
           slotDuration="00:30:00"
