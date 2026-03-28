@@ -15,7 +15,7 @@ import { AgendamentoDetail } from "./agendamento-detail";
 import { BloqueioForm } from "./bloqueio-form";
 import { deleteBloqueio } from "@/app/actions/bloqueios";
 import { rescheduleAgendamento } from "@/app/actions/agendamentos";
-import { ensureUTC } from "@/lib/timezone";
+import { ensureUTC, toMadridDatetimeLocal } from "@/lib/timezone";
 import {
   Dialog,
   DialogContent,
@@ -232,8 +232,8 @@ export function AgendaView({
         return {
           id: a.id,
           title: `${etapaPrefix}${a.cliente_nome} — ${a.servico_nome}`,
-          start: a.data_hora_inicio,
-          end: a.data_hora_fim,
+          start: toMadridDatetimeLocal(new Date(a.data_hora_inicio)),
+          end: toMadridDatetimeLocal(new Date(a.data_hora_fim)),
           backgroundColor: a.status === "cancelado" ? statusColor.bg : (prof?.cor_agenda ?? "#C9A96E"),
           borderColor: a.status === "cancelado" ? statusColor.border : (prof?.cor_agenda ?? "#C9A96E"),
           textColor: a.status === "cancelado" ? statusColor.text : "#fff",
@@ -254,8 +254,8 @@ export function AgendaView({
         return {
           id: `bloqueio-${b.id}`,
           title: b.motivo ? `🚫 ${b.motivo} (${profNome})` : `🚫 ${t("block")} (${profNome})`,
-          start: b.data_hora_inicio,
-          end: b.data_hora_fim,
+          start: toMadridDatetimeLocal(new Date(b.data_hora_inicio)),
+          end: toMadridDatetimeLocal(new Date(b.data_hora_fim)),
           display: "background" as const,
           backgroundColor: "#e7e5e4",
           borderColor: "#a8a29e",
