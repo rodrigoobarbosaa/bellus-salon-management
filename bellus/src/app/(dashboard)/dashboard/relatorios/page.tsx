@@ -3,12 +3,12 @@ import { createClient } from "@/lib/supabase/server";
 import { getTranslations } from "next-intl/server";
 import { getReportsData } from "@/app/actions/relatorios";
 import {
-  RevenueChart,
-  AppointmentsChart,
-  MonthlyChart,
-  PaymentChart,
-  ProfessionalChart,
-} from "./report-charts";
+  RevenueChartLazy as RevenueChart,
+  AppointmentsChartLazy as AppointmentsChart,
+  MonthlyChartLazy as MonthlyChart,
+  PaymentChartLazy as PaymentChart,
+  ProfessionalChartLazy as ProfessionalChart,
+} from "./report-charts-lazy";
 
 export default async function RelatoriosPage() {
   const supabase = await createClient();

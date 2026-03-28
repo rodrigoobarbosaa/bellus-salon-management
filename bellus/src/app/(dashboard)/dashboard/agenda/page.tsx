@@ -1,6 +1,6 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { AgendaView } from "./agenda-view";
+import { AgendaViewLazy as AgendaView } from "./agenda-view-lazy";
 
 export default async function AgendaPage() {
   const supabase = await createClient();

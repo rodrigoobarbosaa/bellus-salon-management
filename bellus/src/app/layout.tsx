@@ -20,6 +20,7 @@ export const viewport: Viewport = {
 };
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://bellus.app"),
   title: "Bellus",
   description: "Sistema de gestão para salão de beleza",
   manifest: "/manifest.webmanifest",
@@ -30,6 +31,16 @@ export const metadata: Metadata = {
   },
   icons: {
     apple: [{ url: "/apple-touch-icon.png", sizes: "180x180" }],
+  },
+  openGraph: {
+    siteName: "Bellus",
+    locale: "pt_PT",
+    type: "website",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Bellus Salon Management" }],
+  },
+  twitter: {
+    card: "summary_large_image",
+    images: ["/og-image.png"],
   },
   other: {
     "mobile-web-app-capable": "yes",

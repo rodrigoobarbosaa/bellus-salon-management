@@ -1,4 +1,5 @@
 import { notFound } from "next/navigation";
+import type { Metadata } from "next";
 import { createServiceClient } from "@/lib/supabase/service";
 import { SalonInfo } from "./salon-info";
 import { BookingWizard } from "./booking-wizard";
@@ -6,6 +7,44 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 
 interface BookingPageProps {
   params: Promise<{ slug: string }>;
+}
+
+export async function generateMetadata({ params }: BookingPageProps): Promise<Metadata> {
+  const { slug } = await params;
+  const supabase = createServiceClient();
+  const { data: salao } = await supabase
+    .from("saloes")
+    .select("nome, slug")
+    .eq("slug", slug)
+    .single();
+
+  if (!salao) {
+    return { title: "Booking | Bellus" };
+  }
+
+  const title = `Agendar em ${salao.nome} | Bellus`;
+  const description = `Marque o seu servico online em ${salao.nome}. Rapido, facil e sem telefonemas.`;
+
+  return {
+    title,
+    description,
+    alternates: { canonical: `https://bellus.app/booking/${salao.slug}` },
+    openGraph: {
+      title,
+      description: `Marque online em ${salao.nome}.`,
+      url: `https://bellus.app/booking/${salao.slug}`,
+      siteName: "Bellus",
+      images: [{ url: "/og-image.png", width: 1200, height: 630, alt: `Bellus - ${salao.nome}` }],
+      locale: "pt_PT",
+      type: "website",
+    },
+    twitter: {
+      card: "summary_large_image",
+      title,
+      description: `Marque online em ${salao.nome}.`,
+      images: ["/og-image.png"],
+    },
+  };
 }
 
 export default async function BookingPage({ params }: BookingPageProps) {

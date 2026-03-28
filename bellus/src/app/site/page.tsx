@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { cookies } from "next/headers";
+import type { Metadata } from "next";
 import {
   Calendar,
   MessageCircle,
@@ -22,10 +23,28 @@ import { LandingLangSwitcher } from "./lang-switcher";
 
 export const dynamic = "force-dynamic";
 
-export const metadata = {
+export const metadata: Metadata = {
   title: "Bellus — Salon Management Software",
   description:
     "Online scheduling, cashier, tax, AI marketing & WhatsApp reminders. The complete system your salon needs. From €9/month.",
+  alternates: {
+    canonical: "https://bellus.app/site",
+  },
+  openGraph: {
+    title: "Bellus — Salon Management Software",
+    description: "The complete system your salon needs. Online scheduling, cashier, tax, AI marketing & WhatsApp reminders.",
+    url: "https://bellus.app/site",
+    siteName: "Bellus",
+    images: [{ url: "/og-image.png", width: 1200, height: 630, alt: "Bellus Salon Management" }],
+    locale: "pt_PT",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Bellus — Salon Management Software",
+    description: "The complete system your salon needs. Online scheduling, cashier, tax, AI marketing & WhatsApp reminders.",
+    images: ["/og-image.png"],
+  },
 };
 
 /* ───── Glass card helper ───── */
@@ -94,8 +113,31 @@ export default async function LandingPage() {
   const locale = cookieStore.get("locale")?.value ?? "es";
   const t = getLandingTranslations(locale);
 
+  /* ── JSON-LD Structured Data ── */
+  const jsonLd = {
+    "@context": "https://schema.org",
+    "@type": "SoftwareApplication",
+    name: "Bellus",
+    applicationCategory: "BusinessApplication",
+    description:
+      "Salon management software — online scheduling, cashier, tax, AI marketing & WhatsApp reminders.",
+    url: "https://bellus.app/site",
+    operatingSystem: "Web",
+    offers: {
+      "@type": "AggregateOffer",
+      lowPrice: "0",
+      highPrice: "15",
+      priceCurrency: "EUR",
+      offerCount: "3",
+    },
+  };
+
   return (
     <div className="min-h-screen bg-[#09090b] text-white selection:bg-[#c9a96e]/30">
+      <script
+        type="application/ld+json"
+        dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+      />
       {/* ━━━ NAV ━━━ */}
       <nav className="fixed top-0 z-50 w-full border-b border-white/[0.06] bg-[#09090b]/80 backdrop-blur-xl">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
