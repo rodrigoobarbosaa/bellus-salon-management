@@ -21,6 +21,7 @@ import {
   AlertTriangle,
 } from "lucide-react";
 import { updateCliente } from "@/app/actions/clientes";
+import { SALON_TZ } from "@/lib/timezone";
 
 interface Visita {
   id: string;
@@ -145,6 +146,7 @@ export function ClienteFicha({
       day: "2-digit",
       month: "2-digit",
       year: "numeric",
+      timeZone: SALON_TZ,
     });
   }
 
@@ -152,6 +154,8 @@ export function ClienteFicha({
     return new Date(dateStr).toLocaleTimeString("es-ES", {
       hour: "2-digit",
       minute: "2-digit",
+      hour12: false,
+      timeZone: SALON_TZ,
     });
   }
 

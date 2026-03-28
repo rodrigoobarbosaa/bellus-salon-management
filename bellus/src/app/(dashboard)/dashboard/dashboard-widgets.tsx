@@ -23,6 +23,7 @@ import type {
   TopService,
   FiscalSummary,
 } from "@/app/actions/dashboard";
+import { SALON_TZ } from "@/lib/timezone";
 
 // --- Status Badge ---
 
@@ -85,9 +86,11 @@ export function TodayAgendaCard({ appointments }: { appointments: TodayAppointme
                 <div className="flex items-center gap-2 truncate">
                   <Clock className="size-3 shrink-0 text-stone-400" />
                   <span className="font-medium text-stone-700">
-                    {new Date(appt.data_hora_inicio).toLocaleTimeString([], {
+                    {new Date(appt.data_hora_inicio).toLocaleTimeString("es-ES", {
                       hour: "2-digit",
                       minute: "2-digit",
+                      hour12: false,
+                      timeZone: SALON_TZ,
                     })}
                   </span>
                   <span className="truncate text-stone-600">

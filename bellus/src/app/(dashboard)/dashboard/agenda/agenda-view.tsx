@@ -15,7 +15,7 @@ import { AgendamentoDetail } from "./agendamento-detail";
 import { BloqueioForm } from "./bloqueio-form";
 import { deleteBloqueio } from "@/app/actions/bloqueios";
 import { rescheduleAgendamento } from "@/app/actions/agendamentos";
-import { ensureUTC, toMadridDatetimeLocal } from "@/lib/timezone";
+import { ensureUTC, toMadridDatetimeLocal, SALON_TZ } from "@/lib/timezone";
 import {
   Dialog,
   DialogContent,
@@ -520,9 +520,9 @@ export function AgendaView({
               <p>
                 <span className="font-medium">{t("period")}:</span>{" "}
                 {selectedBloqueio.dia_inteiro
-                  ? new Date(selectedBloqueio.data_hora_inicio).toLocaleDateString("es-ES")
+                  ? new Date(selectedBloqueio.data_hora_inicio).toLocaleDateString("es-ES", { timeZone: SALON_TZ })
                   + ` (${t("fullDay")})`
-                  : `${new Date(selectedBloqueio.data_hora_inicio).toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short" })} — ${new Date(selectedBloqueio.data_hora_fim).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit" })}`}
+                  : `${new Date(selectedBloqueio.data_hora_inicio).toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short", timeZone: SALON_TZ })} — ${new Date(selectedBloqueio.data_hora_fim).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", timeZone: SALON_TZ })}`}
               </p>
             </div>
             {userRole === "proprietario" && (

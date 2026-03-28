@@ -14,6 +14,7 @@ import {
   Filter,
   Download,
 } from "lucide-react";
+import { SALON_TZ } from "@/lib/timezone";
 
 interface Transacao {
   id: string;
@@ -354,11 +355,13 @@ export function CaixaView({ salaoId, profissionais, servicos }: CaixaViewProps) 
               const time = new Date(t.created_at).toLocaleTimeString("es-ES", {
                 hour: "2-digit",
                 minute: "2-digit",
+                timeZone: SALON_TZ,
               });
               const date = tab === "historico"
                 ? new Date(t.created_at).toLocaleDateString("es-ES", {
                     day: "2-digit",
                     month: "2-digit",
+                    timeZone: SALON_TZ,
                   })
                 : null;
 
