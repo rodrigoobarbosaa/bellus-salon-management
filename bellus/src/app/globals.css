@@ -52,6 +52,18 @@
   --radius-2xl: calc(var(--radius) + 8px);
   --radius-3xl: calc(var(--radius) + 12px);
   --radius-4xl: calc(var(--radius) + 16px);
+
+  /* Premium shadow system */
+  --shadow-card: var(--shadow-card);
+  --shadow-card-hover: var(--shadow-card-hover);
+  --shadow-elevated: var(--shadow-elevated);
+  --shadow-nav: var(--shadow-nav);
+  --shadow-header: var(--shadow-header);
+  --shadow-button-gold: var(--shadow-button-gold);
+
+  /* Premium animations */
+  --animate-slide-up-fade: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+  --animate-subtle-float: subtle-float 3s ease-in-out infinite;
 }
 
 :root {
@@ -61,6 +73,14 @@
   --bellus-dark: #1a1a1a;
   --bellus-cream: #f5f0e8;
   --bellus-gray: #6b7280;
+
+  /* Premium shadow tokens */
+  --shadow-card: 0 1px 3px rgba(0,0,0,0.04), 0 4px 12px rgba(0,0,0,0.03);
+  --shadow-card-hover: 0 2px 8px rgba(0,0,0,0.06), 0 8px 24px rgba(0,0,0,0.06);
+  --shadow-elevated: 0 4px 16px rgba(0,0,0,0.08), 0 12px 40px rgba(0,0,0,0.06);
+  --shadow-nav: 0 -1px 8px rgba(0,0,0,0.06), 0 -2px 20px rgba(0,0,0,0.04);
+  --shadow-header: 0 1px 4px rgba(0,0,0,0.04), 0 2px 12px rgba(0,0,0,0.03);
+  --shadow-button-gold: 0 2px 8px rgba(201,169,110,0.3);
 
   --radius: 0.625rem;
   --background: oklch(1 0 0);
@@ -173,6 +193,22 @@
   100% { background-position: 200% 0; }
 }
 
+@keyframes slide-up-fade {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes subtle-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
 @keyframes confetti-fall {
   0% { transform: translateY(-20px) rotate(0deg) scale(1); opacity: 1; }
   50% { opacity: 1; }
@@ -192,9 +228,27 @@
 }
 
 .animate-shimmer {
-  background: linear-gradient(90deg, #e7e5e4 25%, #d6d3d1 50%, #e7e5e4 75%);
+  background: linear-gradient(90deg, #f1f3f5 25%, #e2e5e8 50%, #f1f3f5 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
+}
+
+.animate-slide-up-fade {
+  animation: slide-up-fade 0.4s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+.animate-subtle-float {
+  animation: subtle-float 3s ease-in-out infinite;
+}
+
+/* Page enter animation */
+.page-enter {
+  animation: slide-up-fade 0.35s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+/* Focus ring utility */
+.focus-ring {
+  @apply outline-none focus-visible:ring-2 focus-visible:ring-bellus-gold/40 focus-visible:ring-offset-2;
 }
 
 .animate-confetti-fall {
@@ -221,6 +275,9 @@
   .animate-fade-in-up,
   .animate-fade-in,
   .animate-scale-in,
+  .animate-slide-up-fade,
+  .animate-subtle-float,
+  .page-enter,
   .stagger-children > * {
     animation: none !important;
   }
@@ -228,7 +285,7 @@
 
 /* FullCalendar custom styles */
 .fc {
-  --fc-border-color: #e7e5e4;
+  --fc-border-color: #e2e5e8;
   --fc-today-bg-color: #faf5eb;
   --fc-now-indicator-color: #c9a96e;
   --fc-button-bg-color: #1a1a1a;
