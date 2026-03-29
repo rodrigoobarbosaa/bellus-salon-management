@@ -76,16 +76,19 @@ export function TodayAgendaCard({ appointments }: { appointments: TodayAppointme
         <Calendar className="text-bellus-gold size-4" />
       </CardHeader>
       <CardContent>
-        <p className="text-2xl font-bold text-stone-900">{appointments.length}</p>
+        <p className="text-2xl font-bold text-stone-900 tabular-nums">{appointments.length}</p>
         {appointments.length === 0 ? (
-          <p className="mt-3 text-sm text-stone-400">{t("noAppointments")}</p>
+          <div className="mt-3 flex flex-col items-center py-4 animate-fade-in">
+            <Calendar className="size-8 text-stone-300 mb-2" />
+            <p className="text-sm text-stone-400">{t("noAppointments")}</p>
+          </div>
         ) : (
-          <ul className="mt-3 space-y-2">
+          <ul className="mt-3 space-y-2 stagger-children">
             {appointments.slice(0, 5).map((appt) => (
               <li key={appt.id} className="flex items-center justify-between gap-2 text-sm">
                 <div className="flex items-center gap-2 truncate">
                   <Clock className="size-3 shrink-0 text-stone-400" />
-                  <span className="font-medium text-stone-700">
+                  <span className="font-medium text-stone-700 tabular-nums">
                     {new Date(appt.data_hora_inicio).toLocaleTimeString("es-ES", {
                       hour: "2-digit",
                       minute: "2-digit",
@@ -134,9 +137,9 @@ export function TodayForecastCard({ forecast }: { forecast: TodayForecast }) {
         <TrendingUp className="text-bellus-gold size-4" />
       </CardHeader>
       <CardContent>
-        <p className="text-2xl font-bold text-stone-900">{fmt(forecast.total)}</p>
+        <p className="text-2xl font-bold text-stone-900 tabular-nums">{fmt(forecast.total)}</p>
         <p className="text-xs text-stone-400">
-          {forecast.appointmentCount} {t("appointments")}
+          <span className="tabular-nums">{forecast.appointmentCount}</span> {t("appointments")}
         </p>
         <div className="mt-3 space-y-1.5">
           {forecast.completed > 0 && (
@@ -145,7 +148,7 @@ export function TodayForecastCard({ forecast }: { forecast: TodayForecast }) {
                 <span className="size-2 rounded-full bg-green-500" />
                 <span className="text-stone-500">{t("statusCompleted")}</span>
               </span>
-              <span className="font-medium text-green-700">{fmt(forecast.completed)}</span>
+              <span className="font-medium text-green-700 tabular-nums">{fmt(forecast.completed)}</span>
             </div>
           )}
           {forecast.confirmed > 0 && (
@@ -154,7 +157,7 @@ export function TodayForecastCard({ forecast }: { forecast: TodayForecast }) {
                 <span className="size-2 rounded-full bg-blue-500" />
                 <span className="text-stone-500">{t("statusConfirmed")}</span>
               </span>
-              <span className="font-medium text-blue-700">{fmt(forecast.confirmed)}</span>
+              <span className="font-medium text-blue-700 tabular-nums">{fmt(forecast.confirmed)}</span>
             </div>
           )}
           {forecast.pending > 0 && (
@@ -163,7 +166,7 @@ export function TodayForecastCard({ forecast }: { forecast: TodayForecast }) {
                 <span className="size-2 rounded-full bg-amber-500" />
                 <span className="text-stone-500">{t("statusPending")}</span>
               </span>
-              <span className="font-medium text-amber-700">{fmt(forecast.pending)}</span>
+              <span className="font-medium text-amber-700 tabular-nums">{fmt(forecast.pending)}</span>
             </div>
           )}
         </div>
@@ -193,12 +196,12 @@ export function RevenueKPICard({ revenue }: { revenue: RevenueData }) {
         <DollarSign className="text-bellus-gold size-4" />
       </CardHeader>
       <CardContent>
-        <p className="text-2xl font-bold text-stone-900">{fmt(revenue.month)}</p>
+        <p className="text-2xl font-bold text-stone-900 tabular-nums">{fmt(revenue.month)}</p>
         <div className="mt-3 space-y-1.5">
           {items.map((item) => (
             <div key={item.label} className="flex items-center justify-between text-sm">
               <span className="text-stone-500">{item.label}</span>
-              <span className="flex items-center gap-2 font-medium text-stone-700">
+              <span className="flex items-center gap-2 font-medium text-stone-700 tabular-nums">
                 {fmt(item.value)}
                 {item.prev !== undefined && (
                   <TrendIndicator current={item.value} previous={item.prev} />
@@ -228,12 +231,12 @@ export function ClientKPICard({ data }: { data: ClientData }) {
         <Users className="text-bellus-gold size-4" />
       </CardHeader>
       <CardContent>
-        <p className="text-2xl font-bold text-stone-900">{data.totalActive}</p>
+        <p className="text-2xl font-bold text-stone-900 tabular-nums">{data.totalActive}</p>
         <p className="text-xs text-stone-400">{t("activeClients")}</p>
         <div className="mt-3 space-y-1.5">
           <div className="flex items-center justify-between text-sm">
             <span className="text-stone-500">{t("newThisMonth")}</span>
-            <span className="flex items-center gap-2 font-medium text-stone-700">
+            <span className="flex items-center gap-2 font-medium text-stone-700 tabular-nums">
               {data.newThisMonth}
               {data.prevMonthNew > 0 && (
                 <TrendIndicator current={data.newThisMonth} previous={data.prevMonthNew} />
@@ -242,12 +245,12 @@ export function ClientKPICard({ data }: { data: ClientData }) {
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-stone-500">{t("returning")}</span>
-            <span className="font-medium text-stone-700">{data.returningThisMonth}</span>
+            <span className="font-medium text-stone-700 tabular-nums">{data.returningThisMonth}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-stone-500">{t("reminderConversion")}</span>
             <span className="font-medium text-stone-700">
-              {data.remindersSent > 0 ? `${conversionRate}%` : "—"}
+              <span className="tabular-nums">{data.remindersSent > 0 ? `${conversionRate}%` : "—"}</span>
             </span>
           </div>
         </div>
@@ -280,7 +283,7 @@ export function TopServicesCard({ services }: { services: TopService[] }) {
               <li key={svc.servico_id}>
                 <div className="flex items-center justify-between text-sm">
                   <span className="truncate font-medium text-stone-700">{svc.nome}</span>
-                  <span className="shrink-0 text-stone-500">
+                  <span className="shrink-0 text-stone-500 tabular-nums">
                     {svc.count}x &middot; {fmt(svc.revenue)}
                   </span>
                 </div>
@@ -318,25 +321,25 @@ export function FiscalSummaryCard({ data }: { data: FiscalSummary }) {
         <div className="space-y-1.5">
           <div className="flex items-center justify-between text-sm">
             <span className="text-stone-500">{t("ivaCollected")}</span>
-            <span className="font-medium text-stone-700">{fmt(data.ivaRepercutido)}</span>
+            <span className="font-medium text-stone-700 tabular-nums">{fmt(data.ivaRepercutido)}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-stone-500">{t("ivaDeductible")}</span>
-            <span className="font-medium text-stone-700">-{fmt(data.ivaSoportado)}</span>
+            <span className="font-medium text-stone-700 tabular-nums">-{fmt(data.ivaSoportado)}</span>
           </div>
           <div className="flex items-center justify-between border-t border-stone-100 pt-1.5 text-sm">
             <span className="font-medium text-stone-600">{t("ivaBalance")}</span>
-            <span className={`font-bold ${data.saldoIva >= 0 ? "text-red-600" : "text-green-600"}`}>
+            <span className={`font-bold tabular-nums ${data.saldoIva >= 0 ? "text-red-600" : "text-green-600"}`}>
               {fmt(data.saldoIva)}
             </span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-stone-500">{t("irpfEstimated")}</span>
-            <span className="font-medium text-stone-700">{fmt(data.irpfEstimado)}</span>
+            <span className="font-medium text-stone-700 tabular-nums">{fmt(data.irpfEstimado)}</span>
           </div>
           <div className="flex items-center justify-between text-sm">
             <span className="text-stone-500">{t("cuotaAutonomos")}</span>
-            <span className="font-medium text-stone-700">{fmt(data.cuotaAutonomos)}</span>
+            <span className="font-medium text-stone-700 tabular-nums">{fmt(data.cuotaAutonomos)}</span>
           </div>
         </div>
 

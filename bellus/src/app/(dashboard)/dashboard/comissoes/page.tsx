@@ -18,7 +18,10 @@ import {
   Check,
   X,
   Trophy,
+  Users,
 } from "lucide-react";
+import { SkeletonCard } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 
 function formatCurrency(amount: number) {
   return new Intl.NumberFormat("es-ES", {
@@ -133,9 +136,13 @@ export default function ComissoesPage() {
       </div>
 
       {loading ? (
-        <p className="py-20 text-center text-sm text-stone-400">{t("loading")}</p>
+        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <SkeletonCard />
+          <SkeletonCard />
+          <SkeletonCard />
+        </div>
       ) : !data || data.professionals.length === 0 ? (
-        <p className="py-20 text-center text-sm text-stone-400">{t("noData")}</p>
+        <EmptyState icon={Users} title={t("noData")} className="py-20" />
       ) : (
         <>
           {/* Summary cards */}
@@ -145,7 +152,7 @@ export default function ComissoesPage() {
                 <TrendingUp className="size-4" />
                 {t("totalBilled")}
               </div>
-              <p className="mt-1 text-2xl font-bold text-stone-900">
+              <p className="mt-1 text-2xl font-bold text-stone-900 tabular-nums">
                 {formatCurrency(data.totals.totalBilled)}
               </p>
             </div>
@@ -154,7 +161,7 @@ export default function ComissoesPage() {
                 <Building2 className="size-4" />
                 {t("salonTotal")}
               </div>
-              <p className="mt-1 text-2xl font-bold text-amber-600">
+              <p className="mt-1 text-2xl font-bold text-amber-600 tabular-nums">
                 {formatCurrency(data.totals.totalSalonCut)}
               </p>
             </div>
@@ -163,7 +170,7 @@ export default function ComissoesPage() {
                 <User className="size-4" />
                 {t("professionalsTotal")}
               </div>
-              <p className="mt-1 text-2xl font-bold text-emerald-600">
+              <p className="mt-1 text-2xl font-bold text-emerald-600 tabular-nums">
                 {formatCurrency(data.totals.totalProfessionalEarnings)}
               </p>
             </div>
@@ -284,13 +291,13 @@ export default function ComissoesPage() {
                 <div className="grid grid-cols-3 gap-4 rounded-lg bg-stone-50 p-3">
                   <div className="text-center">
                     <p className="text-xs text-stone-500">{t("billed")}</p>
-                    <p className="text-lg font-bold text-stone-900">
+                    <p className="text-lg font-bold text-stone-900 tabular-nums">
                       {formatCurrency(p.totalBilled)}
                     </p>
                   </div>
                   <div className="text-center">
                     <p className="text-xs text-stone-500">{t("salonCut")}</p>
-                    <p className="text-lg font-bold text-amber-600">
+                    <p className="text-lg font-bold text-amber-600 tabular-nums">
                       {formatCurrency(p.salonCut)}
                     </p>
                     <p className="text-xs text-stone-400">
@@ -301,7 +308,7 @@ export default function ComissoesPage() {
                   </div>
                   <div className="text-center">
                     <p className="text-xs text-stone-500">{t("youKeep")}</p>
-                    <p className="text-lg font-bold text-emerald-600">
+                    <p className="text-lg font-bold text-emerald-600 tabular-nums">
                       {formatCurrency(p.professionalEarnings)}
                     </p>
                     <p className="text-xs text-stone-400">

@@ -13,7 +13,10 @@ import {
   ChevronRight,
   Filter,
   Download,
+  Receipt,
 } from "lucide-react";
+import { SkeletonList } from "@/components/ui/skeleton";
+import { EmptyState } from "@/components/ui/empty-state";
 import { SALON_TZ } from "@/lib/timezone";
 
 interface Transacao {
@@ -311,8 +314,8 @@ export function CaixaView({ salaoId, profissionais, servicos }: CaixaViewProps) 
         {/* Total */}
         <div className="col-span-2 sm:col-span-1 bg-white border-2 border-gray-900 rounded-xl p-4">
           <p className="text-xs text-muted-foreground">{t("total")}</p>
-          <p className="text-2xl font-bold">{formatCurrency(totalAmount)}</p>
-          <p className="text-xs text-muted-foreground">{totalCount} {t("transactions")}</p>
+          <p className="text-2xl font-bold tabular-nums">{formatCurrency(totalAmount)}</p>
+          <p className="text-xs text-muted-foreground tabular-nums">{totalCount} {t("transactions")}</p>
         </div>
 
         {/* Per forma */}
@@ -327,8 +330,8 @@ export function CaixaView({ salaoId, profissionais, servicos }: CaixaViewProps) 
                 <Icon className="h-4 w-4" />
                 <span className="text-xs font-medium">{FORMA_LABELS[forma]}</span>
               </div>
-              <p className="text-lg font-bold">{formatCurrency(total)}</p>
-              <p className="text-xs opacity-70">{count} {t("payments")}</p>
+              <p className="text-lg font-bold tabular-nums">{formatCurrency(total)}</p>
+              <p className="text-xs opacity-70 tabular-nums">{count} {t("payments")}</p>
             </div>
           );
         })}
@@ -343,11 +346,13 @@ export function CaixaView({ salaoId, profissionais, servicos }: CaixaViewProps) 
         </div>
 
         {loading ? (
-          <div className="p-8 text-center text-muted-foreground">{tc("loading")}</div>
+          <SkeletonList rows={4} />
         ) : transacoes.length === 0 ? (
-          <div className="p-8 text-center text-muted-foreground">
-            {t("noTransactions")} {tab === "dia" ? t("forThisDay") : t("inThisPeriod")}
-          </div>
+          <EmptyState
+            icon={Receipt}
+            title={`${t("noTransactions")} ${tab === "dia" ? t("forThisDay") : t("inThisPeriod")}`}
+            className="py-8"
+          />
         ) : (
           <div className="divide-y">
             {transacoes.map((t) => {
@@ -382,7 +387,7 @@ export function CaixaView({ salaoId, profissionais, servicos }: CaixaViewProps) 
                     </div>
                   </div>
                   <div className="text-right">
-                    <p className="font-medium">{formatCurrency(t.valor_final)}</p>
+                    <p className="font-medium tabular-nums">{formatCurrency(t.valor_final)}</p>
                     {t.valor_desconto > 0 && (
                       <p className="text-xs text-red-500 line-through">
                         {formatCurrency(t.valor)}

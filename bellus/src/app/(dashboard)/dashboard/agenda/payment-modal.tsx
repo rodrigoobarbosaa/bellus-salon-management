@@ -350,9 +350,34 @@ export function PaymentModal({
 
     return (
       <Dialog open={open} onOpenChange={handleClose}>
-        <DialogContent className="sm:max-w-sm">
-          <div className="flex flex-col items-center gap-4 py-6">
-            <CheckCircle className="h-16 w-16 text-green-500" />
+        <DialogContent className="sm:max-w-sm overflow-hidden">
+          {/* Confetti celebration */}
+          <div className="pointer-events-none absolute inset-0 overflow-hidden" aria-hidden="true">
+            {Array.from({ length: 24 }).map((_, i) => (
+              <div
+                key={i}
+                className="absolute animate-confetti-fall"
+                style={{
+                  left: `${Math.random() * 100}%`,
+                  animationDelay: `${Math.random() * 0.6}s`,
+                  animationDuration: `${1.2 + Math.random() * 0.8}s`,
+                }}
+              >
+                <div
+                  className="size-2 rounded-sm"
+                  style={{
+                    backgroundColor: ["#C9A96E", "#22c55e", "#3b82f6", "#f59e0b", "#ec4899", "#8b5cf6"][i % 6],
+                    transform: `rotate(${Math.random() * 360}deg)`,
+                  }}
+                />
+              </div>
+            ))}
+          </div>
+
+          <div className="flex flex-col items-center gap-4 py-6 relative">
+            <div className="animate-scale-in">
+              <CheckCircle className="h-16 w-16 text-green-500" />
+            </div>
             <h3 className="text-lg font-semibold">
               {modo === "cortesia" ? "Cortesía registrada" : "Pago registrado"}
             </h3>

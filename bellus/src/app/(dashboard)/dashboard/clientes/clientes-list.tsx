@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
 import { Search, Plus, Users, AlertCircle, TrendingUp, Phone, Mail, ChevronRight } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import { ClienteForm } from "./cliente-form";
 
 interface Cliente {
@@ -94,7 +95,7 @@ export function ClientesList({ clientes, totalClientes, pendingReturn, returnNot
               <Users className="h-5 w-5 text-blue-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-stone-800">{totalClientes}</p>
+              <p className="text-2xl font-bold text-stone-800 tabular-nums">{totalClientes}</p>
               <p className="text-xs text-stone-500">{t("total")}</p>
             </div>
           </CardContent>
@@ -105,7 +106,7 @@ export function ClientesList({ clientes, totalClientes, pendingReturn, returnNot
               <AlertCircle className="h-5 w-5 text-amber-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-stone-800">{pendingReturn}</p>
+              <p className="text-2xl font-bold text-stone-800 tabular-nums">{pendingReturn}</p>
               <p className="text-xs text-stone-500">{t("pendingReturn")}</p>
             </div>
           </CardContent>
@@ -116,7 +117,7 @@ export function ClientesList({ clientes, totalClientes, pendingReturn, returnNot
               <TrendingUp className="h-5 w-5 text-green-600" />
             </div>
             <div>
-              <p className="text-2xl font-bold text-stone-800">{conversionRate}%</p>
+              <p className="text-2xl font-bold text-stone-800 tabular-nums">{conversionRate}%</p>
               <p className="text-xs text-stone-500">{t("returnConversion")}</p>
             </div>
           </CardContent>
@@ -187,9 +188,12 @@ export function ClientesList({ clientes, totalClientes, pendingReturn, returnNot
       {/* Client list */}
       <div className="divide-y divide-stone-100 rounded-xl border border-stone-200 bg-white">
         {filtered.length === 0 ? (
-          <div className="p-8 text-center text-sm text-stone-400">
-            {search ? t("noResults") : t("noClients")}
-          </div>
+          <EmptyState
+            icon={Users}
+            title={search ? t("noResults") : t("noClients")}
+            description={search ? undefined : t("registered", { count: 0 })}
+            className="py-8"
+          />
         ) : (
           filtered.map((c) => {
             const isOverdue = c.proximo_retorno && c.proximo_retorno <= today;
