@@ -28,10 +28,10 @@ import { SALON_TZ } from "@/lib/timezone";
 // --- Status Badge ---
 
 const statusColors: Record<string, string> = {
-  pendente: "bg-amber-100 text-amber-700",
-  confirmado: "bg-blue-100 text-blue-700",
-  concluido: "bg-green-100 text-green-700",
-  cancelado: "bg-stone-100 text-stone-500",
+  pendente: "bg-amber-50 text-amber-600",
+  confirmado: "bg-blue-50 text-blue-600",
+  concluido: "bg-green-50 text-green-600",
+  cancelado: "bg-stone-50 text-stone-500",
 };
 
 function StatusBadge({ status }: { status: string }) {
@@ -57,7 +57,7 @@ function TrendIndicator({ current, previous }: { current: number; previous: numb
   if (pct === 0) return null;
   const isUp = pct > 0;
   return (
-    <span className={`inline-flex items-center gap-0.5 text-xs font-medium ${isUp ? "text-green-600" : "text-red-500"}`}>
+    <span className={`inline-flex items-center gap-0.5 rounded-full px-1.5 py-0.5 text-xs font-medium ${isUp ? "bg-green-50 text-green-600" : "bg-red-50 text-red-500"}`}>
       {isUp ? <TrendingUp className="size-3" /> : <TrendingDown className="size-3" />}
       {isUp ? "+" : ""}
       {pct}%
@@ -72,11 +72,13 @@ export function TodayAgendaCard({ appointments }: { appointments: TodayAppointme
   return (
     <Card className="col-span-full lg:col-span-1">
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-stone-600">{t("todayAgenda")}</CardTitle>
-        <Calendar className="text-bellus-gold size-4" />
+        <CardTitle className="text-xs font-semibold uppercase tracking-wider text-stone-400">{t("todayAgenda")}</CardTitle>
+        <div className="flex size-8 items-center justify-center rounded-lg bg-bellus-gold/10">
+          <Calendar className="text-bellus-gold size-4" />
+        </div>
       </CardHeader>
       <CardContent>
-        <p className="text-2xl font-bold text-stone-900 tabular-nums">{appointments.length}</p>
+        <p className="text-3xl font-bold tracking-tight text-stone-900 tabular-nums">{appointments.length}</p>
         {appointments.length === 0 ? (
           <div className="mt-3 flex flex-col items-center py-4 animate-fade-in">
             <Calendar className="size-8 text-stone-300 mb-2" />
@@ -114,7 +116,7 @@ export function TodayAgendaCard({ appointments }: { appointments: TodayAppointme
       <CardFooter>
         <Link
           href="/dashboard/agenda"
-          className="text-bellus-gold hover:text-bellus-gold/80 inline-flex items-center gap-1 text-sm font-medium"
+          className="text-bellus-gold hover:text-bellus-gold/80 inline-flex items-center gap-1 text-sm font-medium transition-all hover:gap-2"
         >
           {t("viewFullAgenda")} <ArrowRight className="size-3" />
         </Link>
@@ -133,11 +135,13 @@ export function TodayForecastCard({ forecast }: { forecast: TodayForecast }) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-stone-600">{t("todayForecast")}</CardTitle>
-        <TrendingUp className="text-bellus-gold size-4" />
+        <CardTitle className="text-xs font-semibold uppercase tracking-wider text-stone-400">{t("todayForecast")}</CardTitle>
+        <div className="flex size-8 items-center justify-center rounded-lg bg-bellus-gold/10">
+          <TrendingUp className="text-bellus-gold size-4" />
+        </div>
       </CardHeader>
       <CardContent>
-        <p className="text-2xl font-bold text-stone-900 tabular-nums">{fmt(forecast.total)}</p>
+        <p className="text-3xl font-bold tracking-tight text-stone-900 tabular-nums">{fmt(forecast.total)}</p>
         <p className="text-xs text-stone-400">
           <span className="tabular-nums">{forecast.appointmentCount}</span> {t("appointments")}
         </p>
@@ -192,11 +196,13 @@ export function RevenueKPICard({ revenue }: { revenue: RevenueData }) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-stone-600">{t("revenue")}</CardTitle>
-        <DollarSign className="text-bellus-gold size-4" />
+        <CardTitle className="text-xs font-semibold uppercase tracking-wider text-stone-400">{t("revenue")}</CardTitle>
+        <div className="flex size-8 items-center justify-center rounded-lg bg-bellus-gold/10">
+          <DollarSign className="text-bellus-gold size-4" />
+        </div>
       </CardHeader>
       <CardContent>
-        <p className="text-2xl font-bold text-stone-900 tabular-nums">{fmt(revenue.month)}</p>
+        <p className="text-3xl font-bold tracking-tight text-stone-900 tabular-nums">{fmt(revenue.month)}</p>
         <div className="mt-3 space-y-1.5">
           {items.map((item) => (
             <div key={item.label} className="flex items-center justify-between text-sm">
@@ -227,11 +233,13 @@ export function ClientKPICard({ data }: { data: ClientData }) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-stone-600">{t("clients")}</CardTitle>
-        <Users className="text-bellus-gold size-4" />
+        <CardTitle className="text-xs font-semibold uppercase tracking-wider text-stone-400">{t("clients")}</CardTitle>
+        <div className="flex size-8 items-center justify-center rounded-lg bg-bellus-gold/10">
+          <Users className="text-bellus-gold size-4" />
+        </div>
       </CardHeader>
       <CardContent>
-        <p className="text-2xl font-bold text-stone-900 tabular-nums">{data.totalActive}</p>
+        <p className="text-3xl font-bold tracking-tight text-stone-900 tabular-nums">{data.totalActive}</p>
         <p className="text-xs text-stone-400">{t("activeClients")}</p>
         <div className="mt-3 space-y-1.5">
           <div className="flex items-center justify-between text-sm">
@@ -271,8 +279,10 @@ export function TopServicesCard({ services }: { services: TopService[] }) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-stone-600">{t("topServices")}</CardTitle>
-        <Scissors className="text-bellus-gold size-4" />
+        <CardTitle className="text-xs font-semibold uppercase tracking-wider text-stone-400">{t("topServices")}</CardTitle>
+        <div className="flex size-8 items-center justify-center rounded-lg bg-bellus-gold/10">
+          <Scissors className="text-bellus-gold size-4" />
+        </div>
       </CardHeader>
       <CardContent>
         {services.length === 0 ? (
@@ -287,9 +297,9 @@ export function TopServicesCard({ services }: { services: TopService[] }) {
                     {svc.count}x &middot; {fmt(svc.revenue)}
                   </span>
                 </div>
-                <div className="mt-1 h-1.5 w-full rounded-full bg-stone-100">
+                <div className="mt-1 h-2 w-full rounded-full bg-stone-100">
                   <div
-                    className="bg-bellus-gold h-1.5 rounded-full transition-all"
+                    className="h-2 rounded-full bg-gradient-to-r from-bellus-gold to-bellus-gold-light transition-all"
                     style={{ width: `${(svc.count / maxCount) * 100}%` }}
                   />
                 </div>
@@ -314,8 +324,10 @@ export function FiscalSummaryCard({ data }: { data: FiscalSummary }) {
   return (
     <Card>
       <CardHeader className="flex flex-row items-center justify-between pb-2">
-        <CardTitle className="text-sm font-medium text-stone-600">{t("fiscalSummary")}</CardTitle>
-        <Receipt className="text-bellus-gold size-4" />
+        <CardTitle className="text-xs font-semibold uppercase tracking-wider text-stone-400">{t("fiscalSummary")}</CardTitle>
+        <div className="flex size-8 items-center justify-center rounded-lg bg-bellus-gold/10">
+          <Receipt className="text-bellus-gold size-4" />
+        </div>
       </CardHeader>
       <CardContent>
         <div className="space-y-1.5">
@@ -358,7 +370,7 @@ export function FiscalSummaryCard({ data }: { data: FiscalSummary }) {
       <CardFooter>
         <Link
           href="/dashboard/fiscal"
-          className="text-bellus-gold hover:text-bellus-gold/80 inline-flex items-center gap-1 text-sm font-medium"
+          className="text-bellus-gold hover:text-bellus-gold/80 inline-flex items-center gap-1 text-sm font-medium transition-all hover:gap-2"
         >
           {t("viewFiscal")} <ArrowRight className="size-3" />
         </Link>

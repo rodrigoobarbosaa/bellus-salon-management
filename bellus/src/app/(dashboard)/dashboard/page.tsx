@@ -2,6 +2,8 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { getTranslations } from "next-intl/server";
 import { getDashboardData } from "@/app/actions/dashboard";
+import { BarChart3 } from "lucide-react";
+import { EmptyState } from "@/components/ui/empty-state";
 import {
   TodayAgendaCard,
   TodayForecastCard,
@@ -40,9 +42,9 @@ export default async function DashboardPage() {
   const greetingKey = hour < 12 ? "goodMorning" : hour < 18 ? "goodAfternoon" : "goodEvening";
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-6 page-enter">
       <div>
-        <h2 className="text-2xl font-bold text-stone-900">
+        <h2 className="text-[32px] font-bold tracking-tight text-stone-900">
           {t(greetingKey)}, {userName}!
         </h2>
         <p className="mt-1 text-sm text-stone-500 capitalize">
@@ -56,7 +58,7 @@ export default async function DashboardPage() {
       </div>
 
       {dashboardData ? (
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid gap-5 sm:grid-cols-2 lg:grid-cols-3 stagger-children">
           <TodayAgendaCard appointments={dashboardData.todayAppointments} />
           <TodayForecastCard forecast={dashboardData.todayForecast} />
           <RevenueKPICard revenue={dashboardData.revenue} />
@@ -65,7 +67,11 @@ export default async function DashboardPage() {
           <FiscalSummaryCard data={dashboardData.fiscalSummary} />
         </div>
       ) : (
-        <p className="text-sm text-stone-400">{t("noData")}</p>
+        <EmptyState
+          icon={BarChart3}
+          title={t("noData")}
+          description={t("noData")}
+        />
       )}
     </div>
   );
