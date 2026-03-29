@@ -495,5 +495,11 @@
     "es": "Español",
     "en": "English",
     "ru": "Русский"
+  },
+  "notifications": {
+    "title": "Notificaciones",
+    "description": "Personaliza los mensajes de WhatsApp/SMS que reciben tus clientes.",
+    "recentHistory": "Historial reciente",
+    "noNotifications": "No hay notificaciones enviadas aún."
   }
 }

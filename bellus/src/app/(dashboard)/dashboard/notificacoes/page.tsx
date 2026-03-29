@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { getTranslations } from "next-intl/server";
 import { TemplateEditor } from "./template-editor";
 
 export default async function NotificacoesPage() {
@@ -55,12 +56,14 @@ export default async function NotificacoesPage() {
     created_at: string;
   }>;
 
+  const t = await getTranslations("notifications");
+
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="text-2xl font-bold text-stone-800">Notificaciones</h1>
+        <h1 className="text-2xl font-bold text-stone-800">{t("title")}</h1>
         <p className="text-sm text-stone-500">
-          Personaliza los mensajes de WhatsApp/SMS que reciben tus clientes.
+          {t("description")}
         </p>
       </div>
 
@@ -68,9 +71,9 @@ export default async function NotificacoesPage() {
 
       {/* Recent notifications log */}
       <div className="rounded-xl border border-stone-200 bg-white p-6">
-        <h2 className="mb-4 text-lg font-semibold text-stone-800">Historial reciente</h2>
+        <h2 className="mb-4 text-lg font-semibold text-stone-800">{t("recentHistory")}</h2>
         {logs.length === 0 ? (
-          <p className="text-sm text-stone-400">No hay notificaciones enviadas aún.</p>
+          <p className="text-sm text-stone-400">{t("noNotifications")}</p>
         ) : (
           <div className="divide-y divide-stone-100">
             {logs.map((log) => (

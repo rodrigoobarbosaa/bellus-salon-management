@@ -495,5 +495,11 @@
     "es": "Español",
     "en": "English",
     "ru": "Русский"
+  },
+  "notifications": {
+    "title": "Уведомления",
+    "description": "Настройте сообщения WhatsApp/SMS, которые получают ваши клиенты.",
+    "recentHistory": "Недавняя история",
+    "noNotifications": "Уведомления ещё не отправлялись."
   }
 }

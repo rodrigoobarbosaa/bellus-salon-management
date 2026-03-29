@@ -183,7 +183,7 @@ export default function ConfiguracoesPage() {
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label htmlFor="whatsapp" className="text-sm font-medium text-stone-700">
                   {t("whatsappRequired")}
@@ -246,7 +246,7 @@ export default function ConfiguracoesPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label htmlFor="instagram_url" className="text-sm font-medium text-stone-700">
                   {t("instagram")}
@@ -273,7 +273,7 @@ export default function ConfiguracoesPage() {
               </div>
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div className="space-y-2">
                 <label htmlFor="moeda" className="text-sm font-medium text-stone-700">
                   {t("currency")}
