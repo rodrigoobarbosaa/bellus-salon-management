@@ -228,15 +228,28 @@ export function AgendaView({
         const statusColor = STATUS_COLORS[a.status] ?? STATUS_COLORS.pendente;
 
         const etapaPrefix = a.tipo_etapa === "aplicacao" ? "🎨 " : a.tipo_etapa === "secado" ? "💨 " : "";
+        const pagoPrefix = a.status === "concluido" ? "✓ " : "";
 
         return {
           id: a.id,
-          title: `${etapaPrefix}${a.cliente_nome} — ${a.servico_nome}`,
+          title: `${pagoPrefix}${etapaPrefix}${a.cliente_nome} — ${a.servico_nome}`,
           start: toMadridDatetimeLocal(new Date(a.data_hora_inicio)),
           end: toMadridDatetimeLocal(new Date(a.data_hora_fim)),
-          backgroundColor: a.status === "cancelado" ? statusColor.bg : (prof?.cor_agenda ?? "#C9A96E"),
-          borderColor: a.status === "cancelado" ? statusColor.border : (prof?.cor_agenda ?? "#C9A96E"),
-          textColor: a.status === "cancelado" ? statusColor.text : "#fff",
+          backgroundColor: a.status === "cancelado"
+            ? statusColor.bg
+            : a.status === "concluido"
+              ? "#dcfce7"
+              : (prof?.cor_agenda ?? "#C9A96E"),
+          borderColor: a.status === "cancelado"
+            ? statusColor.border
+            : a.status === "concluido"
+              ? "#22c55e"
+              : (prof?.cor_agenda ?? "#C9A96E"),
+          textColor: a.status === "cancelado"
+            ? statusColor.text
+            : a.status === "concluido"
+              ? "#166534"
+              : "#fff",
           editable: a.status !== "cancelado" && a.status !== "concluido",
           extendedProps: { agendamento: a, type: "agendamento" },
           classNames: a.status === "cancelado" ? ["opacity-50", "line-through"] : [],

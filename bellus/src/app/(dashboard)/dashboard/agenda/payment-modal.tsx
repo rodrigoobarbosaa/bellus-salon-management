@@ -9,7 +9,7 @@ import {
   DialogTitle,
   DialogFooter,
 } from "@/components/ui/dialog";
-import { createTransacao } from "@/app/actions/transacoes";
+import { createComandaTransacoes } from "@/app/actions/transacoes";
 import {
   Banknote,
   CreditCard,
@@ -22,6 +22,9 @@ import {
   Gift,
   Star,
   Camera,
+  Plus,
+  X,
+  Split,
 } from "lucide-react";
 
 interface Agendamento {
@@ -70,6 +73,7 @@ export function PaymentModal({
   const servico = servicos.find((s) => s.id === agendamento.servico_id);
   const precoBase = servico?.preco_base ?? 0;
 
+  // Existing state
   const [formaPagamento, setFormaPagamento] = useState<string>("efectivo");
   const [tipoDesconto, setTipoDesconto] = useState<"percentual" | "fixo" | "">("");
   const [valorDesconto, setValorDesconto] = useState("");
@@ -82,6 +86,28 @@ export function PaymentModal({
   const [precoManual, setPrecoManual] = useState("");
   const [usarPrecoManual, setUsarPrecoManual] = useState(false);
 
+  // Extra services state
+  const [servicosExtras, setServicosExtras] = useState<string[]>([]);
+  const [showExtraSelect, setShowExtraSelect] = useState(false);
+
+  // Split payment state
+  const [splitEnabled, setSplitEnabled] = useState(false);
+  const [split1Forma, setSplit1Forma] = useState("efectivo");
+  const [split2Forma, setSplit2Forma] = useState("tarjeta");
+  const [split1Valor, setSplit1Valor] = useState("");
+  const [split2Valor, setSplit2Valor] = useState("");
+
+  // Total bruto = main service + extras
+  const totalBruto = useMemo(() => {
+    let total = precoBase;
+    for (const sid of servicosExtras) {
+      const s = servicos.find((sv) => sv.id === sid);
+      if (s) total += s.preco_base;
+    }
+    return total;
+  }, [precoBase, servicosExtras, servicos]);
+
+  // Valor final after discount
   const valorFinal = useMemo(() => {
     if (modo === "cortesia") return 0;
     if (usarPrecoManual && precoManual !== "") {
@@ -89,13 +115,27 @@ export function PaymentModal({
     }
     const desc = parseFloat(valorDesconto) || 0;
     if (tipoDesconto === "percentual" && desc > 0) {
-      return Math.max(0, precoBase - (precoBase * desc) / 100);
+      return Math.max(0, totalBruto - (totalBruto * desc) / 100);
     }
     if (tipoDesconto === "fixo" && desc > 0) {
-      return Math.max(0, precoBase - desc);
+      return Math.max(0, totalBruto - desc);
     }
-    return precoBase;
-  }, [modo, usarPrecoManual, precoManual, precoBase, tipoDesconto, valorDesconto]);
+    return totalBruto;
+  }, [modo, usarPrecoManual, precoManual, totalBruto, tipoDesconto, valorDesconto]);
+
+  // Split validation
+  const splitValid = useMemo(() => {
+    if (!splitEnabled) return true;
+    const v1 = parseFloat(split1Valor) || 0;
+    const v2 = parseFloat(split2Valor) || 0;
+    return Math.abs(v1 + v2 - valorFinal) < 0.01 && v1 > 0 && v2 > 0;
+  }, [splitEnabled, split1Valor, split2Valor, valorFinal]);
+
+  // Available services for extras (exclude main + already added)
+  const availableExtras = useMemo(() => {
+    const usedIds = new Set([agendamento.servico_id, ...servicosExtras]);
+    return servicos.filter((s) => !usedIds.has(s.id) && s.preco_base > 0);
+  }, [servicos, agendamento.servico_id, servicosExtras]);
 
   function formatCurrency(amount: number) {
     return new Intl.NumberFormat("es-ES", {
@@ -104,47 +144,79 @@ export function PaymentModal({
     }).format(amount);
   }
 
+  function addExtra(servicoId: string) {
+    setServicosExtras((prev) => [...prev, servicoId]);
+    setShowExtraSelect(false);
+  }
+
+  function removeExtra(servicoId: string) {
+    setServicosExtras((prev) => prev.filter((id) => id !== servicoId));
+  }
+
+  // Auto-fill split2 when split1 changes
+  function handleSplit1Change(val: string) {
+    setSplit1Valor(val);
+    const v1 = parseFloat(val) || 0;
+    if (v1 > 0 && v1 <= valorFinal) {
+      setSplit2Valor((valorFinal - v1).toFixed(2));
+    }
+  }
+
   async function handleSubmit() {
     setIsLoading(true);
     setError(null);
 
-    const fd = new FormData();
-    fd.set("agendamento_id", agendamento.id);
-    fd.set("cliente_id", agendamento.cliente_id);
-    fd.set("profissional_id", agendamento.profissional_id);
-    fd.set("servico_id", agendamento.servico_id);
-    fd.set("valor", precoBase.toString());
+    // Build all service items
+    const allServicos = [agendamento.servico_id, ...servicosExtras];
+
+    // Build payload
+    const payload = {
+      agendamento_id: agendamento.id,
+      cliente_id: agendamento.cliente_id,
+      profissional_id: agendamento.profissional_id,
+      servicos: allServicos,
+      tipo_desconto: null as string | null,
+      valor_desconto: 0,
+      notas: null as string | null,
+      cortesia: modo === "cortesia",
+      tipo_cortesia: modo === "cortesia" ? courtesyType : null,
+      split: splitEnabled && modo !== "cortesia",
+      pagamento1: {
+        forma: splitEnabled ? split1Forma : formaPagamento,
+        valor: splitEnabled ? parseFloat(split1Valor) || 0 : valorFinal,
+      },
+      pagamento2: splitEnabled
+        ? {
+            forma: split2Forma,
+            valor: parseFloat(split2Valor) || 0,
+          }
+        : null,
+    };
 
     if (modo === "cortesia") {
-      fd.set("forma_pagamento", "efectivo");
-      fd.set("tipo_desconto", "percentual");
-      fd.set("valor_desconto", "100");
-      fd.set("valor_final", "0");
       const courtesyLabel =
-        COURTESY_TYPES.find((t) => t.value === courtesyType)?.label ?? "Cortesía";
-      fd.set(
-        "notas",
-        notas
-          ? `[${courtesyLabel.toUpperCase()}] ${notas}`
-          : `[${courtesyLabel.toUpperCase()}]`
-      );
+        COURTESY_TYPES.find((ct) => ct.value === courtesyType)?.label ?? "Cortesía";
+      payload.tipo_desconto = "percentual";
+      payload.valor_desconto = 100;
+      payload.notas = notas
+        ? `[${courtesyLabel.toUpperCase()}] ${notas}`
+        : `[${courtesyLabel.toUpperCase()}]`;
+      payload.pagamento1 = { forma: "efectivo", valor: 0 };
     } else {
-      fd.set("forma_pagamento", formaPagamento);
-      fd.set("valor_final", valorFinal.toString());
       if (usarPrecoManual && precoManual !== "") {
-        const diff = precoBase - valorFinal;
+        const diff = totalBruto - valorFinal;
         if (diff > 0) {
-          fd.set("tipo_desconto", "fixo");
-          fd.set("valor_desconto", diff.toFixed(2));
+          payload.tipo_desconto = "fixo";
+          payload.valor_desconto = parseFloat(diff.toFixed(2));
         }
       } else if (tipoDesconto) {
-        fd.set("tipo_desconto", tipoDesconto);
-        fd.set("valor_desconto", valorDesconto || "0");
+        payload.tipo_desconto = tipoDesconto;
+        payload.valor_desconto = parseFloat(valorDesconto) || 0;
       }
-      if (notas) fd.set("notas", notas);
+      if (notas) payload.notas = notas;
     }
 
-    const result = await createTransacao(fd);
+    const result = await createComandaTransacoes(JSON.stringify(payload));
     setIsLoading(false);
 
     if (result.error) {
@@ -165,12 +237,19 @@ export function PaymentModal({
     setCourtesyType("cortesia");
     setPrecoManual("");
     setUsarPrecoManual(false);
+    setServicosExtras([]);
+    setShowExtraSelect(false);
+    setSplitEnabled(false);
+    setSplit1Forma("efectivo");
+    setSplit2Forma("tarjeta");
+    setSplit1Valor("");
+    setSplit2Valor("");
     onOpenChange(false);
   }
 
   function handleDownloadRecibo() {
     import("jspdf").then(({ jsPDF }) => {
-      const doc = new jsPDF({ unit: "mm", format: [80, 160] });
+      const doc = new jsPDF({ unit: "mm", format: [80, 200] });
       const w = 80;
       const fecha = new Date().toLocaleDateString("es-ES");
       let y = 10;
@@ -188,7 +267,6 @@ export function PaymentModal({
       doc.setFontSize(9);
       const info = [
         ["Cliente", agendamento.cliente_nome ?? "—"],
-        ["Servicio", agendamento.servico_nome ?? servico?.nome ?? "—"],
         ["Profesional", agendamento.profissional_nome ?? "—"],
         ["Fecha", fecha],
       ];
@@ -204,14 +282,25 @@ export function PaymentModal({
       doc.line(5, y, w - 5, y);
       y += 6;
 
+      // List all services
       doc.setFontSize(9);
-      doc.text("Precio base:", 5, y);
+      const mainNome = agendamento.servico_nome ?? servico?.nome ?? "—";
+      doc.text(mainNome, 5, y);
       doc.text(formatCurrency(precoBase), w - 5, y, { align: "right" });
       y += 5;
 
-      if (valorFinal !== precoBase) {
+      for (const sid of servicosExtras) {
+        const extraSvc = servicos.find((sv) => sv.id === sid);
+        if (extraSvc) {
+          doc.text(extraSvc.nome, 5, y);
+          doc.text(formatCurrency(extraSvc.preco_base), w - 5, y, { align: "right" });
+          y += 5;
+        }
+      }
+
+      if (valorFinal !== totalBruto) {
         doc.text("Descuento:", 5, y);
-        doc.text(`-${formatCurrency(precoBase - valorFinal)}`, w - 5, y, {
+        doc.text(`-${formatCurrency(totalBruto - valorFinal)}`, w - 5, y, {
           align: "right",
         });
         y += 5;
@@ -228,13 +317,22 @@ export function PaymentModal({
       doc.text(formatCurrency(valorFinal), w - 5, y, { align: "right" });
       y += 6;
 
+      // Payment method(s)
       doc.setFont("helvetica", "normal");
       doc.setFontSize(9);
-      doc.text(
-        `Pago: ${FORMAS_PAGAMENTO.find((f) => f.value === formaPagamento)?.label ?? formaPagamento}`,
-        5,
-        y
-      );
+      if (splitEnabled) {
+        const label1 = FORMAS_PAGAMENTO.find((f) => f.value === split1Forma)?.label ?? split1Forma;
+        const label2 = FORMAS_PAGAMENTO.find((f) => f.value === split2Forma)?.label ?? split2Forma;
+        doc.text(`${label1}: ${formatCurrency(parseFloat(split1Valor) || 0)}`, 5, y);
+        y += 5;
+        doc.text(`${label2}: ${formatCurrency(parseFloat(split2Valor) || 0)}`, 5, y);
+      } else {
+        doc.text(
+          `Pago: ${FORMAS_PAGAMENTO.find((f) => f.value === formaPagamento)?.label ?? formaPagamento}`,
+          5,
+          y
+        );
+      }
       y += 10;
 
       doc.setFontSize(10);
@@ -244,7 +342,12 @@ export function PaymentModal({
     });
   }
 
+  // --- Success screen ---
   if (success) {
+    const successMsg = splitEnabled
+      ? `${formatCurrency(parseFloat(split1Valor) || 0)} + ${formatCurrency(parseFloat(split2Valor) || 0)}`
+      : `${formatCurrency(valorFinal)} — ${FORMAS_PAGAMENTO.find((f) => f.value === formaPagamento)?.label}`;
+
     return (
       <Dialog open={open} onOpenChange={handleClose}>
         <DialogContent className="sm:max-w-sm">
@@ -255,9 +358,14 @@ export function PaymentModal({
             </h3>
             <p className="text-center text-sm text-muted-foreground">
               {modo === "cortesia"
-                ? `${COURTESY_TYPES.find((t) => t.value === courtesyType)?.label} — ${agendamento.servico_nome ?? servico?.nome}`
-                : `${formatCurrency(valorFinal)} — ${FORMAS_PAGAMENTO.find((f) => f.value === formaPagamento)?.label}`}
+                ? `${COURTESY_TYPES.find((ct) => ct.value === courtesyType)?.label} — ${agendamento.servico_nome ?? servico?.nome}`
+                : successMsg}
             </p>
+            {servicosExtras.length > 0 && (
+              <p className="text-xs text-muted-foreground">
+                +{servicosExtras.length} servicio{servicosExtras.length > 1 ? "s" : ""} adicional{servicosExtras.length > 1 ? "es" : ""}
+              </p>
+            )}
             <div className="flex gap-2">
               {modo !== "cortesia" && (
                 <Button
@@ -277,6 +385,7 @@ export function PaymentModal({
     );
   }
 
+  // --- Main form ---
   return (
     <Dialog open={open} onOpenChange={handleClose}>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-md">
@@ -285,16 +394,104 @@ export function PaymentModal({
         </DialogHeader>
 
         <div className="space-y-4">
-          {/* Service info */}
+          {/* Main service info */}
           <div className="rounded-lg border bg-gray-50 p-3">
-            <p className="font-medium">
-              {agendamento.servico_nome ?? servico?.nome}
-            </p>
-            <p className="text-sm text-muted-foreground">
-              {agendamento.cliente_nome} · {agendamento.profissional_nome}
-            </p>
-            <p className="mt-1 text-lg font-bold">{formatCurrency(precoBase)}</p>
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="font-medium">
+                  {agendamento.servico_nome ?? servico?.nome}
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  {agendamento.cliente_nome} · {agendamento.profissional_nome}
+                </p>
+              </div>
+              <p className="text-lg font-bold">{formatCurrency(precoBase)}</p>
+            </div>
           </div>
+
+          {/* Extra services */}
+          {servicosExtras.length > 0 && (
+            <div className="space-y-1">
+              {servicosExtras.map((sid) => {
+                const extraSvc = servicos.find((sv) => sv.id === sid);
+                if (!extraSvc) return null;
+                return (
+                  <div
+                    key={sid}
+                    className="flex items-center justify-between rounded-lg border bg-blue-50 px-3 py-2"
+                  >
+                    <span className="text-sm font-medium text-blue-800">
+                      {extraSvc.nome}
+                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-bold text-blue-700">
+                        {formatCurrency(extraSvc.preco_base)}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeExtra(sid)}
+                        className="text-blue-400 hover:text-red-500 transition-colors"
+                      >
+                        <X className="h-4 w-4" />
+                      </button>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+
+          {/* Add extra service button */}
+          {modo !== "cortesia" && (
+            <div>
+              {showExtraSelect ? (
+                <div className="space-y-2">
+                  <select
+                    onChange={(e) => {
+                      if (e.target.value) addExtra(e.target.value);
+                    }}
+                    className="w-full rounded-lg border px-3 py-2 text-sm"
+                    defaultValue=""
+                  >
+                    <option value="" disabled>
+                      Seleccionar servicio...
+                    </option>
+                    {availableExtras.map((sv) => (
+                      <option key={sv.id} value={sv.id}>
+                        {sv.nome} — {formatCurrency(sv.preco_base)}
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setShowExtraSelect(false)}
+                    className="text-xs text-muted-foreground hover:underline"
+                  >
+                    Cancelar
+                  </button>
+                </div>
+              ) : (
+                availableExtras.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => setShowExtraSelect(true)}
+                    className="flex items-center gap-1.5 text-sm text-primary hover:underline"
+                  >
+                    <Plus className="h-3.5 w-3.5" />
+                    Añadir servicio
+                  </button>
+                )
+              )}
+            </div>
+          )}
+
+          {/* Total bruto if extras exist */}
+          {servicosExtras.length > 0 && modo !== "cortesia" && (
+            <div className="flex justify-between items-center rounded-lg border bg-gray-100 px-3 py-2">
+              <span className="text-sm text-muted-foreground">Subtotal</span>
+              <span className="text-sm font-bold">{formatCurrency(totalBruto)}</span>
+            </div>
+          )}
 
           {/* Mode toggle */}
           <div className="flex rounded-lg border overflow-hidden">
@@ -359,27 +556,133 @@ export function PaymentModal({
             </>
           ) : (
             <>
-              {/* Payment method */}
-              <div>
-                <label className="text-sm font-medium">Forma de pago</label>
-                <div className="mt-2 grid grid-cols-2 gap-2">
-                  {FORMAS_PAGAMENTO.map(({ value, label, icon: Icon }) => (
-                    <button
-                      key={value}
-                      type="button"
-                      onClick={() => setFormaPagamento(value)}
-                      className={`flex items-center gap-2 rounded-lg border p-3 text-sm transition-colors ${
-                        formaPagamento === value
-                          ? "border-primary bg-primary/5 text-primary font-medium"
-                          : "border-gray-200 hover:bg-gray-50"
-                      }`}
-                    >
-                      <Icon className="h-4 w-4" />
-                      {label}
-                    </button>
-                  ))}
+              {/* Payment method (single or split) */}
+              {!splitEnabled ? (
+                <div>
+                  <label className="text-sm font-medium">Forma de pago</label>
+                  <div className="mt-2 grid grid-cols-2 gap-2">
+                    {FORMAS_PAGAMENTO.map(({ value, label, icon: Icon }) => (
+                      <button
+                        key={value}
+                        type="button"
+                        onClick={() => setFormaPagamento(value)}
+                        className={`flex items-center gap-2 rounded-lg border p-3 text-sm transition-colors ${
+                          formaPagamento === value
+                            ? "border-primary bg-primary/5 text-primary font-medium"
+                            : "border-gray-200 hover:bg-gray-50"
+                        }`}
+                      >
+                        <Icon className="h-4 w-4" />
+                        {label}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              ) : (
+                <div className="space-y-3">
+                  {/* Split 1 */}
+                  <div className="rounded-lg border p-3 space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Pago 1
+                    </label>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {FORMAS_PAGAMENTO.map(({ value, label, icon: Icon }) => (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => setSplit1Forma(value)}
+                          className={`flex items-center gap-1.5 rounded border px-2 py-1.5 text-xs transition-colors ${
+                            split1Forma === value
+                              ? "border-primary bg-primary/5 text-primary font-medium"
+                              : "border-gray-200 hover:bg-gray-50"
+                          }`}
+                        >
+                          <Icon className="h-3 w-3" />
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                        €
+                      </span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        max={valorFinal}
+                        value={split1Valor}
+                        onChange={(e) => handleSplit1Change(e.target.value)}
+                        placeholder="0.00"
+                        className="w-full rounded-lg border pl-8 pr-3 py-2 text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Split 2 */}
+                  <div className="rounded-lg border p-3 space-y-2">
+                    <label className="text-xs font-medium text-muted-foreground">
+                      Pago 2
+                    </label>
+                    <div className="grid grid-cols-2 gap-1.5">
+                      {FORMAS_PAGAMENTO.map(({ value, label, icon: Icon }) => (
+                        <button
+                          key={value}
+                          type="button"
+                          onClick={() => setSplit2Forma(value)}
+                          className={`flex items-center gap-1.5 rounded border px-2 py-1.5 text-xs transition-colors ${
+                            split2Forma === value
+                              ? "border-primary bg-primary/5 text-primary font-medium"
+                              : "border-gray-200 hover:bg-gray-50"
+                          }`}
+                        >
+                          <Icon className="h-3 w-3" />
+                          {label}
+                        </button>
+                      ))}
+                    </div>
+                    <div className="relative">
+                      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-gray-500">
+                        €
+                      </span>
+                      <input
+                        type="number"
+                        min="0"
+                        step="0.01"
+                        value={split2Valor}
+                        onChange={(e) => setSplit2Valor(e.target.value)}
+                        placeholder="0.00"
+                        className="w-full rounded-lg border pl-8 pr-3 py-2 text-sm"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Split validation */}
+                  {split1Valor && split2Valor && !splitValid && (
+                    <p className="text-xs text-red-500">
+                      La suma ({formatCurrency((parseFloat(split1Valor) || 0) + (parseFloat(split2Valor) || 0))}) debe ser igual al total ({formatCurrency(valorFinal)})
+                    </p>
+                  )}
+                </div>
+              )}
+
+              {/* Split toggle */}
+              <button
+                type="button"
+                onClick={() => {
+                  setSplitEnabled(!splitEnabled);
+                  setSplit1Valor("");
+                  setSplit2Valor("");
+                }}
+                className={`flex items-center gap-2 text-sm transition-colors ${
+                  splitEnabled
+                    ? "text-primary font-medium"
+                    : "text-muted-foreground hover:text-primary"
+                }`}
+              >
+                <Split className="h-4 w-4" />
+                {splitEnabled ? "Cancelar pago dividido" : "Dividir pago"}
+              </button>
 
               {/* Price section */}
               <div>
@@ -413,7 +716,7 @@ export function PaymentModal({
                         step="0.01"
                         value={precoManual}
                         onChange={(e) => setPrecoManual(e.target.value)}
-                        placeholder={precoBase.toFixed(2)}
+                        placeholder={totalBruto.toFixed(2)}
                         className="w-full rounded-lg border pl-8 pr-3 py-2 text-sm"
                       />
                     </div>
@@ -473,7 +776,8 @@ export function PaymentModal({
               {((tipoDesconto && parseFloat(valorDesconto) > 0) ||
                 (usarPrecoManual &&
                   precoManual !== "" &&
-                  valorFinal !== precoBase)) && (
+                  valorFinal !== totalBruto) ||
+                servicosExtras.length > 0) && (
                 <div className="flex justify-between items-center rounded-lg border-2 border-green-200 bg-green-50 p-3">
                   <span className="text-sm font-medium text-green-800">
                     Total a cobrar:
@@ -511,7 +815,7 @@ export function PaymentModal({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={isLoading}
+            disabled={isLoading || (splitEnabled && !splitValid)}
             className={
               modo === "cortesia"
                 ? "bg-purple-600 hover:bg-purple-700"
