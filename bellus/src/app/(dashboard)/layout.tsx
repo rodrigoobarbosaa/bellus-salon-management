@@ -47,7 +47,7 @@ export default async function DashboardLayout({ children }: { children: React.Re
 
       <div className="flex min-h-screen flex-col pb-16 md:pb-0">
         <DashboardHeader userName={userName} />
-        <main className="flex-1 bg-stone-50 p-4 md:p-6">{children}</main>
+        <main className="flex-1 bg-[#F8F9FA] p-4 md:p-6">{children}</main>
       </div>
 
       <BottomNav userRole={userRole} />

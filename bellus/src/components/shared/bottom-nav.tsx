@@ -18,7 +18,7 @@ export function BottomNav({ userRole }: BottomNavProps) {
 
   return (
     <nav
-      className="fixed inset-x-0 bottom-0 z-50 border-t border-stone-200 bg-white md:hidden"
+      className="fixed inset-x-0 bottom-0 z-50 border-t border-stone-200/50 bg-white/80 backdrop-blur-lg shadow-[var(--shadow-nav)] md:hidden"
       aria-label={t("nav.dashboard")}
     >
       <div className="flex h-16 items-center justify-around">

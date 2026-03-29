@@ -32,7 +32,7 @@ export function DashboardHeader({ userName }: DashboardHeaderProps) {
     : pathname.split("/").pop()?.replace(/-/g, " ") ?? "Dashboard";
 
   return (
-    <header className="flex h-16 items-center justify-between border-b border-stone-200 bg-white px-4 md:px-6">
+    <header className="flex h-16 items-center justify-between border-b border-stone-200/50 bg-white/80 backdrop-blur-lg shadow-[var(--shadow-header)] px-4 md:px-6">
       <div className="flex items-center gap-4">
         <h1 className="text-bellus-dark text-lg font-semibold md:hidden">
           <span className="text-bellus-gold">B</span>ellus

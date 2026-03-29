@@ -20,7 +20,7 @@ export function Sidebar({ userName, userRole }: SidebarProps) {
   const items: NavItem[] = menuItems[userRole] ?? menuItems.profissional;
 
   return (
-    <aside className="bg-bellus-dark hidden h-screen w-60 flex-col border-r border-stone-800 md:flex">
+    <aside className="hidden h-screen w-60 flex-col border-r border-stone-800 bg-gradient-to-b from-[#1e1e1e] to-[#141414] md:flex">
       <div className="flex h-16 items-center px-6">
         <Link href="/dashboard" className="text-2xl font-bold tracking-tight text-white">
           <span className="text-bellus-gold">B</span>ellus
@@ -40,8 +40,8 @@ export function Sidebar({ userName, userRole }: SidebarProps) {
               className={cn(
                 "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-colors",
                 isActive
-                  ? "bg-bellus-gold/15 text-bellus-gold"
-                  : "text-stone-400 hover:bg-stone-800 hover:text-white"
+                  ? "bg-bellus-gold/15 text-bellus-gold border-l-2 border-bellus-gold"
+                  : "text-stone-400 hover:bg-white/[0.06] hover:text-white"
               )}
             >
               <item.icon className="size-5 shrink-0" />
@@ -53,7 +53,7 @@ export function Sidebar({ userName, userRole }: SidebarProps) {
 
       <div className="border-t border-stone-800 p-4">
         <div className="mb-3 flex items-center gap-3">
-          <div className="bg-bellus-gold/20 text-bellus-gold flex size-9 items-center justify-center rounded-full text-sm font-semibold">
+          <div className="bg-bellus-gold/20 text-bellus-gold flex size-9 items-center justify-center rounded-full text-sm font-semibold ring-2 ring-bellus-gold/30">
             {userName.charAt(0).toUpperCase()}
           </div>
           <div className="min-w-0 flex-1">
