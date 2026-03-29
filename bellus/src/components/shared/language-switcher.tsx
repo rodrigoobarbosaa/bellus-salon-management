@@ -26,13 +26,13 @@ export function LanguageSwitcher() {
   }
 
   return (
-    <div className="flex items-center gap-1">
+    <div className="flex items-center gap-1 transition-colors hover:text-stone-700">
       <Globe className="h-4 w-4 text-stone-500" />
       <select
         value={locale}
         onChange={handleChange}
         disabled={isPending}
-        className="bg-transparent text-sm text-stone-600 outline-none"
+        className="bg-transparent text-sm text-stone-600 outline-none cursor-pointer transition-colors hover:text-stone-700"
       >
         {locales.map((loc) => (
           <option key={loc} value={loc}>
