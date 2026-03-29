@@ -11,7 +11,7 @@ function Skeleton({ className, ...props }: React.ComponentProps<"div">) {
 
 function SkeletonCard() {
   return (
-    <div className="rounded-xl border bg-card p-6 space-y-3">
+    <div className="rounded-xl border-black/[0.04] border bg-card p-6 space-y-3 shadow-[var(--shadow-card)]">
       <Skeleton className="h-4 w-24" />
       <Skeleton className="h-8 w-32" />
       <Skeleton className="h-3 w-20" />
