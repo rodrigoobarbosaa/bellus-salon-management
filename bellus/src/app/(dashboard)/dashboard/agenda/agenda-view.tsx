@@ -441,7 +441,7 @@ export function AgendaView({
           locale="es"
           timeZone="local"
           slotMinTime="08:00:00"
-          slotMaxTime="22:00:00"
+          slotMaxTime="23:30:00"
           slotDuration="00:30:00"
           allDaySlot={false}
           selectable={true}
