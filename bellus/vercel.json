@@ -22,7 +22,7 @@
     },
     {
       "path": "/api/cron/verifactu-retry",
-      "schedule": "*/30 * * * *"
+      "schedule": "0 */6 * * *"
     }
   ]
 }
