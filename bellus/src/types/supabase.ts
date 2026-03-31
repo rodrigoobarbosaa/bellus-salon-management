@@ -551,6 +551,8 @@ export type Database = {
           cuota_autonomos_mensual: number;
           nif: string | null;
           nombre_fiscal: string | null;
+          serie_factura: string;
+          emitir_factura_auto: boolean;
           created_at: string;
           updated_at: string;
         };
@@ -562,6 +564,8 @@ export type Database = {
           cuota_autonomos_mensual?: number;
           nif?: string | null;
           nombre_fiscal?: string | null;
+          serie_factura?: string;
+          emitir_factura_auto?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -573,6 +577,8 @@ export type Database = {
           cuota_autonomos_mensual?: number;
           nif?: string | null;
           nombre_fiscal?: string | null;
+          serie_factura?: string;
+          emitir_factura_auto?: boolean;
           created_at?: string;
           updated_at?: string;
         };
@@ -611,12 +617,169 @@ export type Database = {
         };
         Relationships: [];
       };
+      // EPIC-09 Verifactu — Story 9.1
+      facturas: {
+        Row: {
+          id: string;
+          salao_id: string;
+          transacao_id: string | null;
+          serie: string;
+          numero: number;
+          numero_completo: string;
+          cliente_id: string | null;
+          profissional_id: string | null;
+          agendamento_id: string | null;
+          fecha_emision: string;
+          base_imponible: number;
+          iva_pct: number;
+          iva_valor: number;
+          irpf_pct: number;
+          irpf_valor: number;
+          total: number;
+          forma_pagamento: "efectivo" | "tarjeta" | "bizum" | "transferencia";
+          hash_anterior: string | null;
+          hash_actual: string | null;
+          firma_digital: string | null;
+          qr_data: string | null;
+          estado_aeat: "pendiente" | "enviado" | "aceptado" | "rechazado";
+          xml_verifactu: string | null;
+          notas: string | null;
+          factura_rectificada_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          salao_id: string;
+          transacao_id?: string | null;
+          serie?: string;
+          numero: number;
+          cliente_id?: string | null;
+          profissional_id?: string | null;
+          agendamento_id?: string | null;
+          fecha_emision?: string;
+          base_imponible: number;
+          iva_pct?: number;
+          iva_valor: number;
+          irpf_pct?: number;
+          irpf_valor?: number;
+          total: number;
+          forma_pagamento: "efectivo" | "tarjeta" | "bizum" | "transferencia";
+          hash_anterior?: string | null;
+          hash_actual?: string | null;
+          firma_digital?: string | null;
+          qr_data?: string | null;
+          estado_aeat?: "pendiente" | "enviado" | "aceptado" | "rechazado";
+          xml_verifactu?: string | null;
+          notas?: string | null;
+          factura_rectificada_id?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          estado_aeat?: "pendiente" | "enviado" | "aceptado" | "rechazado";
+        }; // apenas estado_aeat atualizavel (resposta AEAT)
+        Relationships: [];
+      };
+      factura_lineas: {
+        Row: {
+          id: string;
+          factura_id: string;
+          servico_id: string | null;
+          descripcion: string;
+          cantidad: number;
+          precio_unitario: number;
+          iva_pct: number;
+          subtotal: number;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          factura_id: string;
+          servico_id?: string | null;
+          descripcion: string;
+          cantidad?: number;
+          precio_unitario: number;
+          iva_pct?: number;
+          subtotal: number;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          factura_id?: string;
+          servico_id?: string | null;
+          descripcion?: string;
+          cantidad?: number;
+          precio_unitario?: number;
+          iva_pct?: number;
+          subtotal?: number;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
+      factura_eventos: {
+        Row: {
+          id: string;
+          factura_id: string | null;
+          salao_id: string;
+          tipo_evento: "emision" | "anulacion" | "rectificacion" | "envio_aeat" | "error_aeat" | "consulta";
+          detalle: Record<string, unknown>;
+          usuario_id: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          factura_id?: string | null;
+          salao_id: string;
+          tipo_evento: "emision" | "anulacion" | "rectificacion" | "envio_aeat" | "error_aeat" | "consulta";
+          detalle?: Record<string, unknown>;
+          usuario_id?: string | null;
+          created_at?: string;
+        };
+        Update: never; // append-only (audit log imutavel)
+        Relationships: [];
+      };
+      factura_envios_aeat: {
+        Row: {
+          id: string;
+          factura_id: string;
+          xml_enviado: string | null;
+          response_code: string | null;
+          response_body: string | null;
+          status: "pendiente" | "enviado" | "aceptado" | "rechazado" | "error";
+          enviado_em: string | null;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          factura_id: string;
+          xml_enviado?: string | null;
+          response_code?: string | null;
+          response_body?: string | null;
+          status?: "pendiente" | "enviado" | "aceptado" | "rechazado" | "error";
+          enviado_em?: string | null;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          factura_id?: string;
+          xml_enviado?: string | null;
+          response_code?: string | null;
+          response_body?: string | null;
+          status?: "pendiente" | "enviado" | "aceptado" | "rechazado" | "error";
+          enviado_em?: string | null;
+          created_at?: string;
+        };
+        Relationships: [];
+      };
     };
     Views: Record<string, never>;
     Functions: {
       salao_id: {
         Args: Record<string, never>;
         Returns: string;
+      };
+      get_next_factura_numero: {
+        Args: { p_salao_id: string; p_serie?: string };
+        Returns: number;
       };
     };
     Enums: {
@@ -629,6 +792,9 @@ export type Database = {
       tipo_notificacao: "confirmacao" | "lembrete_24h" | "lembrete_retorno";
       status_notificacao: "pendente" | "enviado" | "falhou";
       role_usuario: "proprietario" | "profissional" | "cliente";
+      estado_aeat: "pendiente" | "enviado" | "aceptado" | "rechazado";
+      tipo_evento_factura: "emision" | "anulacion" | "rectificacion" | "envio_aeat" | "error_aeat" | "consulta";
+      status_envio_aeat: "pendiente" | "enviado" | "aceptado" | "rechazado" | "error";
     };
   };
 };

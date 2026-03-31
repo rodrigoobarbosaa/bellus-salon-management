@@ -9,6 +9,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Camera, Save } from "lucide-react";
 import Image from "next/image";
 import { BookingQrCode } from "./booking-qr-code";
+import { DeclaracionResponsable } from "@/components/shared/declaracion-responsable";
 
 interface SalonSettings {
   nome: string;
@@ -319,6 +320,9 @@ export default function ConfiguracoesPage() {
 
       {/* Booking QR Code */}
       <BookingQrCode slug={settings.slug} corPrimaria={settings.cor_primaria} />
+
+      {/* Declaración Responsable Verifactu */}
+      <DeclaracionResponsable />
     </div>
   );
 }

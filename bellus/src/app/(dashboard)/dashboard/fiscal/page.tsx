@@ -38,6 +38,7 @@ export default async function FiscalPage() {
       cuota_autonomos_mensual: number;
       nif: string | null;
       nombre_fiscal: string | null;
+      emitir_factura_auto: boolean;
     };
   } else {
     // Create default
@@ -58,6 +59,7 @@ export default async function FiscalPage() {
       cuota_autonomos_mensual: 0,
       nif: null,
       nombre_fiscal: null,
+      emitir_factura_auto: true,
     };
   }
 

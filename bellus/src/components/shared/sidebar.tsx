@@ -7,6 +7,7 @@ import { LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { menuItems, type NavItem } from "@/lib/navigation";
 import { signOut } from "@/app/actions/auth";
+import { DeclaracionResponsableLink } from "@/components/shared/declaracion-responsable";
 import type { RoleProfissional } from "@/stores/auth-store";
 
 interface SidebarProps {
@@ -73,6 +74,7 @@ export function Sidebar({ userName, userRole }: SidebarProps) {
             {t("auth.logout")}
           </button>
         </form>
+        <DeclaracionResponsableLink />
       </div>
     </aside>
   );

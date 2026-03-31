@@ -122,6 +122,7 @@ export async function updateConfigFiscal(formData: FormData) {
   const cuota = parseFloat(formData.get("cuota_autonomos_mensual") as string) || 0;
   const nif = (formData.get("nif") as string) || null;
   const nombreFiscal = (formData.get("nombre_fiscal") as string) || null;
+  const emitirFacturaAuto = formData.get("emitir_factura_auto") !== "false";
 
   if (isNaN(ivaPct) || isNaN(irpfPct)) {
     return { error: "Los porcentajes son obligatorios." };
@@ -135,6 +136,7 @@ export async function updateConfigFiscal(formData: FormData) {
       cuota_autonomos_mensual: cuota,
       nif,
       nombre_fiscal: nombreFiscal,
+      emitir_factura_auto: emitirFacturaAuto,
       updated_at: new Date().toISOString(),
     })
     .eq("salao_id", salaoId);

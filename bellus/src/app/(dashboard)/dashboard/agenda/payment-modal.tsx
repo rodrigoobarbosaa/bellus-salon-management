@@ -10,6 +10,9 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { createComandaTransacoes } from "@/app/actions/transacoes";
+import { createFacturaFromComanda } from "@/app/actions/facturas";
+import { getOrCreateConfigFiscal } from "@/app/actions/fiscal";
+import Link from "next/link";
 import {
   Banknote,
   CreditCard,
@@ -81,6 +84,11 @@ export function PaymentModal({
   const [isLoading, setIsLoading] = useState(false);
   const [success, setSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [facturaInfo, setFacturaInfo] = useState<{
+    id: string;
+    numero: string;
+  } | null>(null);
+  const [facturaWarning, setFacturaWarning] = useState<string | null>(null);
   const [modo, setModo] = useState<"normal" | "cortesia">("normal");
   const [courtesyType, setCourtesyType] = useState<string>("cortesia");
   const [precoManual, setPrecoManual] = useState("");
@@ -221,14 +229,57 @@ export function PaymentModal({
 
     if (result.error) {
       setError(result.error);
-    } else {
-      setSuccess(true);
+      return;
+    }
+
+    setSuccess(true);
+
+    // Auto-generate factura if conditions are met
+    if (modo === "cortesia" || valorFinal <= 0) {
+      // AC5: cortesia/valor 0 → no factura
+      return;
+    }
+
+    if (!result.transacaoIds || result.transacaoIds.length === 0) {
+      return;
+    }
+
+    try {
+      // Check pre-conditions: NIF configured + toggle active
+      const configResult = await getOrCreateConfigFiscal();
+      if (!configResult?.data) return;
+
+      const cfg = configResult.data as { nif: string | null; emitir_factura_auto?: boolean };
+
+      if (!cfg.nif) {
+        setFacturaWarning("Configure o NIF nas configurações fiscais para emitir faturas automaticamente.");
+        return;
+      }
+
+      if (cfg.emitir_factura_auto === false) {
+        return; // toggle desativado
+      }
+
+      const facturaResult = await createFacturaFromComanda(result.transacaoIds);
+
+      if (facturaResult.error) {
+        // AC8: transação OK, factura falhou → warning, sem rollback
+        setFacturaWarning(facturaResult.error);
+      } else if (facturaResult.data) {
+        const f = facturaResult.data as { id: string; numero: number; serie: string };
+        const numero = `${f.serie}-${String(f.numero).padStart(6, "0")}`;
+        setFacturaInfo({ id: f.id, numero });
+      }
+    } catch {
+      setFacturaWarning("Error al generar la factura. La transacción fue registrada correctamente.");
     }
   }
 
   function handleClose() {
     setSuccess(false);
     setError(null);
+    setFacturaInfo(null);
+    setFacturaWarning(null);
     setFormaPagamento("efectivo");
     setTipoDesconto("");
     setValorDesconto("");
@@ -391,8 +442,27 @@ export function PaymentModal({
                 +{servicosExtras.length} servicio{servicosExtras.length > 1 ? "s" : ""} adicional{servicosExtras.length > 1 ? "es" : ""}
               </p>
             )}
+            {facturaInfo && (
+              <div className="flex items-center gap-2 rounded-lg border border-green-200 bg-green-50 px-3 py-2">
+                <CheckCircle className="h-4 w-4 text-green-600" />
+                <span className="text-sm text-green-800">
+                  Factura {facturaInfo.numero} emitida
+                </span>
+                <Link
+                  href={`/dashboard/facturas/${facturaInfo.id}`}
+                  className="text-sm font-medium text-primary hover:underline ml-auto"
+                >
+                  Ver factura
+                </Link>
+              </div>
+            )}
+            {facturaWarning && (
+              <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2">
+                <p className="text-xs text-amber-800">{facturaWarning}</p>
+              </div>
+            )}
             <div className="flex gap-2">
-              {modo !== "cortesia" && (
+              {modo !== "cortesia" && !facturaInfo && (
                 <Button
                   variant="outline"
                   onClick={handleDownloadRecibo}

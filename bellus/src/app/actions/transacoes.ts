@@ -268,7 +268,7 @@ export async function createComandaTransacoes(payloadJson: string) {
   }
 
   // Insert all transactions
-  const { error } = await supabase.from("transacoes").insert(transacoes);
+  const { data: insertedTxs, error } = await supabase.from("transacoes").insert(transacoes).select("id");
 
   if (error) {
     console.error("Error creating transactions:", error);
@@ -305,5 +305,6 @@ export async function createComandaTransacoes(payloadJson: string) {
   revalidatePath("/dashboard/agenda");
   revalidatePath("/dashboard/caixa");
   revalidatePath("/dashboard/clientes");
-  return { success: true };
+  const transacaoIds = insertedTxs?.map((t: { id: string }) => t.id) ?? [];
+  return { success: true, transacaoIds };
 }

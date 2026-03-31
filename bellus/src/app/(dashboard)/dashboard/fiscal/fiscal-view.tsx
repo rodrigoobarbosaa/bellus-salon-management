@@ -30,6 +30,7 @@ interface ConfigFiscal {
   cuota_autonomos_mensual: number;
   nif: string | null;
   nombre_fiscal: string | null;
+  emitir_factura_auto: boolean;
 }
 
 interface Despesa {
@@ -108,6 +109,7 @@ export function FiscalView({ salaoId, salaoNome, configFiscal }: FiscalViewProps
   const [cuota, setCuota] = useState(configFiscal.cuota_autonomos_mensual.toString());
   const [nif, setNif] = useState(configFiscal.nif ?? "");
   const [nombreFiscal, setNombreFiscal] = useState(configFiscal.nombre_fiscal ?? "");
+  const [emitirFacturaAuto, setEmitirFacturaAuto] = useState(configFiscal.emitir_factura_auto);
   const [configSaving, setConfigSaving] = useState(false);
   const [configMsg, setConfigMsg] = useState("");
 
@@ -192,6 +194,7 @@ export function FiscalView({ salaoId, salaoNome, configFiscal }: FiscalViewProps
     fd.set("cuota_autonomos_mensual", cuota);
     fd.set("nif", nif);
     fd.set("nombre_fiscal", nombreFiscal);
+    fd.set("emitir_factura_auto", emitirFacturaAuto ? "true" : "false");
     const result = await updateConfigFiscal(fd);
     setConfigSaving(false);
     if (result.error) {
@@ -591,6 +594,29 @@ export function FiscalView({ salaoId, salaoNome, configFiscal }: FiscalViewProps
                   className="w-full mt-1 border rounded-lg px-3 py-2 text-sm"
                 />
               </div>
+            </div>
+
+            {/* Toggle emitir factura automática */}
+            <div className="flex items-center justify-between rounded-lg border p-3">
+              <div>
+                <p className="text-sm font-medium">{t("autoInvoice")}</p>
+                <p className="text-xs text-muted-foreground">{t("autoInvoiceDesc")}</p>
+              </div>
+              <button
+                type="button"
+                role="switch"
+                aria-checked={emitirFacturaAuto}
+                onClick={() => setEmitirFacturaAuto(!emitirFacturaAuto)}
+                className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors ${
+                  emitirFacturaAuto ? "bg-green-500" : "bg-gray-200"
+                }`}
+              >
+                <span
+                  className={`pointer-events-none inline-block h-5 w-5 rounded-full bg-white shadow-lg ring-0 transition-transform ${
+                    emitirFacturaAuto ? "translate-x-5" : "translate-x-0"
+                  }`}
+                />
+              </button>
             </div>
 
             {configMsg && (
