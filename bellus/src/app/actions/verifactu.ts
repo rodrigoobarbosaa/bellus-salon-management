@@ -7,6 +7,7 @@ import {
   getAeatEnvironment,
 } from "@/lib/verifactu/aeat-client";
 import type { AeatResponse } from "@/lib/verifactu/aeat-client";
+import { validateVerifactuXml } from "@/lib/verifactu/xml-validator";
 import { logFacturaEvento } from "./factura-eventos";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
@@ -49,6 +50,24 @@ export async function submitFacturaToAeat(facturaId: string) {
   if (fetchErr || !factura) return { error: "Factura no encontrada" };
   if (!factura.xml_verifactu) return { error: "Factura sin XML Verifactu generado" };
   if (factura.estado_aeat === "aceptado") return { error: "Factura ya aceptada por la AEAT" };
+
+  // Validate XML before submission
+  const validation = validateVerifactuXml(factura.xml_verifactu);
+  if (!validation.valid) {
+    await logFacturaEvento({
+      factura_id: facturaId,
+      tipo_evento: "error_aeat",
+      detalle: {
+        action: "xml_validation_failed",
+        errors: validation.errors,
+        environment: getAeatEnvironment(),
+      },
+    });
+
+    return {
+      error: `XML inválido (${validation.errors.length} erro${validation.errors.length > 1 ? "s" : ""}): ${validation.errors[0]}`,
+    };
+  }
 
   // Check if we can actually submit
   if (!canSubmitToAeat()) {
