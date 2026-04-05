@@ -212,11 +212,7 @@ export function PaymentModal({
       payload.pagamento1 = { forma: "efectivo", valor: 0 };
     } else {
       if (usarPrecoManual && precoManual !== "") {
-        const diff = totalBruto - valorFinal;
-        if (diff > 0) {
-          payload.tipo_desconto = "fixo";
-          payload.valor_desconto = parseFloat(diff.toFixed(2));
-        }
+        (payload as Record<string, unknown>).valor_final_override = valorFinal;
       } else if (tipoDesconto) {
         payload.tipo_desconto = tipoDesconto;
         payload.valor_desconto = parseFloat(valorDesconto) || 0;

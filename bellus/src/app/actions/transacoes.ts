@@ -123,6 +123,7 @@ interface ComandaPayload {
   split: boolean;
   pagamento1: { forma: string; valor: number };
   pagamento2: { forma: string; valor: number } | null;
+  valor_final_override?: number; // manual price override (can be > or < base price)
 }
 
 export async function createComandaTransacoes(payloadJson: string) {
@@ -161,10 +162,13 @@ export async function createComandaTransacoes(payloadJson: string) {
 
   const totalBruto = servicos.reduce((sum, sid) => sum + (priceMap.get(sid) ?? 0), 0);
 
-  // Calculate final value after discount
+  // Calculate final value after discount or manual override
   let valorFinalTotal: number;
   if (payload.cortesia) {
     valorFinalTotal = 0;
+  } else if (payload.valor_final_override != null && payload.valor_final_override >= 0) {
+    // Manual price override (supports both surcharges and discounts)
+    valorFinalTotal = payload.valor_final_override;
   } else {
     valorFinalTotal = totalBruto;
     if (payload.tipo_desconto === "percentual" && payload.valor_desconto > 0) {
@@ -307,4 +311,30 @@ export async function createComandaTransacoes(payloadJson: string) {
   revalidatePath("/dashboard/clientes");
   const transacaoIds = insertedTxs?.map((t: { id: string }) => t.id) ?? [];
   return { success: true, transacaoIds };
+}
+
+export async function updateTransacaoFormaPagamento(
+  transacaoId: string,
+  novaForma: "efectivo" | "tarjeta" | "bizum" | "transferencia"
+) {
+  const supabase = await createClient();
+  const { salaoId } = await getUserSalaoId(supabase);
+
+  if (!salaoId) {
+    return { error: "No autenticado o salón no encontrado." };
+  }
+
+  const { error } = await supabase
+    .from("transacoes")
+    .update({ forma_pagamento: novaForma })
+    .eq("id", transacaoId)
+    .eq("salao_id", salaoId);
+
+  if (error) {
+    console.error("Error updating payment method:", error);
+    return { error: "Error al actualizar la forma de pago." };
+  }
+
+  revalidatePath("/dashboard/caixa");
+  return { success: true };
 }

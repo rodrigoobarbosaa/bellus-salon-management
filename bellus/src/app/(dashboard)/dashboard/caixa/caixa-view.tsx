@@ -14,7 +14,11 @@ import {
   Filter,
   Download,
   Receipt,
+  Pencil,
+  Check,
+  X,
 } from "lucide-react";
+import { updateTransacaoFormaPagamento } from "@/app/actions/transacoes";
 import { SkeletonList } from "@/components/ui/skeleton";
 import { EmptyState } from "@/components/ui/empty-state";
 import { SALON_TZ } from "@/lib/timezone";
@@ -91,6 +95,11 @@ export function CaixaView({ salaoId, profissionais, servicos }: CaixaViewProps) 
   const [filterProf, setFilterProf] = useState("");
   const [filterForma, setFilterForma] = useState("");
   const [showFilters, setShowFilters] = useState(false);
+
+  // Edit payment method state
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editForma, setEditForma] = useState<string>("");
+  const [editLoading, setEditLoading] = useState(false);
 
   const supabase = createClient();
 
@@ -174,6 +183,23 @@ export function CaixaView({ salaoId, profissionais, servicos }: CaixaViewProps) 
 
   const totalAmount = transacoes.reduce((sum, t) => sum + t.valor_final, 0);
   const totalCount = transacoes.length;
+
+  async function handleSaveForma(transacaoId: string) {
+    setEditLoading(true);
+    const result = await updateTransacaoFormaPagamento(
+      transacaoId,
+      editForma as "efectivo" | "tarjeta" | "bizum" | "transferencia"
+    );
+    setEditLoading(false);
+    if (result.success) {
+      setTransacoes((prev) =>
+        prev.map((t) =>
+          t.id === transacaoId ? { ...t, forma_pagamento: editForma } : t
+        )
+      );
+      setEditingId(null);
+    }
+  }
 
   function handleExport() {
     const header = "Fecha,Cliente,Servicio,Profesional,Valor,Descuento,Total,Forma\n";
@@ -370,6 +396,8 @@ export function CaixaView({ salaoId, profissionais, servicos }: CaixaViewProps) 
                   })
                 : null;
 
+              const isEditing = editingId === t.id;
+
               return (
                 <div key={t.id} className="flex items-center justify-between p-4 hover:bg-gray-50">
                   <div className="flex items-center gap-3">
@@ -384,15 +412,67 @@ export function CaixaView({ salaoId, profissionais, servicos }: CaixaViewProps) 
                         {t.cliente_nome} · {t.profissional_nome}
                         {date && ` · ${date}`} · {time}
                       </p>
+                      {isEditing && (
+                        <div className="flex items-center gap-1.5 mt-1.5">
+                          {(["efectivo", "tarjeta", "bizum", "transferencia"] as const).map((forma) => {
+                            const FIcon = FORMA_ICONS[forma] ?? Banknote;
+                            return (
+                              <button
+                                key={forma}
+                                type="button"
+                                onClick={() => setEditForma(forma)}
+                                className={`flex items-center gap-1 rounded border px-2 py-1 text-xs transition-colors ${
+                                  editForma === forma
+                                    ? "border-primary bg-primary/10 text-primary font-medium"
+                                    : "border-gray-200 hover:bg-gray-100"
+                                }`}
+                              >
+                                <FIcon className="h-3 w-3" />
+                                {FORMA_LABELS[forma]}
+                              </button>
+                            );
+                          })}
+                          <button
+                            type="button"
+                            onClick={() => handleSaveForma(t.id)}
+                            disabled={editLoading || editForma === t.forma_pagamento}
+                            className="p-1 rounded text-green-600 hover:bg-green-50 disabled:opacity-40"
+                          >
+                            <Check className="h-4 w-4" />
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setEditingId(null)}
+                            className="p-1 rounded text-gray-400 hover:bg-gray-100"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      )}
                     </div>
                   </div>
-                  <div className="text-right">
-                    <p className="font-medium tabular-nums">{formatCurrency(t.valor_final)}</p>
-                    {t.valor_desconto > 0 && (
-                      <p className="text-xs text-red-500 line-through">
-                        {formatCurrency(t.valor)}
-                      </p>
+                  <div className="flex items-center gap-2">
+                    {!isEditing && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setEditingId(t.id);
+                          setEditForma(t.forma_pagamento);
+                        }}
+                        className="p-1.5 rounded text-gray-400 hover:text-primary hover:bg-gray-100 transition-colors"
+                        title={tc("edit")}
+                      >
+                        <Pencil className="h-3.5 w-3.5" />
+                      </button>
                     )}
+                    <div className="text-right">
+                      <p className="font-medium tabular-nums">{formatCurrency(t.valor_final)}</p>
+                      {t.valor_desconto > 0 && (
+                        <p className="text-xs text-red-500 line-through">
+                          {formatCurrency(t.valor)}
+                        </p>
+                      )}
+                    </div>
                   </div>
                 </div>
               );
