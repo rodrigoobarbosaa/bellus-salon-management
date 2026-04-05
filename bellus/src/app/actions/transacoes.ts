@@ -45,6 +45,15 @@ export async function createTransacao(formData: FormData) {
     return { error: "Datos incompletos para registrar el pago." };
   }
 
+  // Fetch appointment date so transaction is recorded on the service date
+  const { data: agendamentoData } = await supabase
+    .from("agendamentos")
+    .select("data_hora_inicio")
+    .eq("id", agendamentoId)
+    .single();
+
+  const transacaoDate = (agendamentoData as { data_hora_inicio: string } | null)?.data_hora_inicio ?? undefined;
+
   // Calculate final value (accept client override for custom price / courtesy)
   const valorFinalOverride = formData.get("valor_final") ? parseFloat(formData.get("valor_final") as string) : null;
 
@@ -70,6 +79,7 @@ export async function createTransacao(formData: FormData) {
     valor_final: Math.round(valorFinal * 100) / 100,
     forma_pagamento: formaPagamento as "efectivo" | "tarjeta" | "bizum" | "transferencia",
     notas,
+    ...(transacaoDate && { created_at: transacaoDate }),
   });
 
   if (error) {
@@ -147,6 +157,15 @@ export async function createComandaTransacoes(payloadJson: string) {
     return { error: "Datos incompletos para registrar el pago." };
   }
 
+  // Fetch appointment date so transaction is recorded on the service date, not closure date
+  const { data: agendamento } = await supabase
+    .from("agendamentos")
+    .select("data_hora_inicio")
+    .eq("id", agendamento_id)
+    .single();
+
+  const transacaoDate = (agendamento as { data_hora_inicio: string } | null)?.data_hora_inicio ?? undefined;
+
   // Fetch service prices
   const { data: svcData } = await supabase
     .from("servicos")
@@ -196,6 +215,7 @@ export async function createComandaTransacoes(payloadJson: string) {
     valor_final: number;
     forma_pagamento: "efectivo" | "tarjeta" | "bizum" | "transferencia";
     notas: string | null;
+    created_at?: string;
   }> = [];
 
   if (payload.split && payload.pagamento2) {
@@ -212,6 +232,7 @@ export async function createComandaTransacoes(payloadJson: string) {
       valor_final: Math.round(payload.pagamento1.valor * 100) / 100,
       forma_pagamento: payload.pagamento1.forma as "efectivo" | "tarjeta" | "bizum" | "transferencia",
       notas: notas ? `[SPLIT 1/2] ${notas}` : "[SPLIT 1/2]",
+      ...(transacaoDate && { created_at: transacaoDate }),
     });
     transacoes.push({
       salao_id: salaoId,
@@ -225,6 +246,7 @@ export async function createComandaTransacoes(payloadJson: string) {
       valor_final: Math.round(payload.pagamento2.valor * 100) / 100,
       forma_pagamento: payload.pagamento2.forma as "efectivo" | "tarjeta" | "bizum" | "transferencia",
       notas: notas ? `[SPLIT 2/2] ${notas}` : "[SPLIT 2/2]",
+      ...(transacaoDate && { created_at: transacaoDate }),
     });
 
     // If extras exist, add separate transactions for each extra
@@ -243,6 +265,7 @@ export async function createComandaTransacoes(payloadJson: string) {
         valor_final: 0, // included in split total
         forma_pagamento: payload.pagamento1.forma as "efectivo" | "tarjeta" | "bizum" | "transferencia",
         notas: "[ADICIONAL - incluido en split]",
+        ...(transacaoDate && { created_at: transacaoDate }),
       });
     }
   } else {
@@ -267,6 +290,7 @@ export async function createComandaTransacoes(payloadJson: string) {
         valor_final: finalPrice,
         forma_pagamento: payload.pagamento1.forma as "efectivo" | "tarjeta" | "bizum" | "transferencia",
         notas: i === 0 ? (notas ?? null) : (servicos.length > 1 ? "[ADICIONAL]" : null),
+        ...(transacaoDate && { created_at: transacaoDate }),
       });
     }
   }
