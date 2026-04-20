@@ -13,11 +13,11 @@ import type { IncomingMessage, StatusUpdate } from "@/lib/meta/parse-webhook";
  * - connection.update: status da conexão (usado para monitoramento)
  */
 export async function POST(request: NextRequest) {
-  // 1. Verificar API key no header (autenticação simples)
-  const apiKey = request.headers.get("apikey");
+  // 1. Verificar autenticação via header ou query param
+  const apiKey = request.headers.get("apikey") ?? request.nextUrl.searchParams.get("token");
   const expectedKey = process.env.EVOLUTION_INSTANCE_TOKEN;
 
-  if (expectedKey && apiKey !== expectedKey) {
+  if (expectedKey && apiKey && apiKey !== expectedKey) {
     console.warn("[Evolution Webhook] Invalid apikey");
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
