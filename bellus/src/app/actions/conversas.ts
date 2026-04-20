@@ -2,7 +2,7 @@
 
 import { createClient } from "@/lib/supabase/server";
 import { redirect } from "next/navigation";
-import { sendReply } from "@/lib/meta/send-message";
+import { sendReply } from "@/lib/evolution/send-message";
 
 async function getAuthenticatedSalao() {
   const supabase = await createClient();

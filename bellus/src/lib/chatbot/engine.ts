@@ -5,7 +5,7 @@
 
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { CHATBOT_TOOLS, executeTool } from "./tools";
-import { sendReply } from "@/lib/meta/send-message";
+import { sendReply } from "@/lib/evolution/send-message";
 
 interface ConversationContext {
   conversaId: string;

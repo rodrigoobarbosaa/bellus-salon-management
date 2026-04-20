@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { sendWhatsApp, isWhatsAppConfigured } from "./whatsapp";
+import { sendWhatsAppMessage as sendWhatsApp, isEvolutionConfigured as isWhatsAppConfigured } from "@/lib/evolution/send-message";
 import { getConfirmationTemplate, renderTemplate } from "./templates";
 
 interface BookingConfirmationParams {
