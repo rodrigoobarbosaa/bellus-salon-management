@@ -17,7 +17,8 @@
     "inicio": "Главная",
     "citas": "Записи",
     "mas": "Ещё",
-    "facturas": "Счета"
+    "facturas": "Счета",
+    "conversas": "Разговоры"
   },
   "auth": {
     "login": "Войти",
@@ -527,6 +528,39 @@
     "colAcciones": "Действия",
     "reenviar": "Повторить",
     "pagination": "{from}-{to} из {total}"
+  },
+  "conversas": {
+    "title": "Разговоры",
+    "description": "Разговоры WhatsApp и Instagram с клиентами.",
+    "search": "Поиск по имени...",
+    "empty": "Нет разговоров.",
+    "selectConversa": "Выберите разговор для просмотра сообщений.",
+    "noMessages": "Нет сообщений в этом разговоре.",
+    "inputPlaceholder": "Напишите сообщение...",
+    "humanModeHint": "Вы в ручном режиме — бот приостановлен для этого разговора.",
+    "botActive": "Бот автоматически отвечает в этом разговоре.",
+    "conversaClosed": "Этот разговор закрыт.",
+    "stats": {
+      "total": "Всего",
+      "ativas": "Активные",
+      "aguardando": "Ожидание человека",
+      "encerradas": "Закрытые"
+    },
+    "filter": {
+      "todas": "Все",
+      "ativo": "Бот",
+      "aguardando_humano": "Человек",
+      "encerrado": "Закрытые"
+    },
+    "actions": {
+      "assume": "Принять",
+      "release": "Вернуть боту",
+      "close": "Закрыть"
+    },
+    "labels": {
+      "cliente": "Клиент",
+      "bellus": "Bellus"
+    }
   },
   "facturaDetail": {
     "title": "Счёт",

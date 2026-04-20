@@ -19,6 +19,7 @@ const routeLabelKeys: Record<string, string> = {
   "/dashboard/configuracoes": "nav.configuracoes",
   "/dashboard/atendimentos": "nav.atendimentos",
   "/dashboard/marketing": "nav.marketing",
+  "/dashboard/conversas": "nav.conversas",
   "/dashboard/notificacoes": "nav.notificacoes",
 };
 

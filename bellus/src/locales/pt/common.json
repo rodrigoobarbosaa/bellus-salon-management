@@ -17,7 +17,8 @@
     "inicio": "Início",
     "citas": "Atendimentos",
     "mas": "Mais",
-    "facturas": "Faturas"
+    "facturas": "Faturas",
+    "conversas": "Conversas"
   },
   "auth": {
     "login": "Entrar",
@@ -527,6 +528,39 @@
     "colAcciones": "Ações",
     "reenviar": "Reenviar",
     "pagination": "{from}-{to} de {total}"
+  },
+  "conversas": {
+    "title": "Conversas",
+    "description": "Conversas de WhatsApp e Instagram com clientes.",
+    "search": "Buscar por nome...",
+    "empty": "Sem conversas.",
+    "selectConversa": "Seleciona uma conversa para ver as mensagens.",
+    "noMessages": "Sem mensagens nesta conversa.",
+    "inputPlaceholder": "Escreve uma mensagem...",
+    "humanModeHint": "Estás em modo manual — o bot está pausado para esta conversa.",
+    "botActive": "O bot está a responder automaticamente a esta conversa.",
+    "conversaClosed": "Esta conversa está encerrada.",
+    "stats": {
+      "total": "Total",
+      "ativas": "Ativas",
+      "aguardando": "A aguardar humano",
+      "encerradas": "Encerradas"
+    },
+    "filter": {
+      "todas": "Todas",
+      "ativo": "Bot",
+      "aguardando_humano": "Humano",
+      "encerrado": "Encerradas"
+    },
+    "actions": {
+      "assume": "Assumir",
+      "release": "Devolver ao bot",
+      "close": "Encerrar"
+    },
+    "labels": {
+      "cliente": "Cliente",
+      "bellus": "Bellus"
+    }
   },
   "facturaDetail": {
     "title": "Fatura",

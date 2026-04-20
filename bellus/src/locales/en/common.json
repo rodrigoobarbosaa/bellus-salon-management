@@ -17,7 +17,8 @@
     "inicio": "Home",
     "citas": "Appointments",
     "mas": "More",
-    "facturas": "Invoices"
+    "facturas": "Invoices",
+    "conversas": "Conversations"
   },
   "auth": {
     "login": "Sign in",
@@ -527,6 +528,39 @@
     "colAcciones": "Actions",
     "reenviar": "Resend",
     "pagination": "{from}-{to} of {total}"
+  },
+  "conversas": {
+    "title": "Conversations",
+    "description": "WhatsApp and Instagram conversations with clients.",
+    "search": "Search by name...",
+    "empty": "No conversations.",
+    "selectConversa": "Select a conversation to view messages.",
+    "noMessages": "No messages in this conversation.",
+    "inputPlaceholder": "Type a message...",
+    "humanModeHint": "You are in manual mode — the bot is paused for this conversation.",
+    "botActive": "The bot is responding automatically to this conversation.",
+    "conversaClosed": "This conversation is closed.",
+    "stats": {
+      "total": "Total",
+      "ativas": "Active",
+      "aguardando": "Waiting for human",
+      "encerradas": "Closed"
+    },
+    "filter": {
+      "todas": "All",
+      "ativo": "Bot",
+      "aguardando_humano": "Human",
+      "encerrado": "Closed"
+    },
+    "actions": {
+      "assume": "Take over",
+      "release": "Return to bot",
+      "close": "Close"
+    },
+    "labels": {
+      "cliente": "Client",
+      "bellus": "Bellus"
+    }
   },
   "facturaDetail": {
     "title": "Invoice",

@@ -12,6 +12,7 @@ import {
   Megaphone,
   BarChart3,
   Percent,
+  MessageSquare,
   type LucideIcon,
 } from "lucide-react";
 
@@ -33,6 +34,7 @@ export const menuItems: Record<"proprietario" | "profissional", NavItem[]> = {
     { href: "/dashboard/relatorios", labelKey: "nav.relatorios", icon: BarChart3 },
     { href: "/dashboard/comissoes", labelKey: "nav.comissoes", icon: Percent },
     { href: "/dashboard/marketing", labelKey: "nav.marketing", icon: Megaphone },
+    { href: "/dashboard/conversas", labelKey: "nav.conversas", icon: MessageSquare },
     { href: "/dashboard/notificacoes", labelKey: "nav.notificacoes", icon: Bell },
     { href: "/dashboard/equipe", labelKey: "nav.equipe", icon: UserCog },
     { href: "/dashboard/configuracoes", labelKey: "nav.configuracoes", icon: Settings },
