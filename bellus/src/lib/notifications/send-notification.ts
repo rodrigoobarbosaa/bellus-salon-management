@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { sendWhatsApp, sendSMS, isTwilioConfigured } from "./twilio";
+import { sendWhatsApp, isWhatsAppConfigured } from "./whatsapp";
 import { getConfirmationTemplate, renderTemplate } from "./templates";
 
 interface BookingConfirmationParams {
@@ -52,12 +52,12 @@ export async function sendBookingConfirmation(params: BookingConfirmationParams)
 
   const logId = (notifLog as { id: string } | null)?.id;
 
-  if (!isTwilioConfigured()) {
-    console.log(`[Notification] Twilio not configured. Message logged only:`, message.slice(0, 80));
+  if (!isWhatsAppConfigured()) {
+    console.log(`[Notification] WhatsApp not configured. Message logged only:`, message.slice(0, 80));
     return;
   }
 
-  // Try WhatsApp first
+  // Send via WhatsApp (Meta Cloud API)
   const waResult = await sendWhatsApp(telefone, message);
 
   if (waResult.success) {
@@ -70,22 +70,7 @@ export async function sendBookingConfirmation(params: BookingConfirmationParams)
     return;
   }
 
-  console.warn(`WhatsApp failed: ${waResult.error}. Trying SMS...`);
-
-  // Fallback to SMS
-  const smsResult = await sendSMS(telefone, message);
-
-  if (smsResult.success) {
-    if (logId) {
-      await supabase
-        .from("notificacoes_log")
-        .update({ status: "enviado", enviado_em: new Date().toISOString() })
-        .eq("id", logId);
-    }
-    return;
-  }
-
-  console.error(`SMS also failed: ${smsResult.error}`);
+  console.error(`WhatsApp failed: ${waResult.error}`);
 
   // Mark as failed
   if (logId) {
@@ -137,8 +122,8 @@ export async function sendNotification(params: {
 
   const logId = (notifLog as { id: string } | null)?.id;
 
-  if (!isTwilioConfigured()) {
-    console.log(`[Notification] ${tipo} logged (Twilio not configured)`);
+  if (!isWhatsAppConfigured()) {
+    console.log(`[Notification] ${tipo} logged (WhatsApp not configured)`);
     return;
   }
 
@@ -153,16 +138,7 @@ export async function sendNotification(params: {
     return;
   }
 
-  const smsResult = await sendSMS(telefone, message);
-  if (smsResult.success) {
-    if (logId) {
-      await supabase
-        .from("notificacoes_log")
-        .update({ status: "enviado", enviado_em: new Date().toISOString() })
-        .eq("id", logId);
-    }
-    return;
-  }
+  console.error(`[Notification] ${tipo} WhatsApp failed: ${waResult.error}`);
 
   if (logId) {
     await supabase

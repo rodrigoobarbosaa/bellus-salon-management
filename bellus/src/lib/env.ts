@@ -9,6 +9,9 @@ const envSchema = z.object({
   ANTHROPIC_API_KEY: z.string().default(""),
   META_APP_ID: z.string().default(""),
   META_APP_SECRET: z.string().default(""),
+  META_WEBHOOK_VERIFY_TOKEN: z.string().default(""),
+  WHATSAPP_PHONE_NUMBER_ID: z.string().default(""),
+  WHATSAPP_ACCESS_TOKEN: z.string().default(""),
   GOOGLE_CLIENT_ID: z.string().default(""),
   GOOGLE_CLIENT_SECRET: z.string().default(""),
 });
@@ -22,6 +25,9 @@ const _env = envSchema.safeParse({
   ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY,
   META_APP_ID: process.env.META_APP_ID,
   META_APP_SECRET: process.env.META_APP_SECRET,
+  META_WEBHOOK_VERIFY_TOKEN: process.env.META_WEBHOOK_VERIFY_TOKEN,
+  WHATSAPP_PHONE_NUMBER_ID: process.env.WHATSAPP_PHONE_NUMBER_ID,
+  WHATSAPP_ACCESS_TOKEN: process.env.WHATSAPP_ACCESS_TOKEN,
   GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID,
   GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET,
 });
@@ -46,6 +52,9 @@ export const env: Env = _env.success
       ANTHROPIC_API_KEY: process.env.ANTHROPIC_API_KEY ?? "",
       META_APP_ID: process.env.META_APP_ID ?? "",
       META_APP_SECRET: process.env.META_APP_SECRET ?? "",
+      META_WEBHOOK_VERIFY_TOKEN: process.env.META_WEBHOOK_VERIFY_TOKEN ?? "",
+      WHATSAPP_PHONE_NUMBER_ID: process.env.WHATSAPP_PHONE_NUMBER_ID ?? "",
+      WHATSAPP_ACCESS_TOKEN: process.env.WHATSAPP_ACCESS_TOKEN ?? "",
       GOOGLE_CLIENT_ID: process.env.GOOGLE_CLIENT_ID ?? "",
       GOOGLE_CLIENT_SECRET: process.env.GOOGLE_CLIENT_SECRET ?? "",
     };
