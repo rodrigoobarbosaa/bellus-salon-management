@@ -174,7 +174,7 @@ async function listarProfissionais(
       .select("profissional_id, profissionais(id, nome)")
       .eq("servico_id", servicoId);
 
-    const sps = (data ?? []) as Array<{
+    const sps = (data ?? []) as unknown as Array<{
       profissional_id: string;
       profissionais: { id: string; nome: string } | null;
     }>;
@@ -478,7 +478,7 @@ async function consultarAgendamentosCliente(
     .order("data_hora_inicio", { ascending: true })
     .limit(5);
 
-  const items = ((agendamentos ?? []) as Array<{
+  const items = ((agendamentos ?? []) as unknown as Array<{
     id: string; data_hora_inicio: string; status: string;
     servicos: { nome: string } | null; profissionais: { nome: string } | null;
   }>).map(a => ({

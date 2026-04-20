@@ -737,6 +737,114 @@ export type Database = {
         Update: never; // append-only (audit log imutavel)
         Relationships: [];
       };
+      conversas: {
+        Row: {
+          id: string;
+          salao_id: string;
+          cliente_id: string | null;
+          canal: "whatsapp" | "instagram";
+          external_id: string;
+          estado: "ativo" | "aguardando_humano" | "encerrado";
+          contexto: Record<string, unknown>;
+          ultima_mensagem_em: string | null;
+          created_at: string;
+          updated_at: string;
+        };
+        Insert: {
+          id?: string;
+          salao_id: string;
+          cliente_id?: string | null;
+          canal: "whatsapp" | "instagram";
+          external_id: string;
+          estado?: "ativo" | "aguardando_humano" | "encerrado";
+          contexto?: Record<string, unknown>;
+          ultima_mensagem_em?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Update: {
+          id?: string;
+          salao_id?: string;
+          cliente_id?: string | null;
+          canal?: "whatsapp" | "instagram";
+          external_id?: string;
+          estado?: "ativo" | "aguardando_humano" | "encerrado";
+          contexto?: Record<string, unknown>;
+          ultima_mensagem_em?: string | null;
+          created_at?: string;
+          updated_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "conversas_cliente_id_fkey";
+            columns: ["cliente_id"];
+            isOneToOne: false;
+            referencedRelation: "clientes";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversas_salao_id_fkey";
+            columns: ["salao_id"];
+            isOneToOne: false;
+            referencedRelation: "saloes";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
+      conversas_mensagens: {
+        Row: {
+          id: string;
+          conversa_id: string;
+          salao_id: string;
+          direcao: "recebida" | "enviada";
+          tipo: "texto" | "imagem" | "audio" | "template" | "interativo";
+          conteudo: string | null;
+          meta_message_id: string | null;
+          status: "recebida" | "enviada" | "entregue" | "lida" | "falhou";
+          metadata: Record<string, unknown>;
+          created_at: string;
+        };
+        Insert: {
+          id?: string;
+          conversa_id: string;
+          salao_id: string;
+          direcao: "recebida" | "enviada";
+          tipo?: "texto" | "imagem" | "audio" | "template" | "interativo";
+          conteudo?: string | null;
+          meta_message_id?: string | null;
+          status?: "recebida" | "enviada" | "entregue" | "lida" | "falhou";
+          metadata?: Record<string, unknown>;
+          created_at?: string;
+        };
+        Update: {
+          id?: string;
+          conversa_id?: string;
+          salao_id?: string;
+          direcao?: "recebida" | "enviada";
+          tipo?: "texto" | "imagem" | "audio" | "template" | "interativo";
+          conteudo?: string | null;
+          meta_message_id?: string | null;
+          status?: "recebida" | "enviada" | "entregue" | "lida" | "falhou";
+          metadata?: Record<string, unknown>;
+          created_at?: string;
+        };
+        Relationships: [
+          {
+            foreignKeyName: "conversas_mensagens_conversa_id_fkey";
+            columns: ["conversa_id"];
+            isOneToOne: false;
+            referencedRelation: "conversas";
+            referencedColumns: ["id"];
+          },
+          {
+            foreignKeyName: "conversas_mensagens_salao_id_fkey";
+            columns: ["salao_id"];
+            isOneToOne: false;
+            referencedRelation: "saloes";
+            referencedColumns: ["id"];
+          }
+        ];
+      };
       factura_envios_aeat: {
         Row: {
           id: string;

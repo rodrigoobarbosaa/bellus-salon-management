@@ -182,7 +182,7 @@ async function handleMessagesUpdate(
 
   if (!key?.id || !update?.status) return;
 
-  const statusMap: Record<number, string> = {
+  const statusMap: Record<number, StatusUpdate["status"]> = {
     2: "enviada",
     3: "entregue",
     4: "lida",

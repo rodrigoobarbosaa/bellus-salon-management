@@ -80,16 +80,16 @@ export async function processWithAI(
           const motivo = (block.input as Record<string, unknown>).motivo as string;
           toolResults.push({
             type: "tool_result",
-            tool_use_id: block.id,
+            tool_use_id: block.id!,
             content: JSON.stringify({ escalado: true, motivo }),
           });
           continue;
         }
 
-        const result = await executeTool(supabase, salaoId, block.name, block.input as Record<string, unknown>);
+        const result = await executeTool(supabase, salaoId, block.name!, block.input as Record<string, unknown>);
         toolResults.push({
           type: "tool_result",
-          tool_use_id: block.id,
+          tool_use_id: block.id!,
           content: result,
         });
       }
