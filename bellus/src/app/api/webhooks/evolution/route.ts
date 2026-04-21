@@ -216,9 +216,12 @@ async function handleMessagesUpdate(
 async function resolveSalaoId(
   supabase: ReturnType<typeof createServiceClient>
 ): Promise<string | null> {
+  // Buscar o salão que tem serviços cadastrados (o ativo de verdade)
+  // Ordena pelo mais recente para pegar o salão real, não os de teste
   const { data } = await supabase
     .from("saloes")
     .select("id")
+    .order("criado_em", { ascending: false })
     .limit(1)
     .single();
 
