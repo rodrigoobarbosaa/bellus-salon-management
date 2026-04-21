@@ -186,38 +186,48 @@ export async function getDashboardData() {
     appointmentCount: rawList.length,
   };
 
-  // --- Revenue ---
-  type Transacao = { valor_final: number; created_at: string };
+  // --- Revenue (filtered by data_servico = actual service date) ---
+  // Convert ISO timestamps to YYYY-MM-DD for data_servico comparisons
+  const todayDate = todayStart.split("T")[0];
+  const weekStartDate = weekStart.split("T")[0];
+  const monthStartDate = monthStart.split("T")[0];
+  const prevWeekStartDate = prevWeekStart.split("T")[0];
+  const prevWeekEndDate = prevWeekEnd.split("T")[0];
+  const prevMonthStartDate = prevMonthStart.split("T")[0];
+  const prevMonthEndDate = prevMonthEnd.split("T")[0];
+
+  type Transacao = { valor_final: number; data_servico: string };
 
   const { data: allTx } = await supabase
     .from("transacoes")
-    .select("valor_final, created_at")
+    .select("valor_final, data_servico")
     .eq("salao_id", salaoId)
-    .gte("created_at", prevMonthStart);
+    .gte("data_servico", prevMonthStartDate);
 
   const txList = (allTx as Transacao[]) || [];
 
   function sumRange(start: string, end: string) {
     return txList
-      .filter((t) => t.created_at >= start && t.created_at <= end)
+      .filter((t) => t.data_servico >= start && t.data_servico <= end)
       .reduce((sum, t) => sum + (t.valor_final || 0), 0);
   }
 
   const revenue: RevenueData = {
-    today: sumRange(todayStart, todayEnd),
-    week: sumRange(weekStart, todayEnd),
-    month: sumRange(monthStart, todayEnd),
+    today: sumRange(todayDate, todayDate),
+    week: sumRange(weekStartDate, todayDate),
+    month: sumRange(monthStartDate, todayDate),
     quarter: 0,
-    prevWeek: sumRange(prevWeekStart, prevWeekEnd),
-    prevMonth: sumRange(prevMonthStart, prevMonthEnd),
+    prevWeek: sumRange(prevWeekStartDate, prevWeekEndDate),
+    prevMonth: sumRange(prevMonthStartDate, prevMonthEndDate),
   };
 
   // Quarter needs separate query since prevMonthStart might not cover it
+  const quarterStartDate = quarterStart.split("T")[0];
   const { data: quarterTx } = await supabase
     .from("transacoes")
     .select("valor_final")
     .eq("salao_id", salaoId)
-    .gte("created_at", quarterStart);
+    .gte("data_servico", quarterStartDate);
 
   revenue.quarter = ((quarterTx as { valor_final: number }[]) || []).reduce(
     (sum, t) => sum + (t.valor_final || 0),
@@ -266,7 +276,7 @@ export async function getDashboardData() {
       .from("transacoes")
       .select("servico_id, valor_final")
       .eq("salao_id", salaoId)
-      .gte("created_at", monthStart),
+      .gte("data_servico", monthStartDate),
   ]);
 
   type MonthAppt = { cliente_id: string; servico_id: string };

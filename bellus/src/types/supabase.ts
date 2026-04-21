@@ -475,6 +475,7 @@ export type Database = {
           valor_final: number;
           forma_pagamento: "efectivo" | "tarjeta" | "bizum" | "transferencia";
           notas: string | null;
+          data_servico: string;
           created_at: string;
         };
         Insert: {
@@ -490,6 +491,7 @@ export type Database = {
           valor_final: number;
           forma_pagamento: "efectivo" | "tarjeta" | "bizum" | "transferencia";
           notas?: string | null;
+          data_servico?: string;
           created_at?: string;
         };
         Update: {
@@ -505,6 +507,7 @@ export type Database = {
           valor_final?: number;
           forma_pagamento?: "efectivo" | "tarjeta" | "bizum" | "transferencia";
           notas?: string | null;
+          data_servico?: string;
           created_at?: string;
         };
         Relationships: [];

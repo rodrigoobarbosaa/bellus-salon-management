@@ -86,14 +86,18 @@ export async function getReportsData(): Promise<ReportsData | null> {
   // Current month
   const monthStart = new Date(now.getFullYear(), now.getMonth(), 1).toISOString();
 
+  // Date strings (YYYY-MM-DD) for data_servico queries
+  const thirtyDaysAgoDate = thirtyDaysAgo.toISOString().split("T")[0];
+  const sixMonthsAgoDate = sixMonthsAgo.toISOString().split("T")[0];
+
   // Fetch all data in parallel
   const [txRes, apptRes, clientsRes, monthTxRes, profRes] = await Promise.all([
     // Transactions last 30 days
     supabase
       .from("transacoes")
-      .select("valor_final, forma_pagamento, created_at, profissional_id")
+      .select("valor_final, forma_pagamento, data_servico, profissional_id")
       .eq("salao_id", salaoId)
-      .gte("created_at", thirtyDaysAgoISO),
+      .gte("data_servico", thirtyDaysAgoDate),
 
     // Appointments last 30 days
     supabase
@@ -112,9 +116,9 @@ export async function getReportsData(): Promise<ReportsData | null> {
     // Transactions last 6 months (for monthly revenue)
     supabase
       .from("transacoes")
-      .select("valor_final, created_at")
+      .select("valor_final, data_servico")
       .eq("salao_id", salaoId)
-      .gte("created_at", sixMonthsAgoISO),
+      .gte("data_servico", sixMonthsAgoDate),
 
     // Professionals (for names)
     supabase
@@ -124,10 +128,10 @@ export async function getReportsData(): Promise<ReportsData | null> {
       .eq("ativo", true),
   ]);
 
-  type TxRow = { valor_final: number; forma_pagamento: string; created_at: string; profissional_id: string | null };
+  type TxRow = { valor_final: number; forma_pagamento: string; data_servico: string; profissional_id: string | null };
   type ApptRow = { data_hora_inicio: string; status: string };
   type ClientRow = { created_at: string };
-  type MonthTxRow = { valor_final: number; created_at: string };
+  type MonthTxRow = { valor_final: number; data_servico: string };
   type ProfRow = { id: string; nome: string };
 
   const transactions = (txRes.data as unknown as TxRow[]) || [];
@@ -141,7 +145,7 @@ export async function getReportsData(): Promise<ReportsData | null> {
   // --- Daily Revenue (last 30 days) ---
   const dailyRevenueMap: Record<string, { total: number; count: number }> = {};
   for (const tx of transactions) {
-    const key = toDateKey(tx.created_at);
+    const key = tx.data_servico; // YYYY-MM-DD date
     if (!dailyRevenueMap[key]) dailyRevenueMap[key] = { total: 0, count: 0 };
     dailyRevenueMap[key].total += tx.valor_final || 0;
     dailyRevenueMap[key].count++;
@@ -186,7 +190,7 @@ export async function getReportsData(): Promise<ReportsData | null> {
   // --- Monthly Overview (last 6 months) ---
   const monthlyRevenueMap: Record<string, number> = {};
   for (const tx of monthTransactions) {
-    const key = toMonthKey(tx.created_at);
+    const key = toMonthKey(tx.data_servico); // YYYY-MM from date
     monthlyRevenueMap[key] = (monthlyRevenueMap[key] ?? 0) + (tx.valor_final || 0);
   }
 
@@ -225,9 +229,10 @@ export async function getReportsData(): Promise<ReportsData | null> {
   }
 
   // --- Payment Breakdown (this month) ---
+  const monthStartDate = monthStart.split("T")[0]; // YYYY-MM-DD
   const paymentMap: Record<string, { total: number; count: number }> = {};
   for (const tx of transactions) {
-    if (tx.created_at >= monthStart) {
+    if (tx.data_servico >= monthStartDate) {
       const method = tx.forma_pagamento || "otro";
       if (!paymentMap[method]) paymentMap[method] = { total: 0, count: 0 };
       paymentMap[method].total += tx.valor_final || 0;
@@ -246,7 +251,7 @@ export async function getReportsData(): Promise<ReportsData | null> {
   // --- Professional Stats (this month) ---
   const profMap: Record<string, { revenue: number; appointments: number }> = {};
   for (const tx of transactions) {
-    if (tx.created_at >= monthStart && tx.profissional_id) {
+    if (tx.data_servico >= monthStartDate && tx.profissional_id) {
       if (!profMap[tx.profissional_id]) profMap[tx.profissional_id] = { revenue: 0, appointments: 0 };
       profMap[tx.profissional_id].revenue += tx.valor_final || 0;
       profMap[tx.profissional_id].appointments++;

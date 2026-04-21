@@ -308,16 +308,17 @@ export async function getMarketingAnalytics() {
     0
   );
 
-  // Total revenue this month
+  // Total revenue this month (by service date)
   const monthStart = new Date();
   monthStart.setDate(1);
   monthStart.setHours(0, 0, 0, 0);
+  const monthStartDate = monthStart.toISOString().split("T")[0];
 
   const { data: txData } = await supabase
     .from("transacoes")
     .select("valor_final")
     .eq("salao_id", salaoId)
-    .gte("created_at", monthStart.toISOString());
+    .gte("data_servico", monthStartDate);
 
   const totalRevenue = ((txData as { valor_final: number }[]) || []).reduce(
     (sum, t) => sum + (t.valor_final || 0),

@@ -50,9 +50,11 @@ export async function getCommissionsData(
   const salaoId = await getUserSalaoId(supabase);
   if (!salaoId) return null;
 
-  // Date range for the month
-  const monthStart = new Date(year, month - 1, 1).toISOString();
-  const monthEnd = new Date(year, month, 1).toISOString();
+  // Date range for the month (YYYY-MM-DD for data_servico)
+  const monthStartDate = `${year}-${String(month).padStart(2, "0")}-01`;
+  const monthEndDate = month === 12
+    ? `${year + 1}-01-01`
+    : `${year}-${String(month + 1).padStart(2, "0")}-01`;
 
   // Fetch professionals and transactions in parallel
   const [profRes, txRes] = await Promise.all([
@@ -67,8 +69,8 @@ export async function getCommissionsData(
       .from("transacoes")
       .select("profissional_id, valor_final")
       .eq("salao_id", salaoId)
-      .gte("created_at", monthStart)
-      .lt("created_at", monthEnd),
+      .gte("data_servico", monthStartDate)
+      .lt("data_servico", monthEndDate),
   ]);
 
   type ProfRow = {

@@ -86,9 +86,12 @@ export function AgendamentoDetail({
   const t = useTranslations("agenda");
   const [isLoading, setIsLoading] = useState(false);
   const [showCancelConfirm, setShowCancelConfirm] = useState(false);
+  const [showReopenConfirm, setShowReopenConfirm] = useState(false);
   const [showPayment, setShowPayment] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
   const [editError, setEditError] = useState<string | null>(null);
+  const [conflictMessage, setConflictMessage] = useState<string | null>(null);
+  const [pendingFormData, setPendingFormData] = useState<FormData | null>(null);
   const [clientePhone, setClientePhone] = useState<string | null>(null);
   const [clienteIdioma, setClienteIdioma] = useState<"pt" | "es" | "en" | "ru">("es");
   const [salonName, setSalonName] = useState("");
@@ -130,7 +133,12 @@ export function AgendamentoDetail({
     userRole === "proprietario" ||
     agendamento.profissional_id === currentProfissionalId;
 
-  const isTerminal = agendamento.status === "concluido" || agendamento.status === "cancelado";
+  const isProprietario = userRole === "proprietario";
+  const isConcluido = agendamento.status === "concluido";
+  const isCancelado = agendamento.status === "cancelado";
+  const isTerminal = isConcluido || isCancelado;
+  // Proprietario can edit profissional/servico on completed appointments
+  const canEditConcluido = isConcluido && isProprietario;
 
   const inicio = new Date(agendamento.data_hora_inicio);
   const fim = new Date(agendamento.data_hora_fim);
@@ -161,25 +169,60 @@ export function AgendamentoDetail({
     onOpenChange(false);
   }
 
-  async function handleSaveEdit() {
+  async function submitEditForm(fd: FormData) {
     setIsLoading(true);
     setEditError(null);
 
-    const fd = new FormData();
-    fd.set("profissional_id", editProfissional);
-    fd.set("servico_id", editServico);
-    fd.set("data_hora_inicio", editInicio);
-    fd.set("notas", editNotas);
-
     const result = await updateAgendamento(agendamento.id, fd);
     setIsLoading(false);
+
+    if (result && "conflict" in result && result.conflict) {
+      setConflictMessage(result.message as string);
+      setPendingFormData(fd);
+      return;
+    }
 
     if (result.error) {
       setEditError(result.error);
       return;
     }
 
+    setConflictMessage(null);
+    setPendingFormData(null);
     setIsEditing(false);
+    onOpenChange(false);
+  }
+
+  async function handleSaveEdit() {
+    setConflictMessage(null);
+
+    const fd = new FormData();
+    fd.set("profissional_id", editProfissional);
+    fd.set("servico_id", editServico);
+    fd.set("notas", editNotas);
+
+    if (isConcluido) {
+      // Completed appointment: only send profissional/servico changes
+      fd.set("concluido_edit", "true");
+    } else {
+      fd.set("data_hora_inicio", editInicio);
+    }
+
+    await submitEditForm(fd);
+  }
+
+  async function handleForceOverlap() {
+    if (!pendingFormData) return;
+    pendingFormData.set("force_overlap", "true");
+    setConflictMessage(null);
+    await submitEditForm(pendingFormData);
+  }
+
+  async function handleReopen() {
+    setIsLoading(true);
+    await updateAgendamentoStatus(agendamento.id, "confirmado");
+    setIsLoading(false);
+    setShowReopenConfirm(false);
     onOpenChange(false);
   }
 
@@ -187,7 +230,10 @@ export function AgendamentoDetail({
     if (!open) {
       setIsEditing(false);
       setShowCancelConfirm(false);
+      setShowReopenConfirm(false);
       setEditError(null);
+      setConflictMessage(null);
+      setPendingFormData(null);
     }
     onOpenChange(open);
   }
@@ -213,6 +259,37 @@ export function AgendamentoDetail({
           <div className="space-y-4">
             {editError && (
               <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">{editError}</div>
+            )}
+
+            {conflictMessage && (
+              <div className="rounded-md border border-amber-300 bg-amber-50 p-3 space-y-2">
+                <p className="text-sm font-medium text-amber-800">{conflictMessage}</p>
+                <div className="flex gap-2">
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => { setConflictMessage(null); setPendingFormData(null); }}
+                  >
+                    Cancelar
+                  </Button>
+                  <Button
+                    type="button"
+                    size="sm"
+                    onClick={handleForceOverlap}
+                    disabled={isLoading}
+                    className="bg-amber-600 hover:bg-amber-700"
+                  >
+                    {isLoading ? "Guardando..." : "Guardar de todas formas"}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {isConcluido && (
+              <div className="rounded-md bg-blue-50 p-3 text-xs text-blue-700">
+                Turno completado — solo se puede cambiar profesional y servicio.
+              </div>
             )}
 
             {/* Serviço */}
@@ -260,19 +337,21 @@ export function AgendamentoDetail({
               </select>
             </div>
 
-            {/* Data/hora */}
-            <div className="space-y-2">
-              <label htmlFor="edit-inicio" className="text-sm font-medium text-stone-700">
-                Fecha y hora *
-              </label>
-              <Input
-                id="edit-inicio"
-                type="datetime-local"
-                value={editInicio}
-                onChange={(e) => setEditInicio(e.target.value)}
-                disabled={isLoading}
-              />
-            </div>
+            {/* Data/hora — hidden for completed appointments */}
+            {!isConcluido && (
+              <div className="space-y-2">
+                <label htmlFor="edit-inicio" className="text-sm font-medium text-stone-700">
+                  Fecha y hora *
+                </label>
+                <Input
+                  id="edit-inicio"
+                  type="datetime-local"
+                  value={editInicio}
+                  onChange={(e) => setEditInicio(e.target.value)}
+                  disabled={isLoading}
+                />
+              </div>
+            )}
 
             {/* Notas */}
             <div className="space-y-2">
@@ -292,7 +371,7 @@ export function AgendamentoDetail({
             <div className="flex gap-2 justify-end">
               <Button
                 variant="outline"
-                onClick={() => { setIsEditing(false); setEditError(null); }}
+                onClick={() => { setIsEditing(false); setEditError(null); setConflictMessage(null); setPendingFormData(null); }}
                 disabled={isLoading}
               >
                 Cancelar
@@ -380,6 +459,23 @@ export function AgendamentoDetail({
               </div>
             )}
 
+            {/* Reopen button for completed appointments (proprietario only) */}
+            {isConcluido && isProprietario && !showReopenConfirm && (
+              <div className="space-y-2 border-t border-stone-100 pt-3">
+                <div className="flex flex-wrap gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowReopenConfirm(true)}
+                    disabled={isLoading}
+                    className="text-amber-600 hover:bg-amber-50 hover:text-amber-700"
+                  >
+                    Reabrir turno
+                  </Button>
+                </div>
+              </div>
+            )}
+
             {/* Confirmação de cancelamento */}
             {showCancelConfirm && (
               <div className="space-y-3 rounded-md border border-red-200 bg-red-50 p-3">
@@ -402,6 +498,33 @@ export function AgendamentoDetail({
                     className="bg-red-600 hover:bg-red-700"
                   >
                     {isLoading ? "Cancelando..." : "Sí, cancelar"}
+                  </Button>
+                </div>
+              </div>
+            )}
+
+            {/* Confirmação de reabertura */}
+            {showReopenConfirm && (
+              <div className="space-y-3 rounded-md border border-amber-200 bg-amber-50 p-3">
+                <p className="text-sm font-medium text-amber-700">
+                  ¿Reabrir este turno? Se eliminarán las transacciones asociadas y la comanda deberá rehacerse.
+                </p>
+                <div className="flex gap-2">
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setShowReopenConfirm(false)}
+                    disabled={isLoading}
+                  >
+                    No
+                  </Button>
+                  <Button
+                    size="sm"
+                    onClick={handleReopen}
+                    disabled={isLoading}
+                    className="bg-amber-600 hover:bg-amber-700"
+                  >
+                    {isLoading ? "Reabriendo..." : "Sí, reabrir"}
                   </Button>
                 </div>
               </div>
@@ -432,14 +555,14 @@ export function AgendamentoDetail({
                   {t("sendWhatsApp")}
                 </Button>
               )}
-              {canEdit && !isTerminal && (
+              {((canEdit && !isTerminal) || canEditConcluido) && (
                 <Button
                   variant="outline"
                   onClick={() => setIsEditing(true)}
                   className="gap-2"
                 >
                   <Pencil className="size-3.5" />
-                  Editar
+                  {canEditConcluido ? "Corregir" : "Editar"}
                 </Button>
               )}
               <Button variant="outline" onClick={() => handleOpenChange(false)}>

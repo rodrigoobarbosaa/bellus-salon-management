@@ -217,6 +217,7 @@ export async function updateAgendamentoStatus(id: string, status: string) {
   const validTransitions: Record<string, string[]> = {
     pendente: ["confirmado", "cancelado"],
     confirmado: ["concluido", "cancelado"],
+    concluido: ["confirmado"],
   };
 
   const { data: current } = await supabase
@@ -245,6 +246,21 @@ export async function updateAgendamentoStatus(id: string, status: string) {
 
   if (error) {
     return { error: "Error al actualizar el estado." };
+  }
+
+  // When reopening a completed appointment, delete associated transactions
+  if (currentStatus === "concluido" && status === "confirmado") {
+    const svc = createServiceClient();
+    const { data: transacoes } = await svc
+      .from("transacoes")
+      .select("id")
+      .eq("agendamento_id", id);
+
+    if (transacoes && (transacoes as Array<{ id: string }>).length > 0) {
+      for (const tx of transacoes as Array<{ id: string }>) {
+        await svc.from("transacoes").delete().eq("id", tx.id);
+      }
+    }
   }
 
   // When completing an appointment, calculate next return date
@@ -324,9 +340,71 @@ export async function updateAgendamento(id: string, formData: FormData) {
   const servico_id = formData.get("servico_id") as string;
   const data_hora_inicio = formData.get("data_hora_inicio") as string;
   const notas = (formData.get("notas") as string) || null;
+  const forceOverlap = formData.get("force_overlap") === "true";
+  const concluidoEdit = formData.get("concluido_edit") === "true";
 
-  if (!profissional_id || !servico_id || !data_hora_inicio) {
-    return { error: "Profesional, servicio y fecha/hora son obligatorios." };
+  if (!profissional_id || !servico_id) {
+    return { error: "Profesional y servicio son obligatorios." };
+  }
+
+  // Buscar status atual do agendamento
+  const { data: currentAg } = await supabase
+    .from("agendamentos")
+    .select("status, data_hora_inicio, data_hora_fim")
+    .eq("id", id)
+    .eq("salao_id", salaoId)
+    .single();
+
+  if (!currentAg) {
+    return { error: "Turno no encontrado." };
+  }
+
+  const currentStatus = (currentAg as { status: string; data_hora_inicio: string; data_hora_fim: string }).status;
+
+  // For completed appointments, only allow profissional_id and servico_id changes (no date/time)
+  if (currentStatus === "concluido") {
+    if (!concluidoEdit) {
+      return { error: "No se puede editar un turno completado sin permiso especial." };
+    }
+
+    const svc = createServiceClient();
+
+    const { error: updateError } = await supabase
+      .from("agendamentos")
+      .update({
+        profissional_id,
+        servico_id,
+        notas,
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", id)
+      .eq("salao_id", salaoId);
+
+    if (updateError) {
+      return { error: "Error al actualizar el turno." };
+    }
+
+    // Update associated transactions (using service client — transacoes has no UPDATE RLS policy)
+    const { data: transacoes } = await svc
+      .from("transacoes")
+      .select("id")
+      .eq("agendamento_id", id);
+
+    if (transacoes && (transacoes as Array<{ id: string }>).length > 0) {
+      for (const tx of transacoes as Array<{ id: string }>) {
+        await svc
+          .from("transacoes")
+          .update({ profissional_id, servico_id })
+          .eq("id", tx.id);
+      }
+    }
+
+    revalidatePath("/dashboard/agenda");
+    return { success: true };
+  }
+
+  if (!data_hora_inicio) {
+    return { error: "Fecha y hora son obligatorios." };
   }
 
   // Buscar duração do serviço
@@ -345,17 +423,19 @@ export async function updateAgendamento(id: string, formData: FormData) {
   const fim = new Date(inicio.getTime() + duracao * 60 * 1000);
 
   // Verificar conflito (excluindo o próprio agendamento)
-  const { data: conflitos } = await supabase
-    .from("agendamentos")
-    .select("id")
-    .eq("profissional_id", profissional_id)
-    .neq("status", "cancelado")
-    .neq("id", id)
-    .lt("data_hora_inicio", fim.toISOString())
-    .gt("data_hora_fim", inicio.toISOString());
+  if (!forceOverlap) {
+    const { data: conflitos } = await supabase
+      .from("agendamentos")
+      .select("id")
+      .eq("profissional_id", profissional_id)
+      .neq("status", "cancelado")
+      .neq("id", id)
+      .lt("data_hora_inicio", fim.toISOString())
+      .gt("data_hora_fim", inicio.toISOString());
 
-  if (conflitos && (conflitos as Array<{ id: string }>).length > 0) {
-    return { error: "Conflicto de horario: el profesional ya tiene un turno en ese horario." };
+    if (conflitos && (conflitos as Array<{ id: string }>).length > 0) {
+      return { conflict: true, message: "El profesional ya tiene un turno en ese horario. ¿Deseas guardar de todas formas?" };
+    }
   }
 
   // Verificar bloqueios

@@ -31,6 +31,7 @@ interface Transacao {
   valor_final: number;
   forma_pagamento: string;
   notas: string | null;
+  data_servico: string;
   created_at: string;
   cliente_id: string | null;
   profissional_id: string | null;
@@ -114,14 +115,11 @@ export function CaixaView({ salaoId, profissionais, servicos }: CaixaViewProps) 
     async (from: string, to: string) => {
       setLoading(true);
 
-      const toEnd = new Date(to);
-      toEnd.setDate(toEnd.getDate() + 1);
-
       let query = supabase
         .from("transacoes")
         .select("*, clientes(nome)" as string)
-        .gte("created_at", `${from}T00:00:00`)
-        .lt("created_at", toEnd.toISOString())
+        .gte("data_servico", from)
+        .lte("data_servico", to)
         .order("created_at", { ascending: false });
 
       if (filterProf) {
@@ -206,7 +204,7 @@ export function CaixaView({ salaoId, profissionais, servicos }: CaixaViewProps) 
     const rows = transacoes
       .map(
         (t) =>
-          `${new Date(t.created_at).toLocaleString("es-ES")},${t.cliente_nome},${t.servico_nome},${t.profissional_nome},${t.valor},${t.valor_desconto},${t.valor_final},${FORMA_LABELS[t.forma_pagamento] ?? t.forma_pagamento}`
+          `${t.data_servico},${t.cliente_nome},${t.servico_nome},${t.profissional_nome},${t.valor},${t.valor_desconto},${t.valor_final},${FORMA_LABELS[t.forma_pagamento] ?? t.forma_pagamento}`
       )
       .join("\n");
 
@@ -388,11 +386,11 @@ export function CaixaView({ salaoId, profissionais, servicos }: CaixaViewProps) 
                 minute: "2-digit",
                 timeZone: SALON_TZ,
               });
+              // Show service date (not closure date) in history tab
               const date = tab === "historico"
-                ? new Date(t.created_at).toLocaleDateString("es-ES", {
+                ? new Date(t.data_servico + "T12:00:00").toLocaleDateString("es-ES", {
                     day: "2-digit",
                     month: "2-digit",
-                    timeZone: SALON_TZ,
                   })
                 : null;
 

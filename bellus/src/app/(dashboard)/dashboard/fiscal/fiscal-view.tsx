@@ -128,12 +128,14 @@ export function FiscalView({ salaoId, salaoNome, configFiscal }: FiscalViewProps
 
     const { start, end } = getTrimestreDates(year, trimestre);
 
-    // Fetch transactions (ingresos)
+    // Fetch transactions (ingresos) — filter by service date
+    const startDate = start.toISOString().split("T")[0];
+    const endDate = end.toISOString().split("T")[0];
     const { data: transacoes } = await supabase
       .from("transacoes")
       .select("valor_final")
-      .gte("created_at", start.toISOString())
-      .lte("created_at", end.toISOString());
+      .gte("data_servico", startDate)
+      .lte("data_servico", endDate);
 
     const totalIngresos = ((transacoes as { valor_final: number }[]) ?? [])
       .reduce((sum: number, t: { valor_final: number }) => sum + t.valor_final, 0);

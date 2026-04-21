@@ -52,11 +52,12 @@ export async function GET(request: NextRequest) {
         .gte("data_hora_inicio", weekAgo.toISOString())
         .eq("status", "concluido");
 
+      const weekAgoDate = weekAgo.toISOString().split("T")[0];
       const { data: txData } = await supabase
         .from("transacoes")
         .select("valor_final")
         .eq("salao_id", salaoId)
-        .gte("created_at", weekAgo.toISOString());
+        .gte("data_servico", weekAgoDate);
 
       const revenue = ((txData as { valor_final: number }[]) || []).reduce(
         (sum, t) => sum + (t.valor_final || 0),
