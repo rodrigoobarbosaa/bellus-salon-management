@@ -269,6 +269,10 @@ async function callClaude(
   });
 
   const data = await res.json();
+  if (!res.ok) {
+    console.error("[Chatbot] Claude API error:", res.status, JSON.stringify(data).substring(0, 500));
+    return { content: [], stopReason: "error" };
+  }
   return {
     content: data.content ?? [],
     stopReason: data.stop_reason ?? "end_turn",
