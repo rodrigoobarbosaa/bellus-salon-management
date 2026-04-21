@@ -34,19 +34,25 @@ export async function processWithAI(
   salaoId: string,
   ctx: ConversationContext
 ) {
+  console.log(`[Chatbot] processWithAI called for conversa ${ctx.conversaId}, estado=${ctx.estado}`);
+
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     console.warn("[Chatbot] ANTHROPIC_API_KEY not configured, skipping AI processing");
     return;
   }
 
+  console.log("[Chatbot] API key found, length:", apiKey.length);
+
   // Se conversa está em modo "aguardando_humano", não processar com IA
   if (ctx.estado === "aguardando_humano") {
+    console.log("[Chatbot] Conversa em modo aguardando_humano, skipping");
     return;
   }
 
   // Buscar contexto do salão
   const salonContext = await getSalonContext(supabase, salaoId);
+  console.log("[Chatbot] Salon context:", salonContext.nome);
 
   // Buscar histórico recente da conversa (últimas 20 mensagens)
   const history = await getConversationHistory(supabase, ctx.conversaId);
@@ -61,7 +67,15 @@ export async function processWithAI(
   ];
 
   // Chamar Claude com tool use (loop até não haver mais tool calls)
-  let response = await callClaude(apiKey, systemPrompt, messages, CHATBOT_TOOLS);
+  console.log("[Chatbot] Calling Claude API...");
+  let response: ClaudeResponse;
+  try {
+    response = await callClaude(apiKey, systemPrompt, messages, CHATBOT_TOOLS);
+    console.log("[Chatbot] Claude response, stopReason:", response.stopReason, "blocks:", response.content.length);
+  } catch (err) {
+    console.error("[Chatbot] Claude API error:", err);
+    return;
+  }
   let rounds = 0;
 
   while (response.stopReason === "tool_use" && rounds < MAX_TOOL_ROUNDS) {
@@ -108,10 +122,16 @@ export async function processWithAI(
     .join("\n")
     .trim();
 
-  if (!replyText) return;
+  if (!replyText) {
+    console.log("[Chatbot] No reply text extracted from Claude response");
+    return;
+  }
+
+  console.log("[Chatbot] Reply:", replyText.substring(0, 100));
 
   // Enviar resposta ao cliente
   const sendResult = await sendReply(ctx.canal, ctx.externalId, replyText);
+  console.log("[Chatbot] Send result:", JSON.stringify(sendResult));
 
   // Persistir resposta no histórico
   await supabase
