@@ -2,8 +2,11 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { madridToISO } from "@/lib/timezone";
+import { sendBookingConfirmation } from "@/lib/notifications/send-notification";
+import { generateOptOutToken } from "@/lib/opt-out-token";
 
 async function getUserSalaoId(supabase: SupabaseClient) {
   const {
@@ -193,6 +196,10 @@ export async function createAgendamento(formData: FormData) {
       return { error: "Turno principal creado, pero error al crear el secado." };
     }
   }
+
+  // Send WhatsApp confirmation (non-blocking)
+  const agendamentoId = (newAgendamento as { id: string }).id;
+  sendAgendamentoConfirmation(salaoId, cliente_id, agendamentoId, servico_id, profissional_id, inicio).catch(() => {});
 
   revalidatePath("/dashboard/agenda");
   return { success: true };
@@ -459,4 +466,54 @@ export async function rescheduleAgendamento(
 
   revalidatePath("/dashboard/agenda");
   return { success: true };
+}
+
+// --- Notification helper (fire-and-forget) ---
+
+async function sendAgendamentoConfirmation(
+  salaoId: string,
+  clienteId: string,
+  agendamentoId: string,
+  servicoId: string,
+  profissionalId: string,
+  inicio: Date,
+) {
+  const svc = createServiceClient();
+
+  const [clRes, svcRes, profRes, salaoRes] = await Promise.all([
+    svc.from("clientes").select("nome, telefone, idioma_preferido").eq("id", clienteId).single(),
+    svc.from("servicos").select("nome").eq("id", servicoId).single(),
+    svc.from("profissionais").select("nome").eq("id", profissionalId).single(),
+    svc.from("saloes").select("nome, endereco").eq("id", salaoId).single(),
+  ]);
+
+  const cliente = clRes.data as { nome: string; telefone: string; idioma_preferido: string } | null;
+  if (!cliente?.telefone) return;
+
+  const idioma = cliente.idioma_preferido || "es";
+  const servicoNome = (svcRes.data as { nome: string } | null)?.nome ?? "";
+  const profNome = (profRes.data as { nome: string } | null)?.nome ?? "";
+  const salao = salaoRes.data as { nome: string; endereco: string | null } | null;
+
+  const dateStr = inicio.toLocaleDateString(idioma, { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Madrid" });
+  const timeStr = inicio.toLocaleTimeString(idioma, { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Madrid" });
+
+  await sendBookingConfirmation({
+    supabase: svc,
+    salaoId,
+    clienteId,
+    agendamentoId,
+    telefone: cliente.telefone,
+    idioma,
+    variables: {
+      nome_cliente: cliente.nome,
+      servico: servicoNome,
+      profissional: profNome,
+      data: dateStr,
+      hora: timeStr,
+      salao: salao?.nome ?? "",
+      endereco: salao?.endereco ?? "",
+      link_optout: `${process.env.NEXT_PUBLIC_APP_URL || "https://bellus.app"}/api/opt-out?client_id=${clienteId}&token=${generateOptOutToken(clienteId)}`,
+    },
+  });
 }

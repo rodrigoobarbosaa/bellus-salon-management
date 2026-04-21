@@ -34,25 +34,17 @@ export async function processWithAI(
   salaoId: string,
   ctx: ConversationContext
 ) {
-  console.log(`[Chatbot] processWithAI called for conversa ${ctx.conversaId}, estado=${ctx.estado}`);
-
   const apiKey = process.env.ANTHROPIC_API_KEY;
   if (!apiKey) {
     console.warn("[Chatbot] ANTHROPIC_API_KEY not configured, skipping AI processing");
     return;
   }
 
-  console.log("[Chatbot] API key found, length:", apiKey.length);
-
   // Se conversa está em modo "aguardando_humano", não processar com IA
-  if (ctx.estado === "aguardando_humano") {
-    console.log("[Chatbot] Conversa em modo aguardando_humano, skipping");
-    return;
-  }
+  if (ctx.estado === "aguardando_humano") return;
 
   // Buscar contexto do salão
   const salonContext = await getSalonContext(supabase, salaoId);
-  console.log("[Chatbot] Salon context:", salonContext.nome);
 
   // Buscar histórico recente da conversa (últimas 20 mensagens)
   const history = await getConversationHistory(supabase, ctx.conversaId);
@@ -67,11 +59,9 @@ export async function processWithAI(
   ];
 
   // Chamar Claude com tool use (loop até não haver mais tool calls)
-  console.log("[Chatbot] Calling Claude API...");
   let response: ClaudeResponse;
   try {
     response = await callClaude(apiKey, systemPrompt, messages, CHATBOT_TOOLS);
-    console.log("[Chatbot] Claude response, stopReason:", response.stopReason, "blocks:", response.content.length);
   } catch (err) {
     console.error("[Chatbot] Claude API error:", err);
     return;
@@ -122,16 +112,10 @@ export async function processWithAI(
     .join("\n")
     .trim();
 
-  if (!replyText) {
-    console.log("[Chatbot] No reply text extracted from Claude response");
-    return;
-  }
-
-  console.log("[Chatbot] Reply:", replyText.substring(0, 100));
+  if (!replyText) return;
 
   // Enviar resposta ao cliente
   const sendResult = await sendReply(ctx.canal, ctx.externalId, replyText);
-  console.log("[Chatbot] Send result:", JSON.stringify(sendResult));
 
   // Persistir resposta no histórico
   await supabase
@@ -195,13 +179,37 @@ async function getConversationHistory(
     }));
 }
 
+function formatSchedule(horarios: Record<string, unknown>): string {
+  const dayMap: Record<string, string> = {
+    seg: "Lunes", ter: "Martes", qua: "Miércoles",
+    qui: "Jueves", sex: "Viernes", sab: "Sábado", dom: "Domingo",
+  };
+  const lines: string[] = [];
+  for (const [key, val] of Object.entries(horarios)) {
+    const name = dayMap[key] ?? key;
+    if (!val) {
+      lines.push(`${name}: CERRADO`);
+    } else {
+      const v = val as { abre: string; fecha: string };
+      lines.push(`${name}: ${v.abre} - ${v.fecha}`);
+    }
+  }
+  return lines.join("\n");
+}
+
 function buildSystemPrompt(
   salon: { nome: string; endereco: string; telefone: string; horarios: Record<string, unknown>; moeda: string },
   ctx: ConversationContext
 ): string {
-  const hoje = new Date().toISOString().split("T")[0];
-  const diasSemana = ["domingo", "segunda", "terça", "quarta", "quinta", "sexta", "sábado"];
-  const diaSemana = diasSemana[new Date().getDay()];
+  // Usar timezone de España
+  const now = new Date();
+  const madridTime = new Date(now.toLocaleString("en-US", { timeZone: "Europe/Madrid" }));
+  const hoje = madridTime.toISOString().split("T")[0];
+  const diasSemana = ["domingo", "lunes", "martes", "miércoles", "jueves", "viernes", "sábado"];
+  const diaSemana = diasSemana[madridTime.getDay()];
+  const horaAtual = madridTime.toTimeString().substring(0, 5);
+
+  const schedule = formatSchedule(salon.horarios);
 
   return `Eres la asistente virtual de ${salon.nome}, un salón de belleza.
 Tu nombre es Bellus y tu trabajo es ayudar a los clientes a agendar citas, consultar disponibilidad y responder preguntas sobre los servicios.
@@ -211,9 +219,11 @@ INFORMACIÓN DEL SALÓN:
 - Dirección: ${salon.endereco}
 - Teléfono: ${salon.telefone}
 - Moneda: ${salon.moeda}
-- Horarios: ${JSON.stringify(salon.horarios)}
 
-HOY: ${hoje} (${diaSemana})
+HORARIO DE APERTURA:
+${schedule}
+
+HOY: ${hoje} (${diaSemana}), hora actual: ${horaAtual} (Europe/Madrid)
 CANAL: ${ctx.canal}
 ${ctx.clienteId ? `CLIENTE IDENTIFICADO: ID ${ctx.clienteId}` : "CLIENTE NUEVO (no identificado)"}
 ${ctx.canal === "whatsapp" ? `TELÉFONO DEL CLIENTE: ${ctx.externalId}` : `INSTAGRAM ID: ${ctx.externalId}`}
@@ -228,7 +238,9 @@ REGLAS:
 7. Mensajes cortos (máximo 300 caracteres por mensaje). Divide si necesario.
 8. Si el cliente dice "cancelar", busca sus citas y confirma cuál cancelar.
 9. No compartas información de otros clientes ni datos sensibles del salón.
-10. Si recibes audio o imagen, pide al cliente que escriba el mensaje en texto.`;
+10. Si recibes audio o imagen, pide al cliente que escriba el mensaje en texto.
+11. Para verificar disponibilidad, usa SIEMPRE la tool "verificar_disponibilidade". NO asumas que un día está cerrado sin consultar la tool primero.
+12. Los días de la semana del horario arriba son la referencia general, pero SIEMPRE verifica con la tool antes de decir que no hay disponibilidad.`;
 }
 
 // --- Claude API Calls ---

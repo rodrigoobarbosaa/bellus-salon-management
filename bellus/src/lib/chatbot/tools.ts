@@ -221,19 +221,19 @@ async function verificarDisponibilidade(
 
   const horarios = (salao as { horario_funcionamento: Record<string, unknown> | null })?.horario_funcionamento;
 
-  // Get day of week (0=domingo, 1=segunda, ...)
+  // Get day of week (0=dom, 1=seg, ...)
   const dayOfWeek = new Date(`${data}T12:00:00`).getDay();
-  const dayNames = ["domingo", "segunda", "terca", "quarta", "quinta", "sexta", "sabado"];
-  const dayKey = dayNames[dayOfWeek];
+  const dayKeys = ["dom", "seg", "ter", "qua", "qui", "sex", "sab"];
+  const dayKey = dayKeys[dayOfWeek];
 
-  const dayHours = horarios?.[dayKey] as { abertura?: string; fecho?: string; fechado?: boolean } | undefined;
+  const dayHours = horarios?.[dayKey] as { abre?: string; fecha?: string } | null | undefined;
 
-  if (!dayHours || dayHours.fechado) {
+  if (!dayHours) {
     return JSON.stringify({ disponivel: false, motivo: "Salão fechado neste dia" });
   }
 
-  const openTime = dayHours.abertura ?? "09:00";
-  const closeTime = dayHours.fecho ?? "20:00";
+  const openTime = dayHours.abre ?? "09:00";
+  const closeTime = dayHours.fecha ?? "20:00";
 
   // Get professionals to check
   let profIds: string[] = [];
