@@ -27,6 +27,7 @@ interface Agendamento {
   cliente_id: string;
   profissional_id: string;
   servico_id: string;
+  servicos_adicionais?: string[] | null;
   data_hora_inicio: string;
   data_hora_fim: string;
   status: string;

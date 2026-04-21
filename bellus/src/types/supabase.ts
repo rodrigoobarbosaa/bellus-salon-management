@@ -256,6 +256,7 @@ export type Database = {
           data_hora_fim: string;
           status: "pendente" | "confirmado" | "concluido" | "cancelado";
           notas: string | null;
+          servicos_adicionais: string[] | null;
           created_at: string;
           updated_at: string;
         };
@@ -269,6 +270,7 @@ export type Database = {
           data_hora_fim: string;
           status?: "pendente" | "confirmado" | "concluido" | "cancelado";
           notas?: string | null;
+          servicos_adicionais?: string[] | null;
           created_at?: string;
           updated_at?: string;
         };
@@ -282,6 +284,7 @@ export type Database = {
           data_hora_fim?: string;
           status?: "pendente" | "confirmado" | "concluido" | "cancelado";
           notas?: string | null;
+          servicos_adicionais?: string[] | null;
           created_at?: string;
           updated_at?: string;
         };

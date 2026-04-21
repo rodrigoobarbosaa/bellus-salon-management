@@ -41,25 +41,28 @@ export async function createAgendamento(formData: FormData) {
   const notas = (formData.get("notas") as string) || null;
   const isNewCliente = formData.get("new_cliente") === "true";
   const forceOverlap = formData.get("force_overlap") === "true";
+  const servicosAdicionaisJson = formData.get("servicos_adicionais") as string | null;
+  const servicosAdicionais: string[] = servicosAdicionaisJson ? JSON.parse(servicosAdicionaisJson) : [];
 
   if (!profissional_id || !servico_id || !data_hora_inicio) {
     return { error: "Profesional, servicio y fecha/hora son obligatorios." };
   }
 
-  // Buscar duração do serviço
-  const { data: servico } = await supabase
+  // Buscar duração do serviço principal + adicionais
+  const allServiceIds = [servico_id, ...servicosAdicionais];
+  const { data: allServicos } = await supabase
     .from("servicos")
-    .select("duracao_minutos")
-    .eq("id", servico_id)
-    .single();
+    .select("id, duracao_minutos")
+    .in("id", allServiceIds);
 
-  if (!servico) {
+  if (!allServicos || !(allServicos as Array<{ id: string; duracao_minutos: number }>).find(s => s.id === servico_id)) {
     return { error: "Servicio no encontrado." };
   }
 
-  const duracao = (servico as { duracao_minutos: number }).duracao_minutos;
+  const duracaoTotal = (allServicos as Array<{ id: string; duracao_minutos: number }>)
+    .reduce((sum, s) => sum + s.duracao_minutos, 0);
   const inicio = new Date(madridToISO(data_hora_inicio));
-  const fim = new Date(inicio.getTime() + duracao * 60 * 1000);
+  const fim = new Date(inicio.getTime() + duracaoTotal * 60 * 1000);
 
   // Resolver cliente
   let cliente_id = formData.get("cliente_id") as string | null;
@@ -151,6 +154,7 @@ export async function createAgendamento(formData: FormData) {
       status: "pendente",
       notas,
       tipo_etapa: tipoEtapa as "unico" | "aplicacao" | "secado",
+      ...(servicosAdicionais.length > 0 && { servicos_adicionais: servicosAdicionais }),
     })
     .select("id")
     .single();

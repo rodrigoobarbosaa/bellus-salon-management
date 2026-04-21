@@ -51,6 +51,7 @@ interface Agendamento {
   notas: string | null;
   tipo_etapa?: string;
   agendamento_pai_id?: string | null;
+  servicos_adicionais?: string[] | null;
   cliente_nome?: string;
   servico_nome?: string;
   profissional_nome?: string;
@@ -120,6 +121,7 @@ export function AgendaView({
     clientes: { nome: string } | null;
     tipo_etapa?: string;
     agendamento_pai_id?: string | null;
+    servicos_adicionais?: string[] | null;
   };
 
   // Fetch agendamentos + bloqueios
@@ -161,6 +163,7 @@ export function AgendaView({
           notas: a.notas,
           tipo_etapa: a.tipo_etapa ?? "unico",
           agendamento_pai_id: a.agendamento_pai_id ?? null,
+          servicos_adicionais: a.servicos_adicionais ?? null,
           cliente_nome: a.clientes?.nome ?? t("client"),
           servico_nome: servicoMap.get(a.servico_id)?.nome ?? t("service"),
           profissional_nome: profMap.get(a.profissional_id)?.nome ?? t("professional"),
@@ -232,7 +235,7 @@ export function AgendaView({
 
         return {
           id: a.id,
-          title: `${pagoPrefix}${etapaPrefix}${a.cliente_nome} — ${a.servico_nome}`,
+          title: `${pagoPrefix}${etapaPrefix}${a.cliente_nome} — ${a.servico_nome}${a.servicos_adicionais?.length ? " + " + a.servicos_adicionais.map(sid => servicoMap.get(sid)?.nome ?? "").filter(Boolean).join(" + ") : ""}`,
           start: toMadridDatetimeLocal(new Date(a.data_hora_inicio)),
           end: toMadridDatetimeLocal(new Date(a.data_hora_fim)),
           backgroundColor: a.status === "cancelado"

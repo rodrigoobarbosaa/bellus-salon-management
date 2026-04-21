@@ -35,6 +35,7 @@ interface Agendamento {
   cliente_id: string;
   profissional_id: string;
   servico_id: string;
+  servicos_adicionais?: string[] | null;
   cliente_nome?: string;
   servico_nome?: string;
   profissional_nome?: string;
@@ -94,8 +95,10 @@ export function PaymentModal({
   const [precoManual, setPrecoManual] = useState("");
   const [usarPrecoManual, setUsarPrecoManual] = useState(false);
 
-  // Extra services state
-  const [servicosExtras, setServicosExtras] = useState<string[]>([]);
+  // Extra services state — pre-populate from appointment if available
+  const [servicosExtras, setServicosExtras] = useState<string[]>(
+    agendamento.servicos_adicionais?.length ? agendamento.servicos_adicionais : []
+  );
   const [showExtraSelect, setShowExtraSelect] = useState(false);
 
   // Split payment state

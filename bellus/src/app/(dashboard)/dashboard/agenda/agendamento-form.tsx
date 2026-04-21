@@ -55,6 +55,7 @@ export function AgendamentoForm({
   const [selectedCliente, setSelectedCliente] = useState<{ id: string; nome: string } | null>(null);
   const [showNewCliente, setShowNewCliente] = useState(false);
   const [selectedServico, setSelectedServico] = useState("");
+  const [servicosExtras, setServicosExtras] = useState<string[]>([]);
   const [addSecado, setAddSecado] = useState(false);
   const [secadoHorario, setSecadoHorario] = useState("");
   const [searchTimeout, setSearchTimeout] = useState<ReturnType<typeof setTimeout> | null>(null);
@@ -64,9 +65,14 @@ export function AgendamentoForm({
     ? toMadridDatetimeLocal(defaultDate)
     : "";
 
-  // Calcular hora fim baseado no serviço
+  // Calcular duração total (principal + extras)
   const selectedServicoObj = servicos.find((s) => s.id === selectedServico);
-  const duracao = selectedServicoObj?.duracao_minutos ?? 0;
+  const duracaoPrincipal = selectedServicoObj?.duracao_minutos ?? 0;
+  const duracaoExtras = servicosExtras.reduce((sum, sid) => {
+    const s = servicos.find((sv) => sv.id === sid);
+    return sum + (s?.duracao_minutos ?? 0);
+  }, 0);
+  const duracao = duracaoPrincipal + duracaoExtras;
   const hasPausa = !!(selectedServicoObj?.tempo_pausa_minutos && selectedServicoObj?.duracao_pos_pausa_minutos);
 
   // Buscar clientes com debounce
@@ -123,6 +129,7 @@ export function AgendamentoForm({
     setClienteSearch("");
     setShowNewCliente(false);
     setSelectedServico("");
+    setServicosExtras([]);
     setAddSecado(false);
     setSecadoHorario("");
     setConflictMessage(null);
@@ -145,6 +152,11 @@ export function AgendamentoForm({
     } else {
       setError(t("selectClient"));
       return;
+    }
+
+    // Serviços adicionais
+    if (servicosExtras.length > 0) {
+      formData.set("servicos_adicionais", JSON.stringify(servicosExtras));
     }
 
     // Secado — enviar como naive datetime (servidor converte com madridToISO)
@@ -172,6 +184,7 @@ export function AgendamentoForm({
       setClienteSearch("");
       setShowNewCliente(false);
       setSelectedServico("");
+      setServicosExtras([]);
       setAddSecado(false);
       setSecadoHorario("");
     }
@@ -300,7 +313,7 @@ export function AgendamentoForm({
             )}
           </div>
 
-          {/* Serviço */}
+          {/* Serviço principal */}
           <div className="space-y-2">
             <label htmlFor="servico_id" className="text-sm font-medium text-stone-700">
               {t("serviceRequired")}
@@ -321,8 +334,55 @@ export function AgendamentoForm({
                 </option>
               ))}
             </select>
+
+            {/* Serviços adicionais */}
+            {servicosExtras.map((extraId, idx) => {
+              const extraSvc = servicos.find((s) => s.id === extraId);
+              return (
+                <div key={idx} className="flex items-center gap-2">
+                  <select
+                    value={extraId}
+                    onChange={(e) => {
+                      const updated = [...servicosExtras];
+                      updated[idx] = e.target.value;
+                      setServicosExtras(updated);
+                    }}
+                    disabled={isLoading}
+                    className="border-input bg-background flex h-8 flex-1 rounded-md border px-2 py-1 text-sm shadow-xs"
+                  >
+                    {servicos.map((s) => (
+                      <option key={s.id} value={s.id}>
+                        {s.nome} ({s.duracao_minutos} min)
+                      </option>
+                    ))}
+                  </select>
+                  <button
+                    type="button"
+                    onClick={() => setServicosExtras(servicosExtras.filter((_, i) => i !== idx))}
+                    className="text-stone-400 hover:text-red-500"
+                  >
+                    <span className="text-lg leading-none">&times;</span>
+                  </button>
+                </div>
+              );
+            })}
+
+            {selectedServico && (
+              <button
+                type="button"
+                onClick={() => setServicosExtras([...servicosExtras, servicos[0]?.id ?? ""])}
+                disabled={isLoading}
+                className="text-xs font-medium text-bellus-gold hover:underline"
+              >
+                + Agregar servicio
+              </button>
+            )}
+
             {duracao > 0 && (
-              <p className="text-xs text-stone-400">{t("duration")}: {duracao} {t("minutes")}</p>
+              <p className="text-xs text-stone-400">
+                {t("duration")}: {duracao} {t("minutes")}
+                {servicosExtras.length > 0 && ` (${servicosExtras.length + 1} servicios)`}
+              </p>
             )}
           </div>
 
