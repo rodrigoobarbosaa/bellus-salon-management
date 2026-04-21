@@ -86,14 +86,24 @@ async function handleMessagesUpsert(
   salaoId: string,
   body: Record<string, unknown>
 ) {
-  const data = body.data as Record<string, unknown>;
+  // Debug: log payload structure
+  console.log("[Evolution Webhook] Payload keys:", JSON.stringify(Object.keys(body)));
+  console.log("[Evolution Webhook] Data:", JSON.stringify(body.data ?? body).substring(0, 500));
+
+  const data = (body.data ?? body) as Record<string, unknown>;
   if (!data) return;
 
   const key = data.key as { remoteJid?: string; fromMe?: boolean; id?: string } | undefined;
-  if (!key?.remoteJid) return;
+  if (!key?.remoteJid) {
+    console.log("[Evolution Webhook] No key.remoteJid found, checking alternate structure");
+    return;
+  }
 
   // Ignorar mensagens enviadas por nós (fromMe)
-  if (key.fromMe) return;
+  if (key.fromMe) {
+    console.log("[Evolution Webhook] Ignoring fromMe message");
+    return;
+  }
 
   // Ignorar mensagens de grupos
   if (key.remoteJid.includes("@g.us")) return;
