@@ -109,8 +109,8 @@ export async function GET(request: NextRequest) {
     const salao = salaoMap[ag.salao_id];
 
     const inicio = new Date(ag.data_hora_inicio);
-    const dateStr = inicio.toLocaleDateString(cl.idioma_preferido, { day: "numeric", month: "long", year: "numeric" });
-    const timeStr = inicio.toLocaleTimeString(cl.idioma_preferido, { hour: "2-digit", minute: "2-digit" });
+    const dateStr = inicio.toLocaleDateString(cl.idioma_preferido, { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Madrid" });
+    const timeStr = inicio.toLocaleTimeString(cl.idioma_preferido, { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Madrid" });
 
     // Custom template (per-salao, per-idioma) — still one query but only if needed
     const { data: customTpl } = await supabase
