@@ -47,6 +47,7 @@ export default function ComissoesPage() {
   const [editPct, setEditPct] = useState("");
   const [editMeta, setEditMeta] = useState("");
   const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
 
   useEffect(() => {
     setLoading(true);
@@ -80,16 +81,19 @@ export default function ComissoesPage() {
     setEditingId(id);
     setEditPct(String(pct));
     setEditMeta(String(meta));
+    setSaveError(null);
   }
 
   function cancelEdit() {
     setEditingId(null);
     setEditPct("");
     setEditMeta("");
+    setSaveError(null);
   }
 
   async function saveEdit(id: string) {
     setSaving(true);
+    setSaveError(null);
     const result = await updateProfessionalCommission(
       id,
       parseFloat(editPct) || 30,
@@ -99,9 +103,10 @@ export default function ComissoesPage() {
 
     if (result.success) {
       setEditingId(null);
-      // Refresh data
       const d = await getCommissionsData(month, year);
       setData(d);
+    } else {
+      setSaveError(result.error || "Erro ao salvar");
     }
   }
 
@@ -212,51 +217,56 @@ export default function ComissoesPage() {
 
                 {/* Edit config inline */}
                 {editingId === p.id && (
-                  <div className="mb-4 flex flex-wrap items-end gap-3 rounded-lg bg-stone-50 p-3">
-                    <div>
-                      <label className="mb-1 block text-xs text-stone-500">{t("salonPct")}</label>
-                      <div className="flex items-center gap-1">
-                        <input
-                          type="number"
-                          value={editPct}
-                          onChange={(e) => setEditPct(e.target.value)}
-                          className="w-20 rounded-lg border border-stone-300 px-2 py-1.5 text-sm"
-                          min={0}
-                          max={100}
-                          step={1}
-                        />
-                        <Percent className="size-4 text-stone-400" />
+                  <div className="mb-4 rounded-lg bg-stone-50 p-3">
+                    <div className="flex flex-wrap items-end gap-3">
+                      <div>
+                        <label className="mb-1 block text-xs text-stone-500">{t("salonPct")}</label>
+                        <div className="flex items-center gap-1">
+                          <input
+                            type="number"
+                            value={editPct}
+                            onChange={(e) => setEditPct(e.target.value)}
+                            className="w-20 rounded-lg border border-stone-300 px-2 py-1.5 text-sm"
+                            min={0}
+                            max={100}
+                            step={1}
+                          />
+                          <Percent className="size-4 text-stone-400" />
+                        </div>
+                      </div>
+                      <div>
+                        <label className="mb-1 block text-xs text-stone-500">{t("monthlyGoal")}</label>
+                        <div className="flex items-center gap-1">
+                          <span className="text-sm text-stone-400">€</span>
+                          <input
+                            type="number"
+                            value={editMeta}
+                            onChange={(e) => setEditMeta(e.target.value)}
+                            className="w-24 rounded-lg border border-stone-300 px-2 py-1.5 text-sm"
+                            min={0}
+                            step={100}
+                          />
+                        </div>
+                      </div>
+                      <div className="flex gap-1">
+                        <button
+                          onClick={() => saveEdit(p.id)}
+                          disabled={saving}
+                          className="rounded-lg bg-bellus-gold p-1.5 text-white hover:bg-bellus-gold/90 disabled:opacity-50"
+                        >
+                          <Check className="size-4" />
+                        </button>
+                        <button
+                          onClick={cancelEdit}
+                          className="rounded-lg bg-stone-200 p-1.5 text-stone-600 hover:bg-stone-300"
+                        >
+                          <X className="size-4" />
+                        </button>
                       </div>
                     </div>
-                    <div>
-                      <label className="mb-1 block text-xs text-stone-500">{t("monthlyGoal")}</label>
-                      <div className="flex items-center gap-1">
-                        <span className="text-sm text-stone-400">€</span>
-                        <input
-                          type="number"
-                          value={editMeta}
-                          onChange={(e) => setEditMeta(e.target.value)}
-                          className="w-24 rounded-lg border border-stone-300 px-2 py-1.5 text-sm"
-                          min={0}
-                          step={100}
-                        />
-                      </div>
-                    </div>
-                    <div className="flex gap-1">
-                      <button
-                        onClick={() => saveEdit(p.id)}
-                        disabled={saving}
-                        className="rounded-lg bg-bellus-gold p-1.5 text-white hover:bg-bellus-gold/90 disabled:opacity-50"
-                      >
-                        <Check className="size-4" />
-                      </button>
-                      <button
-                        onClick={cancelEdit}
-                        className="rounded-lg bg-stone-200 p-1.5 text-stone-600 hover:bg-stone-300"
-                      >
-                        <X className="size-4" />
-                      </button>
-                    </div>
+                    {saveError && (
+                      <p className="mt-2 text-xs text-red-600">{saveError}</p>
+                    )}
                   </div>
                 )}
 
@@ -277,13 +287,18 @@ export default function ComissoesPage() {
                           ? "bg-gradient-to-r from-emerald-400 to-emerald-500"
                           : "bg-gradient-to-r from-amber-400 to-amber-500"
                       }`}
-                      style={{ width: `${p.metaProgress}%` }}
+                      style={{ width: `${Math.min(p.metaProgress, 100)}%` }}
                     />
                   </div>
                   {p.metaReached && (
-                    <p className="mt-1 text-xs text-emerald-600">
-                      {t("goalReachedDesc")}
-                    </p>
+                    <div className="mt-1 flex items-center justify-between">
+                      <p className="text-xs text-emerald-600">
+                        {t("goalReachedDesc")}
+                      </p>
+                      <p className="text-xs font-medium text-stone-600">
+                        {p.metaProgress}% {t("ofGoal")}
+                      </p>
+                    </div>
                   )}
                 </div>
 

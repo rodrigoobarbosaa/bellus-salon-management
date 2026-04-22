@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 async function getUserSalaoId(supabase: SupabaseClient) {
@@ -16,6 +17,23 @@ async function getUserSalaoId(supabase: SupabaseClient) {
     .single();
 
   return (usuario as { salao_id: string } | null)?.salao_id ?? null;
+}
+
+async function getUserContext(supabase: SupabaseClient) {
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  if (!user) return null;
+
+  const { data: usuario } = await supabase
+    .from("usuarios")
+    .select("salao_id, role")
+    .eq("id", user.id)
+    .single();
+
+  if (!usuario) return null;
+  const u = usuario as { salao_id: string; role: string };
+  return { userId: user.id, salaoId: u.salao_id, role: u.role };
 }
 
 export interface ProfessionalCommission {
@@ -111,7 +129,7 @@ export async function getCommissionsData(
     const salonCut = Math.round(Math.min(salonCutRaw, meta) * 100) / 100;
     const profEarnings = Math.round((billed - salonCut) * 100) / 100;
     const metaReached = salonCutRaw >= meta;
-    const metaProgress = meta > 0 ? Math.min(Math.round((salonCutRaw / meta) * 100), 100) : 0;
+    const metaProgress = meta > 0 ? Math.round((salonCutRaw / meta) * 100) : 0;
 
     totalBilled += billed;
     totalSalonCut += salonCut;
@@ -149,8 +167,8 @@ export async function updateProfessionalCommission(
   metaComissao: number
 ): Promise<{ success: boolean; error?: string }> {
   const supabase = await createClient();
-  const salaoId = await getUserSalaoId(supabase);
-  if (!salaoId) return { success: false, error: "Not authenticated" };
+  const ctx = await getUserContext(supabase);
+  if (!ctx) return { success: false, error: "Not authenticated" };
 
   if (comissaoPct < 0 || comissaoPct > 100) {
     return { success: false, error: "Percentage must be between 0 and 100" };
@@ -159,14 +177,33 @@ export async function updateProfessionalCommission(
     return { success: false, error: "Target must be >= 0" };
   }
 
-  const { error } = await supabase
+  // Verify authorization: proprietario can edit any professional,
+  // others can only edit their own record
+  if (ctx.role !== "proprietario") {
+    const { data: prof } = await supabase
+      .from("profissionais")
+      .select("user_id")
+      .eq("id", profissionalId)
+      .eq("salao_id", ctx.salaoId)
+      .single();
+
+    const p = prof as { user_id: string | null } | null;
+    if (!p || p.user_id !== ctx.userId) {
+      return { success: false, error: "Sem permissão para editar este profissional" };
+    }
+  }
+
+  // Use service client to bypass RLS for this admin operation
+  const serviceClient = createServiceClient();
+
+  const { error } = await serviceClient
     .from("profissionais")
     .update({
       comissao_salao_pct: comissaoPct,
       meta_comissao_salao: metaComissao,
     })
     .eq("id", profissionalId)
-    .eq("salao_id", salaoId);
+    .eq("salao_id", ctx.salaoId);
 
   if (error) return { success: false, error: error.message };
   return { success: true };
