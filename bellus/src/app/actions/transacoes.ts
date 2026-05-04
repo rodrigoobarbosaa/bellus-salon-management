@@ -2,7 +2,10 @@
 
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
+import { createServiceClient } from "@/lib/supabase/service";
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { sendNotification } from "@/lib/notifications/send-notification";
+import { getReviewRequestTemplate, renderTemplate } from "@/lib/notifications/templates";
 
 async function getUserSalaoId(supabase: SupabaseClient) {
   const {
@@ -338,11 +341,72 @@ export async function createComandaTransacoes(payloadJson: string) {
     }
   }
 
+  // Send Google Reviews request (fire-and-forget)
+  if (cliente_id) {
+    sendReviewRequestAfterComanda(salaoId, agendamento_id, cliente_id).catch((err) =>
+      console.error("[Reviews] Failed:", err)
+    );
+  }
+
   revalidatePath("/dashboard/agenda");
   revalidatePath("/dashboard/caixa");
   revalidatePath("/dashboard/clientes");
   const transacaoIds = insertedTxs?.map((t: { id: string }) => t.id) ?? [];
   return { success: true, transacaoIds };
+}
+
+async function sendReviewRequestAfterComanda(
+  salaoId: string,
+  agendamentoId: string,
+  clienteId: string,
+) {
+  const svc = createServiceClient();
+
+  const { data: cliente } = await svc
+    .from("clientes")
+    .select("nome, telefone, idioma_preferido, opt_out_notificacoes")
+    .eq("id", clienteId)
+    .single();
+
+  const cl = cliente as { nome: string; telefone: string | null; idioma_preferido: string; opt_out_notificacoes?: boolean } | null;
+  if (!cl?.telefone || cl.opt_out_notificacoes) return;
+
+  const { data: salao } = await svc
+    .from("saloes")
+    .select("nome, link_google_reviews")
+    .eq("id", salaoId)
+    .single();
+
+  const s = salao as { nome: string; link_google_reviews: string | null } | null;
+  if (!s?.link_google_reviews) return;
+
+  // Check if already sent for this appointment
+  const { data: alreadySent } = await svc
+    .from("notificacoes_log")
+    .select("id")
+    .eq("agendamento_id", agendamentoId)
+    .eq("tipo", "review_request")
+    .limit(1);
+
+  if (alreadySent && (alreadySent as Array<{ id: string }>).length > 0) return;
+
+  const idioma = cl.idioma_preferido || "es";
+  const template = getReviewRequestTemplate(idioma);
+  const message = renderTemplate(template, {
+    nome_cliente: cl.nome,
+    salao: s.nome,
+    link_reviews: s.link_google_reviews,
+  });
+
+  await sendNotification({
+    supabase: svc,
+    salaoId,
+    clienteId,
+    agendamentoId,
+    telefone: cl.telefone,
+    tipo: "review_request",
+    message,
+  });
 }
 
 export async function updateTransacaoFormaPagamento(

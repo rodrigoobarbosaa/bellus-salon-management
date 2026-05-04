@@ -20,6 +20,7 @@ export type Database = {
           horario_funcionamento: Record<string, unknown> | null;
           instagram_url: string | null;
           google_maps_url: string | null;
+          link_google_reviews: string | null;
           criado_em: string;
         };
         Insert: {
@@ -36,6 +37,7 @@ export type Database = {
           horario_funcionamento?: Record<string, unknown> | null;
           instagram_url?: string | null;
           google_maps_url?: string | null;
+          link_google_reviews?: string | null;
           criado_em?: string;
         };
         Update: {
@@ -52,6 +54,7 @@ export type Database = {
           horario_funcionamento?: Record<string, unknown> | null;
           instagram_url?: string | null;
           google_maps_url?: string | null;
+          link_google_reviews?: string | null;
           criado_em?: string;
         };
         Relationships: [];
@@ -404,7 +407,7 @@ export type Database = {
           salao_id: string | null;
           cliente_id: string;
           agendamento_id: string | null;
-          tipo: "confirmacao" | "lembrete_24h" | "lembrete_retorno";
+          tipo: "confirmacao" | "lembrete_24h" | "lembrete_retorno" | "confirmacao_interativa" | "review_request" | "alerta_nao_confirmado";
           mensagem: string;
           status: "pendente" | "enviado" | "falhou";
           enviado_em: string | null;
@@ -415,7 +418,7 @@ export type Database = {
           salao_id?: string | null;
           cliente_id: string;
           agendamento_id?: string | null;
-          tipo: "confirmacao" | "lembrete_24h" | "lembrete_retorno";
+          tipo: "confirmacao" | "lembrete_24h" | "lembrete_retorno" | "confirmacao_interativa" | "review_request" | "alerta_nao_confirmado";
           mensagem: string;
           status?: "pendente" | "enviado" | "falhou";
           enviado_em?: string | null;
@@ -426,7 +429,7 @@ export type Database = {
           salao_id?: string | null;
           cliente_id?: string;
           agendamento_id?: string | null;
-          tipo?: "confirmacao" | "lembrete_24h" | "lembrete_retorno";
+          tipo?: "confirmacao" | "lembrete_24h" | "lembrete_retorno" | "confirmacao_interativa" | "review_request" | "alerta_nao_confirmado";
           mensagem?: string;
           status?: "pendente" | "enviado" | "falhou";
           enviado_em?: string | null;
@@ -438,7 +441,7 @@ export type Database = {
         Row: {
           id: string;
           salao_id: string;
-          tipo: "confirmacao" | "lembrete_24h" | "lembrete_retorno";
+          tipo: "confirmacao" | "lembrete_24h" | "lembrete_retorno" | "confirmacao_interativa" | "review_request" | "alerta_nao_confirmado";
           idioma: "pt" | "es" | "en" | "ru";
           template: string;
           created_at: string;
@@ -447,7 +450,7 @@ export type Database = {
         Insert: {
           id?: string;
           salao_id: string;
-          tipo: "confirmacao" | "lembrete_24h" | "lembrete_retorno";
+          tipo: "confirmacao" | "lembrete_24h" | "lembrete_retorno" | "confirmacao_interativa" | "review_request" | "alerta_nao_confirmado";
           idioma: "pt" | "es" | "en" | "ru";
           template: string;
           created_at?: string;
@@ -456,7 +459,7 @@ export type Database = {
         Update: {
           id?: string;
           salao_id?: string;
-          tipo?: "confirmacao" | "lembrete_24h" | "lembrete_retorno";
+          tipo?: "confirmacao" | "lembrete_24h" | "lembrete_retorno" | "confirmacao_interativa" | "review_request" | "alerta_nao_confirmado";
           idioma?: "pt" | "es" | "en" | "ru";
           template?: string;
           created_at?: string;
@@ -903,7 +906,7 @@ export type Database = {
       status_agendamento: "pendente" | "confirmado" | "concluido" | "cancelado";
       forma_pagamento: "efectivo" | "tarjeta" | "bizum" | "transferencia";
       tipo_transacao: "IVA" | "IRPF";
-      tipo_notificacao: "confirmacao" | "lembrete_24h" | "lembrete_retorno";
+      tipo_notificacao: "confirmacao" | "lembrete_24h" | "lembrete_retorno" | "confirmacao_interativa" | "review_request" | "alerta_nao_confirmado";
       status_notificacao: "pendente" | "enviado" | "falhou";
       role_usuario: "proprietario" | "profissional" | "cliente";
       estado_aeat: "pendiente" | "enviado" | "aceptado" | "rechazado";

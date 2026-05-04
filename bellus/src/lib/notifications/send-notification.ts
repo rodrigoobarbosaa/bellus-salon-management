@@ -90,7 +90,7 @@ export async function sendNotification(params: {
   clienteId: string;
   agendamentoId: string | null;
   telefone: string;
-  tipo: "confirmacao" | "lembrete_24h" | "lembrete_retorno";
+  tipo: "confirmacao" | "lembrete_24h" | "lembrete_retorno" | "confirmacao_interativa" | "review_request" | "alerta_nao_confirmado";
   message: string;
 }) {
   const { supabase, salaoId, clienteId, agendamentoId, telefone, tipo, message } = params;
@@ -145,5 +145,24 @@ export async function sendNotification(params: {
       .from("notificacoes_log")
       .update({ status: "falhou" })
       .eq("id", logId);
+  }
+}
+
+/**
+ * Send a notification directly to staff (professional) via WhatsApp.
+ * Does not log to notificacoes_log, does not check opt-out.
+ */
+export async function sendStaffNotification(params: {
+  telefone: string;
+  message: string;
+}) {
+  if (!isWhatsAppConfigured()) {
+    console.log(`[StaffNotification] WhatsApp not configured. Message:`, params.message.slice(0, 100));
+    return;
+  }
+
+  const waResult = await sendWhatsApp(params.telefone, params.message);
+  if (!waResult.success) {
+    console.error(`[StaffNotification] Failed to send to ${params.telefone}: ${waResult.error}`);
   }
 }

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { handleIncomingMessage, handleStatusUpdate } from "@/lib/meta/handle-webhook";
 import { processWithAI } from "@/lib/chatbot/engine";
+import { handleConfirmationResponse } from "@/lib/notifications/handle-confirmation";
 import type { IncomingMessage, StatusUpdate } from "@/lib/meta/parse-webhook";
 
 /**
@@ -159,6 +160,16 @@ async function handleMessagesUpsert(
   // Reutilizar a mesma lógica de handle-webhook (encontra/cria conversa, persiste mensagem)
   const result = await handleIncomingMessage(supabase, salaoId, incomingMsg);
   console.log(`[Evolution Webhook] Message from ${externalId} → conversa ${result.conversaId}`);
+
+  // Check if this is a response to a confirmation request (SIM/NAO/CAMBIAR)
+  if (result.contexto?.awaiting_confirmation) {
+    const handled = await handleConfirmationResponse(supabase, salaoId, result);
+    if (handled) {
+      console.log(`[Evolution Webhook] Confirmation response handled for ${externalId}`);
+      return;
+    }
+    // If not handled (e.g., reschedule), fall through to AI processing
+  }
 
   // Processar com IA (Claude)
   await processWithAI(supabase, salaoId, result);

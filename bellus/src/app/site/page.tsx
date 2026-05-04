@@ -571,6 +571,7 @@ export default async function LandingPage() {
                     [t.compFreeWhatsapp, true, false, false, false],
                     [t.compCashier, true, true, true, false],
                     [t.compFiscal, true, false, false, false],
+                    [t.compVerifactu, true, false, false, false],
                     [t.compAiMarketing, true, false, false, false],
                     [t.compLanguages, true, false, false, false],
                     [t.compNoCommission, true, false, false, true],
@@ -598,6 +599,161 @@ export default async function LandingPage() {
                 </tbody>
               </table>
             </Glass>
+          </div>
+        </div>
+      </section>
+
+      {/* ━━━ VERIFACTU ━━━ */}
+      <section id="verifactu" className="relative overflow-hidden px-4 py-24 sm:px-6 lg:px-8">
+        <div className="pointer-events-none absolute inset-0 -z-10">
+          <div className="absolute left-0 top-1/2 h-[500px] w-[500px] -translate-y-1/2 rounded-full bg-[#c9a96e]/[0.05] blur-[100px]" />
+          <div className="absolute right-0 bottom-0 h-[300px] w-[300px] rounded-full bg-[#c9a96e]/[0.03] blur-[80px]" />
+        </div>
+
+        <div className="mx-auto max-w-6xl">
+          <div className="grid items-start gap-16 lg:grid-cols-2">
+            {/* Left — copy */}
+            <div>
+              <span className="mb-4 inline-block rounded-full border border-[#c9a96e]/20 bg-[#c9a96e]/10 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-[#c9a96e]">
+                {t.verifactuLabel}
+              </span>
+
+              <div className="mt-1 inline-flex items-center gap-2 rounded-full border border-[#c9a96e]/30 bg-[#c9a96e]/[0.08] px-3 py-1">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-emerald-400" />
+                <span className="text-[10px] font-bold uppercase tracking-widest text-[#c9a96e]">{t.verifactuBadge}</span>
+              </div>
+
+              <h2 className="mt-6 text-3xl font-bold leading-tight tracking-tight sm:text-4xl">
+                {t.verifactuTitle}
+              </h2>
+              <p className="mt-4 max-w-lg text-sm leading-relaxed text-white/40">
+                {t.verifactuSub}
+              </p>
+
+              <ul className="mt-8 space-y-5">
+                {([
+                  [t.verifactu1Title, t.verifactu1Desc],
+                  [t.verifactu2Title, t.verifactu2Desc],
+                  [t.verifactu3Title, t.verifactu3Desc],
+                  [t.verifactu4Title, t.verifactu4Desc],
+                ] as [string, string][]).map(([h, d]) => (
+                  <li key={h} className="flex gap-4">
+                    <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg border border-[#c9a96e]/20 bg-[#c9a96e]/10 text-[#c9a96e]">
+                      <Check className="size-3.5" />
+                    </div>
+                    <div>
+                      <div className="text-sm font-semibold text-white/80">{h}</div>
+                      <div className="mt-0.5 text-xs leading-relaxed text-white/35">{d}</div>
+                    </div>
+                  </li>
+                ))}
+              </ul>
+
+              <p className="mt-8 max-w-lg border-l-2 border-[#c9a96e]/40 pl-4 text-xs leading-relaxed text-white/30">
+                {t.verifactuNote}
+              </p>
+
+              <a
+                href="/dashboard/fiscal"
+                className="mt-8 inline-flex items-center gap-2 rounded-xl border border-white/10 bg-white/[0.04] px-6 py-3 text-sm font-semibold text-white/70 transition hover:bg-white/[0.08]"
+              >
+                {t.verifactuCta}
+                <ChevronRight className="size-4" />
+              </a>
+            </div>
+
+            {/* Right — certified invoice mockup */}
+            <div>
+              {/* Ambient glow */}
+              <div className="pointer-events-none absolute -inset-4 rounded-3xl bg-[#c9a96e]/[0.08] blur-2xl" />
+
+              <div className="relative overflow-hidden rounded-2xl border border-white/[0.08] bg-white shadow-2xl shadow-black/40">
+                {/* Browser chrome */}
+                <div className="flex items-center gap-2 border-b border-gray-200 bg-gray-100 px-5 py-3">
+                  <div className="flex gap-1.5">
+                    <div className="size-2.5 rounded-full bg-[#ff5f57]" />
+                    <div className="size-2.5 rounded-full bg-[#febc2e]" />
+                    <div className="size-2.5 rounded-full bg-[#28c840]" />
+                  </div>
+                  <div className="mx-auto rounded-lg bg-white px-6 py-1 text-xs text-gray-400">
+                    app.bellus.com/facturas/F-2026-00418
+                  </div>
+                </div>
+
+                {/* Invoice content */}
+                <div className="p-6 text-gray-900">
+                  <div className="flex items-start justify-between">
+                    <div>
+                      <div className="text-[10px] font-semibold uppercase tracking-widest text-gray-400">Factura simplificada</div>
+                      <div className="text-xl font-extrabold tracking-tight">Nº F-2026/00418</div>
+                    </div>
+                    <span className="inline-flex items-center gap-1 rounded-full bg-[#c9a96e]/15 border border-[#c9a96e]/30 px-2 py-1 text-[9px] font-bold uppercase tracking-wider text-[#a07d3a]">
+                      ✓ VERI*FACTU
+                    </span>
+                  </div>
+
+                  <div className="mt-4 space-y-1 border-t border-gray-100 pt-4 text-sm">
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Corte + peinado</span>
+                      <span className="tabular-nums">€ 38,00</span>
+                    </div>
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Tratamiento brillo</span>
+                      <span className="tabular-nums">€ 22,00</span>
+                    </div>
+                    <div className="flex justify-between border-t border-gray-100 pt-2 font-bold">
+                      <span>Total (IVA inc.)</span>
+                      <span className="tabular-nums">€ 60,00</span>
+                    </div>
+                  </div>
+
+                  {/* QR + status */}
+                  <div className="mt-4 grid grid-cols-[auto_1fr] items-start gap-4 rounded-xl bg-gray-50 p-4">
+                    <div className="h-16 w-16 rounded-md bg-gray-900 p-1.5">
+                      <svg viewBox="0 0 11 11" className="h-full w-full">
+                        {[
+                          [0,0],[1,0],[2,0],[3,0],[4,0],[5,0],[6,0],
+                          [0,1],[6,1],[0,2],[2,2],[3,2],[4,2],[6,2],
+                          [0,3],[2,3],[3,3],[4,3],[6,3],[0,4],[2,4],[3,4],[4,4],[6,4],
+                          [0,5],[6,5],[0,6],[1,6],[2,6],[3,6],[4,6],[5,6],[6,6],
+                          [8,0],[9,0],[10,0],[8,2],[10,2],[8,4],[9,4],[10,4],
+                          [0,8],[2,8],[4,8],[5,8],[6,8],[8,8],[0,9],[5,9],[8,9],
+                          [0,10],[1,10],[2,10],[4,10],[6,10],[7,10],[8,10],[10,10],
+                        ].map(([x,y]) => (
+                          <rect key={x+'-'+y} x={x} y={y} width="1" height="1" fill="white" />
+                        ))}
+                      </svg>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1.5">
+                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
+                        <span className="text-[10px] font-semibold uppercase tracking-wider text-emerald-700">Registrado en AEAT · 0,8 s</span>
+                      </div>
+                      <div className="mt-1.5 font-mono text-[9px] text-gray-400">Hash: a3f8c2e1…7e2c</div>
+                      <div className="font-mono text-[9px] text-gray-400">Anterior: 91b2d4…e4d1</div>
+                      <div className="mt-1 text-[10px] text-gray-500">
+                        Verifica en <span className="font-semibold text-[#c9a96e]">sede.aeat.es</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Timeline */}
+                  <div className="mt-5 rounded-xl border border-gray-200 p-4">
+                    <div className="mb-3 text-[10px] font-semibold uppercase tracking-widest text-gray-400">Calendario AEAT</div>
+                    <div className="space-y-2">
+                      <div className="flex items-baseline gap-3">
+                        <span className="w-28 shrink-0 text-sm font-bold tabular-nums text-[#c9a96e]">{t.verifactuDate1}</span>
+                        <span className="text-xs text-gray-600">{t.verifactuDate1Label}</span>
+                      </div>
+                      <div className="flex items-baseline gap-3">
+                        <span className="w-28 shrink-0 text-sm font-bold tabular-nums text-[#c9a96e]">{t.verifactuDate2}</span>
+                        <span className="text-xs text-gray-600">{t.verifactuDate2Label}</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </section>

@@ -1,16 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { sendNotification } from "@/lib/notifications/send-notification";
-import { getReminderTemplate, renderTemplate } from "@/lib/notifications/templates";
+import { getConfirmationRequestTemplate, renderTemplate } from "@/lib/notifications/templates";
 import { generateOptOutToken } from "@/lib/opt-out-token";
 
 /**
  * GET /api/cron/reminders
- * Sends 24h reminder notifications for upcoming appointments.
+ * Sends 24h interactive confirmation requests for upcoming appointments.
  * Protected by CRON_SECRET header.
  */
 export async function GET(request: NextRequest) {
-  // Verify cron secret (fail-closed: reject if secret is missing or mismatched)
   const cronSecret = process.env.CRON_SECRET;
   if (!cronSecret || request.headers.get("authorization") !== `Bearer ${cronSecret}`) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
@@ -23,8 +22,10 @@ export async function GET(request: NextRequest) {
   const from = new Date(now.getTime() + 23 * 60 * 60 * 1000);
   const to = new Date(now.getTime() + 25 * 60 * 60 * 1000);
 
-  // Fetch eligible appointments (confirmed or pendente, not cancelled)
-  const { data: agendamentos } = await supabase
+  console.log(`[Reminders] Running at ${now.toISOString()}, window: ${from.toISOString()} - ${to.toISOString()}`);
+
+  // Fetch eligible appointments
+  const { data: agendamentos, error: agError } = await supabase
     .from("agendamentos")
     .select(`
       id,
@@ -39,7 +40,13 @@ export async function GET(request: NextRequest) {
     .gte("data_hora_inicio", from.toISOString())
     .lte("data_hora_inicio", to.toISOString());
 
+  if (agError) {
+    console.error("[Reminders] Error fetching agendamentos:", agError);
+    return NextResponse.json({ error: "Database error", details: agError.message }, { status: 500 });
+  }
+
   if (!agendamentos || (agendamentos as unknown[]).length === 0) {
+    console.log("[Reminders] No appointments found in window");
     return NextResponse.json({ sent: 0, message: "No reminders to send" });
   }
 
@@ -53,6 +60,12 @@ export async function GET(request: NextRequest) {
     status: string;
   }>;
 
+  console.log(`[Reminders] Found ${items.length} appointments:`, items.map(a => ({
+    id: a.id.slice(0, 8),
+    prof: a.profissional_id.slice(0, 8),
+    status: a.status,
+  })));
+
   const agendamentoIds = items.map((a) => a.id);
   const clienteIds   = [...new Set(items.map((a) => a.cliente_id))];
   const servicoIds   = [...new Set(items.map((a) => a.servico_id))];
@@ -65,7 +78,7 @@ export async function GET(request: NextRequest) {
       .from("notificacoes_log")
       .select("agendamento_id")
       .in("agendamento_id", agendamentoIds)
-      .eq("tipo", "lembrete_24h"),
+      .in("tipo", ["lembrete_24h", "confirmacao_interativa"]),
     supabase
       .from("clientes")
       .select("id, nome, telefone, idioma_preferido, opt_out_notificacoes")
@@ -84,6 +97,13 @@ export async function GET(request: NextRequest) {
       .in("id", salaoIds),
   ]);
 
+  // Log any query errors
+  if (alreadySentRes.error) console.error("[Reminders] Error fetching already sent:", alreadySentRes.error);
+  if (clientesRes.error) console.error("[Reminders] Error fetching clientes:", clientesRes.error);
+  if (servicosRes.error) console.error("[Reminders] Error fetching servicos:", servicosRes.error);
+  if (profsRes.error) console.error("[Reminders] Error fetching profissionais:", profsRes.error);
+  if (saloesRes.error) console.error("[Reminders] Error fetching saloes:", saloesRes.error);
+
   const alreadySentIds = new Set(
     ((alreadySentRes.data ?? []) as { agendamento_id: string }[]).map((r) => r.agendamento_id)
   );
@@ -97,32 +117,57 @@ export async function GET(request: NextRequest) {
   const profMap    = Object.fromEntries(((profsRes.data ?? []) as unknown as NomeRow[]).map((p) => [p.id, p.nome]));
   const salaoMap   = Object.fromEntries(((saloesRes.data ?? []) as unknown as SalaoRow[]).map((s) => [s.id, s]));
 
+  console.log(`[Reminders] Loaded: ${Object.keys(clienteMap).length} clients, ${Object.keys(servicoMap).length} services, ${Object.keys(profMap).length} professionals`);
+
   let sent = 0;
   let skipped = 0;
+  const skipReasons: Record<string, number> = {};
 
   for (const ag of items) {
-    if (alreadySentIds.has(ag.id)) { skipped++; continue; }
+    if (alreadySentIds.has(ag.id)) {
+      skipped++;
+      skipReasons["already_sent"] = (skipReasons["already_sent"] || 0) + 1;
+      continue;
+    }
 
     const cl = clienteMap[ag.cliente_id];
-    if (!cl || cl.opt_out_notificacoes || !cl.telefone) { skipped++; continue; }
+    if (!cl) {
+      skipped++;
+      skipReasons["client_not_found"] = (skipReasons["client_not_found"] || 0) + 1;
+      console.warn(`[Reminders] Client ${ag.cliente_id.slice(0, 8)} not found for appointment ${ag.id.slice(0, 8)}`);
+      continue;
+    }
+
+    if (cl.opt_out_notificacoes) {
+      skipped++;
+      skipReasons["opted_out"] = (skipReasons["opted_out"] || 0) + 1;
+      continue;
+    }
+
+    if (!cl.telefone) {
+      skipped++;
+      skipReasons["no_phone"] = (skipReasons["no_phone"] || 0) + 1;
+      console.warn(`[Reminders] Client ${cl.nome} has no phone number`);
+      continue;
+    }
 
     const salao = salaoMap[ag.salao_id];
-
     const inicio = new Date(ag.data_hora_inicio);
-    const dateStr = inicio.toLocaleDateString(cl.idioma_preferido, { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Madrid" });
-    const timeStr = inicio.toLocaleTimeString(cl.idioma_preferido, { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Madrid" });
+    const idioma = cl.idioma_preferido || "es";
+    const dateStr = inicio.toLocaleDateString(idioma, { day: "numeric", month: "long", year: "numeric", timeZone: "Europe/Madrid" });
+    const timeStr = inicio.toLocaleTimeString(idioma, { hour: "2-digit", minute: "2-digit", timeZone: "Europe/Madrid" });
 
-    // Custom template (per-salao, per-idioma) — still one query but only if needed
+    // Custom template (per-salao, per-idioma)
     const { data: customTpl } = await supabase
       .from("notification_templates")
       .select("template")
       .eq("salao_id", ag.salao_id)
-      .eq("tipo", "lembrete_24h")
-      .eq("idioma", cl.idioma_preferido as "pt" | "es" | "en" | "ru")
+      .eq("tipo", "confirmacao_interativa")
+      .eq("idioma", idioma as "pt" | "es" | "en" | "ru")
       .maybeSingle();
 
-    const template = getReminderTemplate(
-      cl.idioma_preferido,
+    const template = getConfirmationRequestTemplate(
+      idioma,
       (customTpl as { template: string } | null)?.template
     );
 
@@ -143,12 +188,50 @@ export async function GET(request: NextRequest) {
       clienteId: ag.cliente_id,
       agendamentoId: ag.id,
       telefone: cl.telefone,
-      tipo: "lembrete_24h",
+      tipo: "confirmacao_interativa",
       message,
     });
 
+    // Set awaiting_confirmation context on the conversation
+    const normalizedPhone = cl.telefone.replace(/^\+/, "").replace(/[\s-]/g, "");
+    const { data: conversa } = await supabase
+      .from("conversas")
+      .select("id, contexto")
+      .eq("salao_id", ag.salao_id)
+      .eq("canal", "whatsapp")
+      .eq("external_id", normalizedPhone)
+      .maybeSingle();
+
+    const confirmationCtx = {
+      awaiting_confirmation: true,
+      agendamento_id: ag.id,
+      profissional_id: ag.profissional_id,
+      confirmation_sent_at: new Date().toISOString(),
+      expires_at: new Date(now.getTime() + 20 * 60 * 60 * 1000).toISOString(),
+    };
+
+    if (conversa) {
+      await supabase
+        .from("conversas")
+        .update({
+          contexto: { ...(conversa.contexto as Record<string, unknown>), ...confirmationCtx },
+        })
+        .eq("id", (conversa as { id: string }).id);
+    } else {
+      await supabase.from("conversas").insert({
+        salao_id: ag.salao_id,
+        cliente_id: ag.cliente_id,
+        canal: "whatsapp",
+        external_id: normalizedPhone,
+        estado: "ativo",
+        contexto: confirmationCtx,
+      });
+    }
+
+    console.log(`[Reminders] Sent confirmation request to ${cl.nome} (prof: ${profMap[ag.profissional_id] ?? ag.profissional_id.slice(0, 8)})`);
     sent++;
   }
 
-  return NextResponse.json({ sent, skipped, total: items.length });
+  console.log(`[Reminders] Done. Sent: ${sent}, Skipped: ${skipped}, Reasons:`, skipReasons);
+  return NextResponse.json({ sent, skipped, total: items.length, skipReasons });
 }

@@ -185,6 +185,28 @@ const translations: Record<LandingLocale, Record<string, string>> = {
     mockDateValue: "Terça, 25 março",
 
     // Footer
+    
+    // VeriFactu
+    compVerifactu: "Faturação certificada AEAT (VeriFactu)",
+    verifactuLabel: "Conformidade · AEAT",
+    verifactuBadge: "VERI*FACTU · ATIVO",
+    verifactuTitle: "VeriFactu incluído. Sem custo extra. Sem plugins.",
+    verifactuSub: "Desde 2026, a Agência Tributária espanhola exige que toda fatura seja assinada, encadeada e enviada em menos de 60 s. Na Bellus já vem incluído — sem módulos pagos à parte, sem configurar nada.",
+    verifactu1Title: "Assinatura + hash encadeado",
+    verifactu1Desc: "Cada fatura é inviolável. Cadeia quebrada = alerta automático.",
+    verifactu2Title: "Envio automático < 60 s",
+    verifactu2Desc: "Registos diretos à AEAT, em cumprimento do RD 1007/2023.",
+    verifactu3Title: "QR + código seguro em cada talão",
+    verifactu3Desc: "Qualquer cliente verifica a fatura pelo telemóvel em sede.aeat.es.",
+    verifactu4Title: "Exportação auditável",
+    verifactu4Desc: "Em caso de inspeção: um clique. Todo o histórico assinado e pronto.",
+    verifactuDate1: "1 janeiro 2026",
+    verifactuDate1Label: "Obrigatório para pessoas coletivas (IS)",
+    verifactuDate2: "1 julho 2026",
+    verifactuDate2Label: "Obrigatório para trabalhadores independentes (IRPF)",
+    verifactuNote: "Multas até €50.000 por exercício se o teu software não cumprir. Com a Bellus, já cumpres — sem pagar nada extra.",
+    verifactuCta: "Ver módulo fiscal",
+
     footerLogin: "Entrar",
     footerRegister: "Criar conta",
     footerRights: "Todos os direitos reservados.",
@@ -524,6 +546,28 @@ const translations: Record<LandingLocale, Record<string, string>> = {
     mockCash: "Cash",
 
     mockDateValue: "Tuesday, March 25",
+
+    
+    // VeriFactu
+    compVerifactu: "AEAT certified invoicing (VeriFactu)",
+    verifactuLabel: "Compliance · Spanish AEAT",
+    verifactuBadge: "VERI*FACTU · ACTIVE",
+    verifactuTitle: "VeriFactu included. No extra cost. No plugins.",
+    verifactuSub: "From 2026, the Spanish Tax Agency requires every invoice to be signed, chained and submitted in under 60s. Bellus ships it built-in — no paid modules, no setup required.",
+    verifactu1Title: "Signature + chained hash",
+    verifactu1Desc: "Every invoice is tamper-proof. Broken chain = automatic alert.",
+    verifactu2Title: "Auto-submit < 60s",
+    verifactu2Desc: "Records straight to AEAT, compliant with RD 1007/2023.",
+    verifactu3Title: "QR + secure code on every receipt",
+    verifactu3Desc: "Clients can verify any invoice from their phone at sede.aeat.es.",
+    verifactu4Title: "Auditable export",
+    verifactu4Desc: "Audit day: one click. Full signed history, ready to go.",
+    verifactuDate1: "Jan 1, 2026",
+    verifactuDate1Label: "Mandatory for legal entities (Corporate Tax)",
+    verifactuDate2: "Jul 1, 2026",
+    verifactuDate2Label: "Mandatory for self-employed (IRPF)",
+    verifactuNote: "Fines up to €50,000 per year if your software doesn't comply. With Bellus, you already do — at no extra cost.",
+    verifactuCta: "See tax module",
 
     footerLogin: "Sign in",
     footerRegister: "Create account",

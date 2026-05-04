@@ -161,6 +161,102 @@ _Don't want to receive messages? {link_optout}_`,
 _Не хотите получать сообщения? {link_optout}_`,
 };
 
+export const CONFIRMATION_REQUEST_TEMPLATES: Record<string, string> = {
+  es: `Hola {nome_cliente} 👋
+
+Te recordamos tu cita en *{salao}*:
+
+📋 {servico} con {profissional}
+📅 {data} a las {hora}
+
+Por favor confirma tu asistencia:
+✅ Responde *SI* para confirmar
+❌ Responde *NO* para cancelar
+🔄 Responde *CAMBIAR* para reagendar
+
+_No deseas recibir mensajes? {link_optout}_`,
+
+  pt: `Olá {nome_cliente} 👋
+
+Lembrete da sua reserva em *{salao}*:
+
+📋 {servico} com {profissional}
+📅 {data} às {hora}
+
+Confirme sua presença:
+✅ Responda *SIM* para confirmar
+❌ Responda *NAO* para cancelar
+🔄 Responda *REMARCAR* para reagendar
+
+_Não quer receber mensagens? {link_optout}_`,
+
+  en: `Hi {nome_cliente} 👋
+
+Reminder of your appointment at *{salao}*:
+
+📋 {servico} with {profissional}
+📅 {data} at {hora}
+
+Please confirm:
+✅ Reply *YES* to confirm
+❌ Reply *NO* to cancel
+🔄 Reply *RESCHEDULE* to change
+
+_Don't want to receive messages? {link_optout}_`,
+
+  ru: `Здравствуйте, {nome_cliente} 👋
+
+Напоминаем о записи в *{salao}*:
+
+📋 {servico} с {profissional}
+📅 {data} в {hora}
+
+Подтвердите запись:
+✅ Ответьте *ДА* для подтверждения
+❌ Ответьте *НЕТ* для отмены
+🔄 Ответьте *ПЕРЕНЕСТИ* для переноса
+
+_Не хотите получать сообщения? {link_optout}_`,
+};
+
+export const REVIEW_REQUEST_TEMPLATES: Record<string, string> = {
+  es: `Hola {nome_cliente} 👋
+
+¡Gracias por tu visita a *{salao}*! 💇
+
+Nos encantaría conocer tu opinión. Déjanos una reseña:
+⭐ {link_reviews}
+
+¡Tu opinión nos ayuda mucho! Gracias 🙏`,
+
+  pt: `Olá {nome_cliente} 👋
+
+Obrigado pela sua visita ao *{salao}*! 💇
+
+Adoraríamos saber sua opinião. Deixe uma avaliação:
+⭐ {link_reviews}
+
+Sua opinião é muito importante! Obrigado 🙏`,
+
+  en: `Hi {nome_cliente} 👋
+
+Thank you for visiting *{salao}*! 💇
+
+We'd love to hear your feedback. Leave us a review:
+⭐ {link_reviews}
+
+Your opinion means a lot! Thanks 🙏`,
+
+  ru: `Здравствуйте, {nome_cliente} 👋
+
+Спасибо за визит в *{salao}*! 💇
+
+Будем рады вашему отзыву:
+⭐ {link_reviews}
+
+Ваше мнение очень важно! Спасибо 🙏`,
+};
+
 /**
  * Render a template by replacing {variable} placeholders.
  */
@@ -197,4 +293,20 @@ export function getReminderTemplate(locale: string, customTemplate?: string | nu
 export function getReturnReminderTemplate(locale: string, customTemplate?: string | null): string {
   if (customTemplate) return customTemplate;
   return RETURN_REMINDER_TEMPLATES[locale] ?? RETURN_REMINDER_TEMPLATES.es;
+}
+
+/**
+ * Get the confirmation request template (interactive SIM/NAO/REAGENDAR).
+ */
+export function getConfirmationRequestTemplate(locale: string, customTemplate?: string | null): string {
+  if (customTemplate) return customTemplate;
+  return CONFIRMATION_REQUEST_TEMPLATES[locale] ?? CONFIRMATION_REQUEST_TEMPLATES.es;
+}
+
+/**
+ * Get the review request template for a locale, with optional custom override.
+ */
+export function getReviewRequestTemplate(locale: string, customTemplate?: string | null): string {
+  if (customTemplate) return customTemplate;
+  return REVIEW_REQUEST_TEMPLATES[locale] ?? REVIEW_REQUEST_TEMPLATES.es;
 }
