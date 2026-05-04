@@ -17,12 +17,25 @@ export async function GET(request: NextRequest) {
 
   const supabase = createServiceClient();
 
-  // Window: appointments between 23h and 25h from now
+  // Window: ALL appointments for tomorrow (Madrid timezone)
+  // Cron runs at 20:00 Madrid — send confirmations the evening before
   const now = new Date();
-  const from = new Date(now.getTime() + 23 * 60 * 60 * 1000);
-  const to = new Date(now.getTime() + 25 * 60 * 60 * 1000);
 
-  console.log(`[Reminders] Running at ${now.toISOString()}, window: ${from.toISOString()} - ${to.toISOString()}`);
+  // Calculate tomorrow's date in Madrid timezone (handles DST automatically)
+  const madridFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Madrid", year: "numeric", month: "2-digit", day: "2-digit" });
+  const todayMadrid = madridFormatter.format(now);
+  const todayDate = new Date(todayMadrid + "T00:00:00");
+  todayDate.setDate(todayDate.getDate() + 1);
+  const tomorrowStr = todayDate.toISOString().split("T")[0]; // YYYY-MM-DD
+
+  // Get Madrid UTC offset dynamically (handles summer/winter)
+  const madridNow = new Date(now.toLocaleString("en-US", { timeZone: "Europe/Madrid" }));
+  const offsetMs = madridNow.getTime() - now.getTime();
+  // from = tomorrow 00:00 Madrid in UTC, to = tomorrow 23:59:59 Madrid in UTC
+  const from = new Date(new Date(`${tomorrowStr}T00:00:00Z`).getTime() - offsetMs);
+  const to = new Date(new Date(`${tomorrowStr}T23:59:59Z`).getTime() - offsetMs);
+
+  console.log(`[Reminders] Running at ${now.toISOString()}, tomorrow (Madrid): ${tomorrowStr}, window: ${from.toISOString()} - ${to.toISOString()}`);
 
   // Fetch eligible appointments
   const { data: agendamentos, error: agError } = await supabase
@@ -207,7 +220,7 @@ export async function GET(request: NextRequest) {
       agendamento_id: ag.id,
       profissional_id: ag.profissional_id,
       confirmation_sent_at: new Date().toISOString(),
-      expires_at: new Date(now.getTime() + 20 * 60 * 60 * 1000).toISOString(),
+      expires_at: new Date(new Date(ag.data_hora_inicio).getTime() - 2 * 60 * 60 * 1000).toISOString(),
     };
 
     if (conversa) {
