@@ -174,6 +174,8 @@ Por favor confirma tu asistencia:
 ❌ Responde *NO* para cancelar
 🔄 Responde *CAMBIAR* para reagendar
 
+O escríbenos cualquier cosa y tu mensaje llegará al salón.
+
 _No deseas recibir mensajes? {link_optout}_`,
 
   pt: `Olá {nome_cliente} 👋
@@ -187,6 +189,8 @@ Confirme sua presença:
 ✅ Responda *SIM* para confirmar
 ❌ Responda *NAO* para cancelar
 🔄 Responda *REMARCAR* para reagendar
+
+Ou escreva qualquer coisa e sua mensagem chegará ao salão.
 
 _Não quer receber mensagens? {link_optout}_`,
 
@@ -202,6 +206,8 @@ Please confirm:
 ❌ Reply *NO* to cancel
 🔄 Reply *RESCHEDULE* to change
 
+Or write anything and your message will reach the salon.
+
 _Don't want to receive messages? {link_optout}_`,
 
   ru: `Здравствуйте, {nome_cliente} 👋
@@ -215,6 +221,8 @@ _Don't want to receive messages? {link_optout}_`,
 ✅ Ответьте *ДА* для подтверждения
 ❌ Ответьте *НЕТ* для отмены
 🔄 Ответьте *ПЕРЕНЕСТИ* для переноса
+
+Или напишите что угодно — ваше сообщение попадёт в салон.
 
 _Не хотите получать сообщения? {link_optout}_`,
 };

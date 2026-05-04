@@ -74,13 +74,16 @@ export async function handleConfirmationResponse(
     return true;
   }
 
-  // Unrecognized response — send clarification
-  const clarifyMsg = `No he entendido tu respuesta. Por favor responde:
-✅ *SI* para confirmar
-❌ *NO* para cancelar
-🔄 *CAMBIAR* para reagendar`;
+  // Unrecognized response — forward to professional and let client know
+  await forwardMessageToProfessional(supabase, salaoId, agendamento_id as string, profissional_id as string, ctx);
 
-  await sendReplyAndLog(supabase, salaoId, ctx, clarifyMsg);
+  const replyMsg = `Tu mensaje ha sido enviado al salón. Te responderemos lo antes posible. 👍
+
+Si quieres confirmar tu cita, responde:
+✅ *SI* para confirmar
+❌ *NO* para cancelar`;
+
+  await sendReplyAndLog(supabase, salaoId, ctx, replyMsg);
   return true;
 }
 
@@ -127,6 +130,42 @@ async function handleConfirmNo(
   await clearConfirmationContext(supabase, ctx.conversaId);
 
   console.log(`[Confirmation] Appointment ${agendamentoId} cancelled by client ${ctx.externalId}`);
+}
+
+/**
+ * Forward an unrecognized message from a client to their assigned professional.
+ */
+async function forwardMessageToProfessional(
+  supabase: SupabaseClient,
+  salaoId: string,
+  agendamentoId: string,
+  profissionalId: string,
+  ctx: ConfirmationContext
+) {
+  const [profRes, clienteRes] = await Promise.all([
+    supabase.from("profissionais").select("nome, telefone").eq("id", profissionalId).single(),
+    supabase.from("clientes").select("nome").eq("id", ctx.clienteId ?? "").single(),
+  ]);
+
+  const prof = profRes.data as { nome: string; telefone: string | null } | null;
+  const clienteNome = (clienteRes.data as { nome: string } | null)?.nome ?? ctx.externalId;
+
+  if (!prof?.telefone) {
+    console.error(`[Confirmation] Cannot forward — professional ${profissionalId} has no phone`);
+    return;
+  }
+
+  const staffMsg = `💬 *Mensaje de cliente*
+
+${clienteNome} respondió a la confirmación de cita con:
+
+"${ctx.conteudo}"
+
+Responde directamente al +${ctx.externalId} si necesita atención.`;
+
+  await sendStaffNotification({ telefone: prof.telefone, message: staffMsg });
+
+  console.log(`[Confirmation] Forwarded message from ${clienteNome} to professional ${prof.nome}`);
 }
 
 /**
