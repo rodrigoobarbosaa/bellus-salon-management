@@ -362,23 +362,43 @@ async function sendReviewRequestAfterComanda(
 ) {
   const svc = createServiceClient();
 
-  const { data: cliente } = await svc
+  const { data: cliente, error: clErr } = await svc
     .from("clientes")
     .select("nome, telefone, idioma_preferido, opt_out_notificacoes")
     .eq("id", clienteId)
     .single();
 
-  const cl = cliente as { nome: string; telefone: string | null; idioma_preferido: string; opt_out_notificacoes?: boolean } | null;
-  if (!cl?.telefone || cl.opt_out_notificacoes) return;
+  if (clErr) {
+    console.error("[Reviews] Error fetching client:", clErr.message);
+    return;
+  }
 
-  const { data: salao } = await svc
+  const cl = cliente as { nome: string; telefone: string | null; idioma_preferido: string; opt_out_notificacoes?: boolean } | null;
+  if (!cl?.telefone) {
+    console.log("[Reviews] Client has no phone number, skipping");
+    return;
+  }
+  if (cl.opt_out_notificacoes) {
+    console.log("[Reviews] Client opted out, skipping");
+    return;
+  }
+
+  const { data: salao, error: salaoErr } = await svc
     .from("saloes")
     .select("nome, link_google_reviews")
     .eq("id", salaoId)
     .single();
 
+  if (salaoErr) {
+    console.error("[Reviews] Error fetching salon:", salaoErr.message);
+    return;
+  }
+
   const s = salao as { nome: string; link_google_reviews: string | null } | null;
-  if (!s?.link_google_reviews) return;
+  if (!s?.link_google_reviews) {
+    console.log("[Reviews] No link_google_reviews configured for salon, skipping");
+    return;
+  }
 
   // Check if already sent for this appointment
   const { data: alreadySent } = await svc
@@ -388,7 +408,10 @@ async function sendReviewRequestAfterComanda(
     .eq("tipo", "review_request")
     .limit(1);
 
-  if (alreadySent && (alreadySent as Array<{ id: string }>).length > 0) return;
+  if (alreadySent && (alreadySent as Array<{ id: string }>).length > 0) {
+    console.log("[Reviews] Already sent for this appointment, skipping");
+    return;
+  }
 
   const idioma = cl.idioma_preferido || "es";
   const template = getReviewRequestTemplate(idioma);
@@ -397,6 +420,8 @@ async function sendReviewRequestAfterComanda(
     salao: s.nome,
     link_reviews: s.link_google_reviews,
   });
+
+  console.log(`[Reviews] Sending review request to ${cl.nome} (${cl.telefone})`);
 
   await sendNotification({
     supabase: svc,
