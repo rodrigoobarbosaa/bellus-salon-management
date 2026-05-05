@@ -342,12 +342,17 @@ export async function createComandaTransacoes(payloadJson: string) {
   }
 
   // Send Google Reviews request
+  console.log(`[Reviews] cliente_id=${cliente_id}, salaoId=${salaoId}, agendamento_id=${agendamento_id}`);
   if (cliente_id) {
     try {
+      console.log("[Reviews] Calling sendReviewRequestAfterComanda...");
       await sendReviewRequestAfterComanda(salaoId, agendamento_id, cliente_id);
+      console.log("[Reviews] Done.");
     } catch (err) {
       console.error("[Reviews] Failed:", err);
     }
+  } else {
+    console.log("[Reviews] SKIPPED — no cliente_id in payload");
   }
 
   revalidatePath("/dashboard/agenda");
