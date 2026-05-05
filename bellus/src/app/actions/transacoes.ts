@@ -362,6 +362,7 @@ async function sendReviewRequestAfterComanda(
   agendamentoId: string,
   clienteId: string,
 ) {
+  console.log(`[Reviews] START — salao=${salaoId}, agendamento=${agendamentoId}, cliente=${clienteId}`);
   const svc = createServiceClient();
 
   const { data: cliente, error: clErr } = await svc

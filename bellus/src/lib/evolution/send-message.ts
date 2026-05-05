@@ -17,9 +17,9 @@ interface SendResult {
 
 function getEvolutionConfig() {
   return {
-    apiUrl: process.env.EVOLUTION_API_URL ?? "",
-    apiKey: process.env.EVOLUTION_API_KEY ?? "",
-    instanceName: process.env.EVOLUTION_INSTANCE_NAME ?? "Bellus",
+    apiUrl: (process.env.EVOLUTION_API_URL ?? "").trim(),
+    apiKey: (process.env.EVOLUTION_API_KEY ?? "").trim(),
+    instanceName: (process.env.EVOLUTION_INSTANCE_NAME ?? "Bellus").trim(),
   };
 }
 
