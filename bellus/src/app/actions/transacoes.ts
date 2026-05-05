@@ -4,7 +4,6 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { sendNotification } from "@/lib/notifications/send-notification";
 import { getReviewRequestTemplate, renderTemplate } from "@/lib/notifications/templates";
 
 async function getUserSalaoId(supabase: SupabaseClient) {
@@ -370,45 +369,28 @@ async function sendReviewRequestAfterComanda(
   console.log(`[Reviews] START — salao=${salaoId}, agendamento=${agendamentoId}, cliente=${clienteId}`);
   const svc = createServiceClient();
 
-  const { data: cliente, error: clErr } = await svc
-    .from("clientes")
-    .select("nome, telefone, idioma_preferido, opt_out_notificacoes")
-    .eq("id", clienteId)
-    .single();
+  const [clienteRes, salaoRes] = await Promise.all([
+    svc.from("clientes").select("nome, telefone, idioma_preferido, opt_out_notificacoes").eq("id", clienteId).single(),
+    svc.from("saloes").select("nome, link_google_reviews").eq("id", salaoId).single(),
+  ]);
 
-  if (clErr) {
-    console.error("[Reviews] Error fetching client:", clErr.message);
+  if (clienteRes.error) {
+    console.error("[Reviews] Error fetching client:", clienteRes.error.message);
+    return;
+  }
+  if (salaoRes.error) {
+    console.error("[Reviews] Error fetching salon:", salaoRes.error.message);
     return;
   }
 
-  const cl = cliente as { nome: string; telefone: string | null; idioma_preferido: string; opt_out_notificacoes?: boolean } | null;
-  if (!cl?.telefone) {
-    console.log("[Reviews] Client has no phone number, skipping");
-    return;
-  }
-  if (cl.opt_out_notificacoes) {
-    console.log("[Reviews] Client opted out, skipping");
-    return;
-  }
+  const cl = clienteRes.data as { nome: string; telefone: string | null; idioma_preferido: string; opt_out_notificacoes?: boolean };
+  const s = salaoRes.data as { nome: string; link_google_reviews: string | null };
 
-  const { data: salao, error: salaoErr } = await svc
-    .from("saloes")
-    .select("nome, link_google_reviews")
-    .eq("id", salaoId)
-    .single();
+  if (!cl.telefone) { console.log("[Reviews] No phone, skip"); return; }
+  if (cl.opt_out_notificacoes) { console.log("[Reviews] Opted out, skip"); return; }
+  if (!s.link_google_reviews) { console.log("[Reviews] No review link configured, skip"); return; }
 
-  if (salaoErr) {
-    console.error("[Reviews] Error fetching salon:", salaoErr.message);
-    return;
-  }
-
-  const s = salao as { nome: string; link_google_reviews: string | null } | null;
-  if (!s?.link_google_reviews) {
-    console.log("[Reviews] No link_google_reviews configured for salon, skipping");
-    return;
-  }
-
-  // Check if already sent for this appointment
+  // Check already sent
   const { data: alreadySent } = await svc
     .from("notificacoes_log")
     .select("id")
@@ -417,7 +399,7 @@ async function sendReviewRequestAfterComanda(
     .limit(1);
 
   if (alreadySent && (alreadySent as Array<{ id: string }>).length > 0) {
-    console.log("[Reviews] Already sent for this appointment, skipping");
+    console.log("[Reviews] Already sent, skip");
     return;
   }
 
@@ -429,17 +411,54 @@ async function sendReviewRequestAfterComanda(
     link_reviews: s.link_google_reviews,
   });
 
-  console.log(`[Reviews] Sending review request to ${cl.nome} (${cl.telefone})`);
+  // Send directly via Evolution API (bypass sendNotification to avoid any import issues)
+  const apiUrl = (process.env.EVOLUTION_API_URL ?? "").trim();
+  const apiKey = (process.env.EVOLUTION_API_KEY ?? "").trim();
+  const instance = (process.env.EVOLUTION_INSTANCE_NAME ?? "Bellus").trim();
 
-  await sendNotification({
-    supabase: svc,
-    salaoId,
-    clienteId,
-    agendamentoId,
-    telefone: cl.telefone,
-    tipo: "review_request",
-    message,
+  console.log(`[Reviews] Evolution config: url=${apiUrl ? "SET" : "EMPTY"}, key=${apiKey ? "SET" : "EMPTY"}, instance=${instance}`);
+
+  if (!apiUrl || !apiKey) {
+    console.error("[Reviews] Evolution API not configured!");
+    return;
+  }
+
+  const phone = cl.telefone.replace(/[^0-9]/g, "");
+  console.log(`[Reviews] Sending to ${cl.nome} (${phone})...`);
+
+  const waRes = await fetch(`${apiUrl}/message/sendText/${instance}`, {
+    method: "POST",
+    headers: { apikey: apiKey, "Content-Type": "application/json" },
+    body: JSON.stringify({ number: phone, text: message }),
   });
+
+  const waStatus = waRes.status;
+  console.log(`[Reviews] Evolution API response: ${waStatus}`);
+
+  if (waStatus === 200 || waStatus === 201) {
+    // Log success
+    await svc.from("notificacoes_log").insert({
+      salao_id: salaoId,
+      cliente_id: clienteId,
+      agendamento_id: agendamentoId,
+      tipo: "review_request",
+      mensagem: message,
+      status: "enviado",
+      enviado_em: new Date().toISOString(),
+    });
+    console.log(`[Reviews] SUCCESS — review sent to ${cl.nome}`);
+  } else {
+    const errBody = await waRes.text().catch(() => "");
+    console.error(`[Reviews] FAILED — HTTP ${waStatus}: ${errBody.slice(0, 200)}`);
+    await svc.from("notificacoes_log").insert({
+      salao_id: salaoId,
+      cliente_id: clienteId,
+      agendamento_id: agendamentoId,
+      tipo: "review_request",
+      mensagem: message,
+      status: "falhou",
+    });
+  }
 }
 
 export async function updateTransacaoFormaPagamento(
