@@ -341,11 +341,13 @@ export async function createComandaTransacoes(payloadJson: string) {
     }
   }
 
-  // Send Google Reviews request (fire-and-forget)
+  // Send Google Reviews request
   if (cliente_id) {
-    sendReviewRequestAfterComanda(salaoId, agendamento_id, cliente_id).catch((err) =>
-      console.error("[Reviews] Failed:", err)
-    );
+    try {
+      await sendReviewRequestAfterComanda(salaoId, agendamento_id, cliente_id);
+    } catch (err) {
+      console.error("[Reviews] Failed:", err);
+    }
   }
 
   revalidatePath("/dashboard/agenda");
