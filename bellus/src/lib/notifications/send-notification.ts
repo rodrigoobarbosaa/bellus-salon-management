@@ -20,18 +20,6 @@ interface BookingConfirmationParams {
 export async function sendBookingConfirmation(params: BookingConfirmationParams) {
   const { supabase, salaoId, clienteId, agendamentoId, telefone, idioma, variables, customTemplate } = params;
 
-  // Check if client opted out
-  const { data: cliente } = await supabase
-    .from("clientes")
-    .select("opt_out_notificacoes")
-    .eq("id", clienteId)
-    .single();
-
-  if ((cliente as { opt_out_notificacoes?: boolean } | null)?.opt_out_notificacoes) {
-    console.log(`Client ${clienteId} opted out of notifications`);
-    return;
-  }
-
   // Get template and render
   const template = getConfirmationTemplate(idioma, customTemplate);
   const message = renderTemplate(template, variables);
@@ -94,17 +82,6 @@ export async function sendNotification(params: {
   message: string;
 }) {
   const { supabase, salaoId, clienteId, agendamentoId, telefone, tipo, message } = params;
-
-  // Check opt-out
-  const { data: cliente } = await supabase
-    .from("clientes")
-    .select("opt_out_notificacoes")
-    .eq("id", clienteId)
-    .single();
-
-  if ((cliente as { opt_out_notificacoes?: boolean } | null)?.opt_out_notificacoes) {
-    return;
-  }
 
   // Log
   const { data: notifLog } = await supabase

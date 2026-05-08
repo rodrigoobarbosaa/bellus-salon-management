@@ -370,7 +370,7 @@ async function sendReviewRequestAfterComanda(
   const svc = createServiceClient();
 
   const [clienteRes, salaoRes] = await Promise.all([
-    svc.from("clientes").select("nome, telefone, idioma_preferido, opt_out_notificacoes").eq("id", clienteId).single(),
+    svc.from("clientes").select("nome, telefone, idioma_preferido").eq("id", clienteId).single(),
     svc.from("saloes").select("nome, link_google_reviews").eq("id", salaoId).single(),
   ]);
 
@@ -383,11 +383,10 @@ async function sendReviewRequestAfterComanda(
     return;
   }
 
-  const cl = clienteRes.data as { nome: string; telefone: string | null; idioma_preferido: string; opt_out_notificacoes?: boolean };
+  const cl = clienteRes.data as { nome: string; telefone: string | null; idioma_preferido: string };
   const s = salaoRes.data as { nome: string; link_google_reviews: string | null };
 
   if (!cl.telefone) { console.log("[Reviews] No phone, skip"); return; }
-  if (cl.opt_out_notificacoes) { console.log("[Reviews] Opted out, skip"); return; }
   if (!s.link_google_reviews) { console.log("[Reviews] No review link configured, skip"); return; }
 
   // Check already sent

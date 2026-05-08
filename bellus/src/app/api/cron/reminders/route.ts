@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { sendNotification } from "@/lib/notifications/send-notification";
 import { getConfirmationRequestTemplate, renderTemplate } from "@/lib/notifications/templates";
-import { generateOptOutToken } from "@/lib/opt-out-token";
 
 /**
  * GET /api/cron/reminders
@@ -117,7 +116,7 @@ export async function GET(request: NextRequest) {
       .select("agendamento_id")
       .in("agendamento_id", agendamentoIds)
       .in("tipo", ["lembrete_24h", "confirmacao_interativa"]),
-    supabase.from("clientes").select("id, nome, telefone, idioma_preferido, opt_out_notificacoes").in("id", clienteIds),
+    supabase.from("clientes").select("id, nome, telefone, idioma_preferido").in("id", clienteIds),
     supabase.from("servicos").select("id, nome").in("id", servicoIds),
     supabase.from("profissionais").select("id, nome").in("id", profIds),
     supabase.from("saloes").select("id, nome, endereco").in("id", salaoIds),
@@ -133,7 +132,7 @@ export async function GET(request: NextRequest) {
     ((alreadySentRes.data ?? []) as { agendamento_id: string }[]).map((r) => r.agendamento_id)
   );
 
-  type ClienteRow = { id: string; nome: string; telefone: string; idioma_preferido: string; opt_out_notificacoes?: boolean };
+  type ClienteRow = { id: string; nome: string; telefone: string; idioma_preferido: string };
   type NomeRow = { id: string; nome: string };
   type SalaoRow = { id: string; nome: string; endereco: string | null };
 
@@ -157,11 +156,6 @@ export async function GET(request: NextRequest) {
     if (!cl) {
       skipped++;
       skipReasons["client_not_found"] = (skipReasons["client_not_found"] || 0) + 1;
-      continue;
-    }
-    if (cl.opt_out_notificacoes) {
-      skipped++;
-      skipReasons["opted_out"] = (skipReasons["opted_out"] || 0) + 1;
       continue;
     }
     if (!cl.telefone) {
@@ -198,7 +192,6 @@ export async function GET(request: NextRequest) {
       hora: timeStr,
       salao: salao?.nome ?? "",
       endereco: salao?.endereco ?? "",
-      link_optout: `${process.env.NEXT_PUBLIC_APP_URL || "https://bellus.app"}/api/opt-out?client_id=${ag.cliente_id}&token=${generateOptOutToken(ag.cliente_id)}`,
     });
 
     await sendNotification({

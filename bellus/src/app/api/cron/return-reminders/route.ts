@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from "next/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import { sendNotification } from "@/lib/notifications/send-notification";
 import { getReturnReminderTemplate, renderTemplate } from "@/lib/notifications/templates";
-import { generateOptOutToken } from "@/lib/opt-out-token";
 import type { SupabaseClient } from "@supabase/supabase-js";
 
 /**
@@ -26,7 +25,6 @@ export async function GET(request: NextRequest) {
     .from("clientes")
     .select("id, salao_id, nome, telefone, idioma_preferido, proximo_retorno")
     .lte("proximo_retorno", today)
-    .eq("opt_out_notificacoes", false)
     .neq("telefone", "");
 
   if (!clientes || (clientes as unknown[]).length === 0) {
@@ -114,7 +112,6 @@ export async function GET(request: NextRequest) {
       nome_cliente: cl.nome,
       salao: salaoNome,
       link_booking: bookingUrl,
-      link_optout: `${process.env.NEXT_PUBLIC_APP_URL || "https://bellus.app"}/api/opt-out?client_id=${cl.id}&token=${generateOptOutToken(cl.id)}`,
     });
 
     await sendNotification({

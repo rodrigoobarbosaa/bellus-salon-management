@@ -34,8 +34,7 @@ export async function GET(request: NextRequest) {
       const { data: clients } = await supabase
         .from("clientes")
         .select("id, nome, telefone, idioma_preferido")
-        .eq("salao_id", salaoId)
-        .eq("opt_out", false);
+        .eq("salao_id", salaoId);
 
       type Client = { id: string; nome: string; telefone: string; idioma_preferido: string | null };
       const clientList = (clients as Client[]) || [];

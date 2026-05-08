@@ -16,8 +16,7 @@ Tu cita en *{salao}* ha sido reservada:
 
 Te esperamos. Si necesitas cancelar, contacta al salón.
 
-— {salao}
-_No deseas recibir mensajes? {link_optout}_`,
+— {salao}`,
 
   pt: `Olá {nome_cliente}! 👋
 
@@ -31,8 +30,7 @@ Sua reserva em *{salao}* foi confirmada:
 
 Te esperamos! Se precisar cancelar, entre em contato com o salão.
 
-— {salao}
-_Não quer receber mensagens? {link_optout}_`,
+— {salao}`,
 
   en: `Hi {nome_cliente}! 👋
 
@@ -46,8 +44,7 @@ Your appointment at *{salao}* has been booked:
 
 We look forward to seeing you! To cancel, please contact the salon.
 
-— {salao}
-_Don't want to receive messages? {link_optout}_`,
+— {salao}`,
 
   ru: `Здравствуйте, {nome_cliente}! 👋
 
@@ -61,8 +58,7 @@ _Don't want to receive messages? {link_optout}_`,
 
 Ждём вас! Для отмены свяжитесь с салоном.
 
-— {salao}
-_Не хотите получать сообщения? {link_optout}_`,
+— {salao}`,
 };
 
 export const REMINDER_24H_TEMPLATES: Record<string, string> = {
@@ -74,8 +70,7 @@ Te recordamos que mañana tienes cita en *{salao}*:
 📅 {data} a las {hora}
 📍 {endereco}
 
-¡Te esperamos!
-_No deseas recibir mensajes? {link_optout}_`,
+¡Te esperamos!`,
 
   pt: `Olá {nome_cliente} 👋
 
@@ -85,8 +80,7 @@ Lembrete: amanhã você tem reserva em *{salao}*:
 📅 {data} às {hora}
 📍 {endereco}
 
-Te esperamos!
-_Não quer receber mensagens? {link_optout}_`,
+Te esperamos!`,
 
   en: `Hi {nome_cliente} 👋
 
@@ -96,8 +90,7 @@ Reminder: you have an appointment tomorrow at *{salao}*:
 📅 {data} at {hora}
 📍 {endereco}
 
-See you there!
-_Don't want to receive messages? {link_optout}_`,
+See you there!`,
 
   ru: `Здравствуйте, {nome_cliente} 👋
 
@@ -107,8 +100,7 @@ _Don't want to receive messages? {link_optout}_`,
 📅 {data} в {hora}
 📍 {endereco}
 
-Ждём вас!
-_Не хотите получать сообщения? {link_optout}_`,
+Ждём вас!`,
 };
 
 export const RETURN_REMINDER_TEMPLATES: Record<string, string> = {
@@ -121,8 +113,7 @@ Ha pasado un tiempo desde tu última visita. ¿Quieres agendar tu próxima cita?
 📅 Reserva aquí: {link_booking}
 
 ¡Te esperamos!
-— {salao}
-_No deseas recibir mensajes? {link_optout}_`,
+— {salao}`,
 
   pt: `Olá {nome_cliente} 👋
 
@@ -133,8 +124,7 @@ Já faz um tempo desde sua última visita. Que tal agendar a próxima?
 📅 Reserve aqui: {link_booking}
 
 Te esperamos!
-— {salao}
-_Não quer receber mensagens? {link_optout}_`,
+— {salao}`,
 
   en: `Hi {nome_cliente} 👋
 
@@ -145,8 +135,7 @@ It's been a while since your last visit. Ready to book your next appointment?
 📅 Book here: {link_booking}
 
 See you soon!
-— {salao}
-_Don't want to receive messages? {link_optout}_`,
+— {salao}`,
 
   ru: `Здравствуйте, {nome_cliente} 👋
 
@@ -157,8 +146,7 @@ _Don't want to receive messages? {link_optout}_`,
 📅 Записаться: {link_booking}
 
 Ждём вас!
-— {salao}
-_Не хотите получать сообщения? {link_optout}_`,
+— {salao}`,
 };
 
 export const CONFIRMATION_REQUEST_TEMPLATES: Record<string, string> = {
@@ -174,9 +162,7 @@ Por favor confirma tu asistencia:
 ❌ Responde *NO* para cancelar
 🔄 Responde *CAMBIAR* para reagendar
 
-O escríbenos cualquier cosa y tu mensaje llegará al salón.
-
-_No deseas recibir mensajes? {link_optout}_`,
+O escríbenos cualquier cosa y tu mensaje llegará al salón.`,
 
   pt: `Olá {nome_cliente} 👋
 
@@ -190,9 +176,7 @@ Confirme sua presença:
 ❌ Responda *NAO* para cancelar
 🔄 Responda *REMARCAR* para reagendar
 
-Ou escreva qualquer coisa e sua mensagem chegará ao salão.
-
-_Não quer receber mensagens? {link_optout}_`,
+Ou escreva qualquer coisa e sua mensagem chegará ao salão.`,
 
   en: `Hi {nome_cliente} 👋
 
@@ -206,9 +190,7 @@ Please confirm:
 ❌ Reply *NO* to cancel
 🔄 Reply *RESCHEDULE* to change
 
-Or write anything and your message will reach the salon.
-
-_Don't want to receive messages? {link_optout}_`,
+Or write anything and your message will reach the salon.`,
 
   ru: `Здравствуйте, {nome_cliente} 👋
 
@@ -222,9 +204,7 @@ _Don't want to receive messages? {link_optout}_`,
 ❌ Ответьте *НЕТ* для отмены
 🔄 Ответьте *ПЕРЕНЕСТИ* для переноса
 
-Или напишите что угодно — ваше сообщение попадёт в салон.
-
-_Не хотите получать сообщения? {link_optout}_`,
+Или напишите что угодно — ваше сообщение попадёт в салон.`,
 };
 
 export const REVIEW_REQUEST_TEMPLATES: Record<string, string> = {
