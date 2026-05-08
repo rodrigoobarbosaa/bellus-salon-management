@@ -6,8 +6,17 @@ import { generateOptOutToken } from "@/lib/opt-out-token";
 
 /**
  * GET /api/cron/reminders
- * Sends 24h interactive confirmation requests for upcoming appointments.
- * Protected by CRON_SECRET header.
+ *
+ * Smart confirmation sending — two daily runs:
+ *
+ * 1) 20:00 Madrid (18:00 UTC summer / 19:00 UTC winter)
+ *    → Sends confirmations for tomorrow MORNING appointments (before 14:00 Madrid)
+ *
+ * 2) 08:00 Madrid (06:00 UTC summer / 07:00 UTC winter)
+ *    → Sends confirmations for today AFTERNOON appointments (14:00+ Madrid)
+ *
+ * This way every client gets a confirmation ~12-14h before their appointment,
+ * always at a reasonable hour (never in the middle of the night).
  */
 export async function GET(request: NextRequest) {
   const cronSecret = process.env.CRON_SECRET;
@@ -16,42 +25,62 @@ export async function GET(request: NextRequest) {
   }
 
   const supabase = createServiceClient();
-
-  // Window: ALL appointments for tomorrow (Madrid timezone)
-  // Cron runs at 20:00 Madrid — send confirmations the evening before
   const now = new Date();
 
-  // Calculate tomorrow's date in Madrid timezone (handles DST automatically)
-  const madridFormatter = new Intl.DateTimeFormat("en-CA", { timeZone: "Europe/Madrid", year: "numeric", month: "2-digit", day: "2-digit" });
-  const todayMadrid = madridFormatter.format(now);
-  const todayDate = new Date(todayMadrid + "T00:00:00");
-  todayDate.setDate(todayDate.getDate() + 1);
-  const tomorrowStr = todayDate.toISOString().split("T")[0]; // YYYY-MM-DD
+  // Determine current Madrid time
+  const madridHour = parseInt(
+    new Intl.DateTimeFormat("en-US", { timeZone: "Europe/Madrid", hour: "numeric", hour12: false }).format(now)
+  );
 
-  // Get Madrid UTC offset dynamically (handles summer/winter)
+  // Get Madrid date components
+  const madridFormatter = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Europe/Madrid",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  });
+
+  // Calculate Madrid UTC offset (handles DST)
   const madridNow = new Date(now.toLocaleString("en-US", { timeZone: "Europe/Madrid" }));
   const offsetMs = madridNow.getTime() - now.getTime();
-  // from = tomorrow 00:00 Madrid in UTC, to = tomorrow 23:59:59 Madrid in UTC
-  const from = new Date(new Date(`${tomorrowStr}T00:00:00Z`).getTime() - offsetMs);
-  const to = new Date(new Date(`${tomorrowStr}T23:59:59Z`).getTime() - offsetMs);
 
-  console.log(`[Reminders] Running at ${now.toISOString()}, tomorrow (Madrid): ${tomorrowStr}, window: ${from.toISOString()} - ${to.toISOString()}`);
+  let fromMadrid: string;
+  let toMadrid: string;
+  let windowLabel: string;
+
+  if (madridHour >= 18) {
+    // EVENING RUN (20:00 Madrid): tomorrow morning appointments (00:00 - 13:59)
+    const todayMadrid = madridFormatter.format(now);
+    const tomorrow = new Date(todayMadrid + "T00:00:00");
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split("T")[0];
+
+    fromMadrid = `${tomorrowStr}T00:00:00`;
+    toMadrid = `${tomorrowStr}T13:59:59`;
+    windowLabel = `tomorrow morning (${tomorrowStr} 00:00-13:59 Madrid)`;
+  } else {
+    // MORNING RUN (08:00 Madrid): today afternoon appointments (14:00 - 23:59)
+    const todayStr = madridFormatter.format(now);
+
+    fromMadrid = `${todayStr}T14:00:00`;
+    toMadrid = `${todayStr}T23:59:59`;
+    windowLabel = `today afternoon (${todayStr} 14:00-23:59 Madrid)`;
+  }
+
+  // Convert Madrid local times to UTC
+  const fromUTC = new Date(new Date(fromMadrid + "Z").getTime() - offsetMs);
+  const toUTC = new Date(new Date(toMadrid + "Z").getTime() - offsetMs);
+
+  console.log(`[Reminders] Running at ${now.toISOString()} (Madrid ~${madridHour}:00), window: ${windowLabel}`);
+  console.log(`[Reminders] UTC range: ${fromUTC.toISOString()} - ${toUTC.toISOString()}`);
 
   // Fetch eligible appointments
   const { data: agendamentos, error: agError } = await supabase
     .from("agendamentos")
-    .select(`
-      id,
-      salao_id,
-      cliente_id,
-      profissional_id,
-      servico_id,
-      data_hora_inicio,
-      status
-    `)
+    .select("id, salao_id, cliente_id, profissional_id, servico_id, data_hora_inicio, status")
     .in("status", ["pendente", "confirmado"])
-    .gte("data_hora_inicio", from.toISOString())
-    .lte("data_hora_inicio", to.toISOString());
+    .gte("data_hora_inicio", fromUTC.toISOString())
+    .lte("data_hora_inicio", toUTC.toISOString());
 
   if (agError) {
     console.error("[Reminders] Error fetching agendamentos:", agError);
@@ -60,7 +89,7 @@ export async function GET(request: NextRequest) {
 
   if (!agendamentos || (agendamentos as unknown[]).length === 0) {
     console.log("[Reminders] No appointments found in window");
-    return NextResponse.json({ sent: 0, message: "No reminders to send" });
+    return NextResponse.json({ sent: 0, window: windowLabel, message: "No reminders to send" });
   }
 
   const items = agendamentos as Array<{
@@ -73,44 +102,27 @@ export async function GET(request: NextRequest) {
     status: string;
   }>;
 
-  console.log(`[Reminders] Found ${items.length} appointments:`, items.map(a => ({
-    id: a.id.slice(0, 8),
-    prof: a.profissional_id.slice(0, 8),
-    status: a.status,
-  })));
+  console.log(`[Reminders] Found ${items.length} appointments`);
 
   const agendamentoIds = items.map((a) => a.id);
-  const clienteIds   = [...new Set(items.map((a) => a.cliente_id))];
-  const servicoIds   = [...new Set(items.map((a) => a.servico_id))];
-  const profIds      = [...new Set(items.map((a) => a.profissional_id))];
-  const salaoIds     = [...new Set(items.map((a) => a.salao_id))];
+  const clienteIds = [...new Set(items.map((a) => a.cliente_id))];
+  const servicoIds = [...new Set(items.map((a) => a.servico_id))];
+  const profIds = [...new Set(items.map((a) => a.profissional_id))];
+  const salaoIds = [...new Set(items.map((a) => a.salao_id))];
 
-  // Batch-fetch all related data and already-sent reminders in parallel
+  // Batch-fetch all related data in parallel
   const [alreadySentRes, clientesRes, servicosRes, profsRes, saloesRes] = await Promise.all([
     supabase
       .from("notificacoes_log")
       .select("agendamento_id")
       .in("agendamento_id", agendamentoIds)
       .in("tipo", ["lembrete_24h", "confirmacao_interativa"]),
-    supabase
-      .from("clientes")
-      .select("id, nome, telefone, idioma_preferido, opt_out_notificacoes")
-      .in("id", clienteIds),
-    supabase
-      .from("servicos")
-      .select("id, nome")
-      .in("id", servicoIds),
-    supabase
-      .from("profissionais")
-      .select("id, nome")
-      .in("id", profIds),
-    supabase
-      .from("saloes")
-      .select("id, nome, endereco")
-      .in("id", salaoIds),
+    supabase.from("clientes").select("id, nome, telefone, idioma_preferido, opt_out_notificacoes").in("id", clienteIds),
+    supabase.from("servicos").select("id, nome").in("id", servicoIds),
+    supabase.from("profissionais").select("id, nome").in("id", profIds),
+    supabase.from("saloes").select("id, nome, endereco").in("id", salaoIds),
   ]);
 
-  // Log any query errors
   if (alreadySentRes.error) console.error("[Reminders] Error fetching already sent:", alreadySentRes.error);
   if (clientesRes.error) console.error("[Reminders] Error fetching clientes:", clientesRes.error);
   if (servicosRes.error) console.error("[Reminders] Error fetching servicos:", servicosRes.error);
@@ -122,15 +134,13 @@ export async function GET(request: NextRequest) {
   );
 
   type ClienteRow = { id: string; nome: string; telefone: string; idioma_preferido: string; opt_out_notificacoes?: boolean };
-  type NomeRow    = { id: string; nome: string };
-  type SalaoRow   = { id: string; nome: string; endereco: string | null };
+  type NomeRow = { id: string; nome: string };
+  type SalaoRow = { id: string; nome: string; endereco: string | null };
 
   const clienteMap = Object.fromEntries(((clientesRes.data ?? []) as unknown as ClienteRow[]).map((c) => [c.id, c]));
   const servicoMap = Object.fromEntries(((servicosRes.data ?? []) as unknown as NomeRow[]).map((s) => [s.id, s.nome]));
-  const profMap    = Object.fromEntries(((profsRes.data ?? []) as unknown as NomeRow[]).map((p) => [p.id, p.nome]));
-  const salaoMap   = Object.fromEntries(((saloesRes.data ?? []) as unknown as SalaoRow[]).map((s) => [s.id, s]));
-
-  console.log(`[Reminders] Loaded: ${Object.keys(clienteMap).length} clients, ${Object.keys(servicoMap).length} services, ${Object.keys(profMap).length} professionals`);
+  const profMap = Object.fromEntries(((profsRes.data ?? []) as unknown as NomeRow[]).map((p) => [p.id, p.nome]));
+  const salaoMap = Object.fromEntries(((saloesRes.data ?? []) as unknown as SalaoRow[]).map((s) => [s.id, s]));
 
   let sent = 0;
   let skipped = 0;
@@ -147,20 +157,16 @@ export async function GET(request: NextRequest) {
     if (!cl) {
       skipped++;
       skipReasons["client_not_found"] = (skipReasons["client_not_found"] || 0) + 1;
-      console.warn(`[Reminders] Client ${ag.cliente_id.slice(0, 8)} not found for appointment ${ag.id.slice(0, 8)}`);
       continue;
     }
-
     if (cl.opt_out_notificacoes) {
       skipped++;
       skipReasons["opted_out"] = (skipReasons["opted_out"] || 0) + 1;
       continue;
     }
-
     if (!cl.telefone) {
       skipped++;
       skipReasons["no_phone"] = (skipReasons["no_phone"] || 0) + 1;
-      console.warn(`[Reminders] Client ${cl.nome} has no phone number`);
       continue;
     }
 
@@ -220,15 +226,13 @@ export async function GET(request: NextRequest) {
       agendamento_id: ag.id,
       profissional_id: ag.profissional_id,
       confirmation_sent_at: new Date().toISOString(),
-      expires_at: new Date(new Date(ag.data_hora_inicio).getTime() - 2 * 60 * 60 * 1000).toISOString(),
+      expires_at: new Date(inicio.getTime() - 2 * 60 * 60 * 1000).toISOString(),
     };
 
     if (conversa) {
       await supabase
         .from("conversas")
-        .update({
-          contexto: { ...(conversa.contexto as Record<string, unknown>), ...confirmationCtx },
-        })
+        .update({ contexto: { ...(conversa.contexto as Record<string, unknown>), ...confirmationCtx } })
         .eq("id", (conversa as { id: string }).id);
     } else {
       await supabase.from("conversas").insert({
@@ -241,10 +245,10 @@ export async function GET(request: NextRequest) {
       });
     }
 
-    console.log(`[Reminders] Sent confirmation request to ${cl.nome} (prof: ${profMap[ag.profissional_id] ?? ag.profissional_id.slice(0, 8)})`);
+    console.log(`[Reminders] Sent to ${cl.nome} for ${timeStr} (prof: ${profMap[ag.profissional_id] ?? "?"})`);
     sent++;
   }
 
   console.log(`[Reminders] Done. Sent: ${sent}, Skipped: ${skipped}, Reasons:`, skipReasons);
-  return NextResponse.json({ sent, skipped, total: items.length, skipReasons });
+  return NextResponse.json({ sent, skipped, total: items.length, window: windowLabel, skipReasons });
 }

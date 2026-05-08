@@ -5,6 +5,10 @@
       "schedule": "0 18 * * *"
     },
     {
+      "path": "/api/cron/reminders",
+      "schedule": "0 6 * * *"
+    },
+    {
       "path": "/api/cron/return-reminders",
       "schedule": "0 9 * * *"
     },
