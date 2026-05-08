@@ -377,6 +377,27 @@ const translations: Record<LandingLocale, Record<string, string>> = {
 
     mockDateValue: "Martes, 25 marzo",
 
+    // VeriFactu
+    compVerifactu: "Facturación certificada AEAT (VeriFactu)",
+    verifactuLabel: "Cumplimiento · AEAT",
+    verifactuBadge: "VERI*FACTU · ACTIVO",
+    verifactuTitle: "VeriFactu incluido. Sin coste extra. Sin plugins.",
+    verifactuSub: "Desde 2026, la Agencia Tributaria exige que toda factura esté firmada, encadenada y enviada en menos de 60 s. En Bellus ya viene incluido — sin módulos de pago aparte, sin configurar nada.",
+    verifactu1Title: "Firma + hash encadenado",
+    verifactu1Desc: "Cada factura, inalterable. Cadena rota = alerta automática.",
+    verifactu2Title: "Envío automático < 60 s",
+    verifactu2Desc: "Registros directos a AEAT, cumpliendo el RD 1007/2023.",
+    verifactu3Title: "QR + código seguro en cada ticket",
+    verifactu3Desc: "Cualquier cliente verifica la factura desde el móvil en sede.aeat.es.",
+    verifactu4Title: "Exportación auditable",
+    verifactu4Desc: "En caso de inspección: un clic. Todo el histórico firmado y listo.",
+    verifactuDate1: "1 enero 2026",
+    verifactuDate1Label: "Obligatorio para personas jurídicas (IS)",
+    verifactuDate2: "1 julio 2026",
+    verifactuDate2Label: "Obligatorio para autónomos (IRPF)",
+    verifactuNote: "Multas de hasta €50.000 por ejercicio si tu software no cumple. Con Bellus, ya cumples — sin pagar nada extra.",
+    verifactuCta: "Ver módulo fiscal",
+
     footerLogin: "Entrar",
     footerRegister: "Crear cuenta",
     footerRights: "Todos los derechos reservados.",
