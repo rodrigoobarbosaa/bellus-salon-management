@@ -106,47 +106,35 @@ See you there!`,
 export const RETURN_REMINDER_TEMPLATES: Record<string, string> = {
   es: `Hola {nome_cliente} 👋
 
-¡Te echamos de menos en *{salao}*! 💇
+¡Ya pasó {intervalo_tempo} desde tu último *{servico}* y es hora de volver para mantenerlo perfecto! 💇
 
-Ha pasado un tiempo desde tu última visita. ¿Quieres agendar tu próxima cita?
+Escríbenos por aquí mismo para agendar tu próxima cita 😊
 
-📅 Reserva aquí: {link_booking}
-
-¡Te esperamos!
-— {salao}`,
+¡Te esperamos en *{salao}*!`,
 
   pt: `Olá {nome_cliente} 👋
 
-Sentimos sua falta no *{salao}*! 💇
+Já faz {intervalo_tempo} desde o seu último *{servico}* e está na hora de voltar para manter tudo perfeito! 💇
 
-Já faz um tempo desde sua última visita. Que tal agendar a próxima?
+Responda por aqui mesmo para agendar a próxima 😊
 
-📅 Reserve aqui: {link_booking}
-
-Te esperamos!
-— {salao}`,
+Te esperamos no *{salao}*!`,
 
   en: `Hi {nome_cliente} 👋
 
-We miss you at *{salao}*! 💇
+It's been {intervalo_tempo} since your last *{servico}* and it's time to come back to keep it looking great! 💇
 
-It's been a while since your last visit. Ready to book your next appointment?
+Just reply here to book your next appointment 😊
 
-📅 Book here: {link_booking}
-
-See you soon!
-— {salao}`,
+We're waiting for you at *{salao}*!`,
 
   ru: `Здравствуйте, {nome_cliente} 👋
 
-Мы скучаем по вам в *{salao}*! 💇
+Прошло {intervalo_tempo} с вашего последнего *{servico}* — пора вернуться, чтобы поддержать результат! 💇
 
-Прошло время с вашего последнего визита. Хотите записаться снова?
+Напишите нам прямо здесь, чтобы записаться 😊
 
-📅 Записаться: {link_booking}
-
-Ждём вас!
-— {salao}`,
+Ждём вас в *{salao}*!`,
 };
 
 export const CONFIRMATION_REQUEST_TEMPLATES: Record<string, string> = {

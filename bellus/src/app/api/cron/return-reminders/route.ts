@@ -83,12 +83,40 @@ export async function GET(request: NextRequest) {
     // Get salon info for template
     const { data: salao } = await supabase
       .from("saloes")
-      .select("nome, slug")
+      .select("nome")
       .eq("id", cl.salao_id)
       .single();
 
-    const salaoNome = (salao as { nome: string; slug: string } | null)?.nome ?? "";
-    const salaoSlug = (salao as { nome: string; slug: string } | null)?.slug ?? "";
+    const salaoNome = (salao as { nome: string } | null)?.nome ?? "";
+
+    // Get last completed appointment to know which service triggers the return
+    const { data: lastApt } = await supabase
+      .from("agendamentos")
+      .select("servico_id, servicos:servico_id(nome, intervalo_retorno_dias)")
+      .eq("cliente_id", cl.id)
+      .eq("status", "concluido")
+      .order("data_hora_inicio", { ascending: false })
+      .limit(1)
+      .single();
+
+    const lastService = lastApt as { servico_id: string; servicos: { nome: string; intervalo_retorno_dias: number | null } | null } | null;
+    const servicoNome = lastService?.servicos?.nome ?? "";
+    const intervaloDias = lastService?.servicos?.intervalo_retorno_dias ?? 0;
+    const intervaloMeses = intervaloDias > 0 ? Math.round(intervaloDias / 30) : 0;
+
+    // Build localized "X month(s)" string
+    const idioma = cl.idioma_preferido || "es";
+    let intervaloTexto = "";
+    if (intervaloMeses > 0) {
+      const labels: Record<string, [string, string]> = {
+        es: ["mes", "meses"],
+        pt: ["mês", "meses"],
+        en: ["month", "months"],
+        ru: ["месяц", "месяцев"],
+      };
+      const [singular, plural] = labels[idioma] ?? labels.es;
+      intervaloTexto = `${intervaloMeses} ${intervaloMeses === 1 ? singular : plural}`;
+    }
 
     // Check for custom template
     const { data: customTpl } = await supabase
@@ -104,14 +132,11 @@ export async function GET(request: NextRequest) {
       (customTpl as { template: string } | null)?.template
     );
 
-    const bookingUrl = salaoSlug
-      ? `${process.env.NEXT_PUBLIC_APP_URL || "https://bellus.app"}/booking/${salaoSlug}`
-      : "";
-
     const message = renderTemplate(template, {
       nome_cliente: cl.nome,
       salao: salaoNome,
-      link_booking: bookingUrl,
+      servico: servicoNome,
+      intervalo_tempo: intervaloTexto,
     });
 
     await sendNotification({

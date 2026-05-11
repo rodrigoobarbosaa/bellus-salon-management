@@ -107,8 +107,20 @@ export async function createTransacao(formData: FormData) {
       .eq("id", clienteId)
       .single();
 
-    const intervalo = (cliente as { intervalo_retorno_dias: number | null } | null)
+    let intervalo = (cliente as { intervalo_retorno_dias: number | null } | null)
       ?.intervalo_retorno_dias;
+
+    // Fallback to service interval if client has no custom interval
+    if (!intervalo && servicoId) {
+      const { data: servico } = await supabase
+        .from("servicos")
+        .select("intervalo_retorno_dias")
+        .eq("id", servicoId)
+        .single();
+
+      intervalo = (servico as { intervalo_retorno_dias: number | null } | null)
+        ?.intervalo_retorno_dias ?? null;
+    }
 
     if (intervalo && intervalo > 0) {
       const proximoRetorno = new Date();
@@ -176,16 +188,18 @@ export async function createComandaTransacoes(payloadJson: string) {
     ? new Date(agendamentoStart).toLocaleDateString("sv-SE", { timeZone: "Europe/Madrid" })
     : new Date().toLocaleDateString("sv-SE", { timeZone: "Europe/Madrid" });
 
-  // Fetch service prices
+  // Fetch service prices and return intervals
   const { data: svcData } = await supabase
     .from("servicos")
-    .select("id, preco_base")
+    .select("id, preco_base, intervalo_retorno_dias")
     .in("id", servicos);
 
   const priceMap = new Map<string, number>();
+  const intervalMap = new Map<string, number | null>();
   if (svcData) {
-    for (const s of svcData as { id: string; preco_base: number }[]) {
+    for (const s of svcData as { id: string; preco_base: number; intervalo_retorno_dias: number | null }[]) {
       priceMap.set(s.id, s.preco_base);
+      intervalMap.set(s.id, s.intervalo_retorno_dias);
     }
   }
 
@@ -327,8 +341,13 @@ export async function createComandaTransacoes(payloadJson: string) {
       .eq("id", cliente_id)
       .single();
 
-    const intervalo = (cliente as { intervalo_retorno_dias: number | null } | null)
+    let intervalo = (cliente as { intervalo_retorno_dias: number | null } | null)
       ?.intervalo_retorno_dias;
+
+    // Fallback to main service interval if client has no custom interval
+    if (!intervalo && servicos.length > 0) {
+      intervalo = intervalMap.get(servicos[0]) ?? null;
+    }
 
     if (intervalo && intervalo > 0) {
       const proximoRetorno = new Date();
