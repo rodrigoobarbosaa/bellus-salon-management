@@ -541,19 +541,17 @@ export function AgendaView({
                   : `${new Date(selectedBloqueio.data_hora_inicio).toLocaleString("es-ES", { dateStyle: "short", timeStyle: "short", timeZone: SALON_TZ })} — ${new Date(selectedBloqueio.data_hora_fim).toLocaleTimeString("es-ES", { hour: "2-digit", minute: "2-digit", timeZone: SALON_TZ })}`}
               </p>
             </div>
-            {userRole === "proprietario" && (
-              <DialogFooter>
-                <Button variant="outline" onClick={() => setSelectedBloqueio(null)}>
-                  {t("close")}
-                </Button>
-                <Button
-                  onClick={handleDeleteBloqueio}
-                  className="bg-red-600 hover:bg-red-700"
-                >
-                  {t("deleteBlock")}
-                </Button>
-              </DialogFooter>
-            )}
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setSelectedBloqueio(null)}>
+                {t("close")}
+              </Button>
+              <Button
+                onClick={handleDeleteBloqueio}
+                className="bg-red-600 hover:bg-red-700"
+              >
+                {t("deleteBlock")}
+              </Button>
+            </DialogFooter>
           </DialogContent>
         </Dialog>
       )}
