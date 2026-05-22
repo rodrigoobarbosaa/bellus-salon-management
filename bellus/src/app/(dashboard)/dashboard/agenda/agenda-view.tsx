@@ -272,10 +272,10 @@ export function AgendaView({
           title: b.motivo ? `🚫 ${b.motivo} (${profNome})` : `🚫 ${t("block")} (${profNome})`,
           start: toMadridDatetimeLocal(new Date(b.data_hora_inicio)),
           end: toMadridDatetimeLocal(new Date(b.data_hora_fim)),
-          display: "background" as const,
           backgroundColor: "#e7e5e4",
           borderColor: "#a8a29e",
           textColor: "#78716c",
+          editable: false,
           extendedProps: { bloqueio: b, type: "bloqueio" },
         };
       });
