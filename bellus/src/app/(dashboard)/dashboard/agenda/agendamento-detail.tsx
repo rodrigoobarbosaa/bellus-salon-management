@@ -15,7 +15,7 @@ import {
   updateAgendamento,
   cancelAgendamento,
 } from "@/app/actions/agendamentos";
-import { Clock, User, Scissors, Calendar, FileText, Pencil, MessageCircle } from "lucide-react";
+import { Clock, User, Scissors, Calendar, FileText, Pencil, MessageCircle, CheckCircle2 } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
 import { buildBookingWhatsAppLink } from "@/lib/whatsapp-link";
@@ -93,6 +93,7 @@ export function AgendamentoDetail({
   const [editError, setEditError] = useState<string | null>(null);
   const [conflictMessage, setConflictMessage] = useState<string | null>(null);
   const [pendingFormData, setPendingFormData] = useState<FormData | null>(null);
+  const [showConfirmedWhatsApp, setShowConfirmedWhatsApp] = useState(false);
   const [clientePhone, setClientePhone] = useState<string | null>(null);
   const [clienteIdioma, setClienteIdioma] = useState<"pt" | "es" | "en" | "ru">("es");
   const [salonName, setSalonName] = useState("");
@@ -161,7 +162,12 @@ export function AgendamentoDetail({
     setIsLoading(true);
     await updateAgendamentoStatus(agendamento.id, newStatus);
     setIsLoading(false);
-    onOpenChange(false);
+    // After confirming, show WhatsApp prompt instead of closing
+    if (newStatus === "confirmado" && clientePhone) {
+      setShowConfirmedWhatsApp(true);
+    } else {
+      onOpenChange(false);
+    }
   }
 
   async function handleCancel() {
@@ -234,11 +240,28 @@ export function AgendamentoDetail({
       setIsEditing(false);
       setShowCancelConfirm(false);
       setShowReopenConfirm(false);
+      setShowConfirmedWhatsApp(false);
       setEditError(null);
       setConflictMessage(null);
       setPendingFormData(null);
     }
     onOpenChange(open);
+  }
+
+  function getWhatsAppLink() {
+    if (!clientePhone) return "";
+    const ini = new Date(agendamento.data_hora_inicio);
+    return buildBookingWhatsAppLink({
+      telefone: clientePhone,
+      nome_cliente: agendamento.cliente_nome ?? "",
+      servico: agendamento.servico_nome ?? "",
+      profissional: agendamento.profissional_nome ?? "",
+      data: ini.toLocaleDateString(clienteIdioma === "en" ? "en-US" : clienteIdioma === "ru" ? "ru-RU" : clienteIdioma === "pt" ? "pt-BR" : "es-ES", { weekday: "long", day: "numeric", month: "long", timeZone: SALON_TZ }),
+      hora: ini.toLocaleTimeString(clienteIdioma === "en" ? "en-US" : "es-ES", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: SALON_TZ }),
+      salao: salonName,
+      endereco: salonEndereco,
+      idioma: clienteIdioma,
+    });
   }
 
   return (
@@ -257,7 +280,33 @@ export function AgendamentoDetail({
           </DialogTitle>
         </DialogHeader>
 
-        {isEditing ? (
+        {showConfirmedWhatsApp ? (
+          /* ===== CONFIRMED — WHATSAPP PROMPT ===== */
+          <div className="space-y-4 text-center">
+            <div className="flex flex-col items-center gap-2">
+              <CheckCircle2 className="size-10 text-green-500" />
+              <p className="text-sm font-medium text-stone-700">Turno confirmado</p>
+              <p className="text-xs text-stone-500">¿Enviar confirmación al cliente por WhatsApp?</p>
+            </div>
+            <Button
+              onClick={() => {
+                window.open(getWhatsAppLink(), "_blank");
+                handleOpenChange(false);
+              }}
+              className="w-full gap-2 bg-green-600 hover:bg-green-700"
+            >
+              <MessageCircle className="size-4" />
+              Enviar por WhatsApp
+            </Button>
+            <Button
+              variant="outline"
+              onClick={() => handleOpenChange(false)}
+              className="w-full"
+            >
+              Cerrar sin enviar
+            </Button>
+          </div>
+        ) : isEditing ? (
           /* ===== EDIT MODE ===== */
           <div className="space-y-4">
             {editError && (
@@ -537,21 +586,7 @@ export function AgendamentoDetail({
               {!isTerminal && clientePhone && (
                 <Button
                   variant="outline"
-                  onClick={() => {
-                    const inicio = new Date(agendamento.data_hora_inicio);
-                    const link = buildBookingWhatsAppLink({
-                      telefone: clientePhone,
-                      nome_cliente: agendamento.cliente_nome ?? "",
-                      servico: agendamento.servico_nome ?? "",
-                      profissional: agendamento.profissional_nome ?? "",
-                      data: inicio.toLocaleDateString(clienteIdioma === "en" ? "en-US" : clienteIdioma === "ru" ? "ru-RU" : clienteIdioma === "pt" ? "pt-BR" : "es-ES", { weekday: "long", day: "numeric", month: "long", timeZone: SALON_TZ }),
-                      hora: inicio.toLocaleTimeString(clienteIdioma === "en" ? "en-US" : "es-ES", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: SALON_TZ }),
-                      salao: salonName,
-                      endereco: salonEndereco,
-                      idioma: clienteIdioma,
-                    });
-                    window.open(link, "_blank");
-                  }}
+                  onClick={() => window.open(getWhatsAppLink(), "_blank")}
                   className="gap-2 border-green-300 text-green-700 hover:bg-green-50 hover:text-green-800"
                   title={t("sendWhatsApp")}
                 >
