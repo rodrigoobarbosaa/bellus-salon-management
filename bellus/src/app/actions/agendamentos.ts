@@ -271,21 +271,23 @@ export async function updateAgendamentoStatus(id: string, status: string) {
   if (status === "concluido") {
     const { data: agendamento } = await supabase
       .from("agendamentos")
-      .select("cliente_id")
+      .select("cliente_id, servico_id")
       .eq("id", id)
       .eq("salao_id", salaoId)
       .single();
 
     if (agendamento) {
-      const clienteId = (agendamento as { cliente_id: string }).cliente_id;
-      const { data: cliente } = await supabase
-        .from("clientes")
-        .select("intervalo_retorno_dias")
-        .eq("id", clienteId)
-        .single();
+      const { cliente_id: clienteId, servico_id: servicoId } = agendamento as { cliente_id: string; servico_id: string };
 
-      const intervalo = (cliente as { intervalo_retorno_dias: number | null } | null)
-        ?.intervalo_retorno_dias;
+      // Check client interval first, then fall back to service interval
+      const [{ data: cliente }, { data: servico }] = await Promise.all([
+        supabase.from("clientes").select("intervalo_retorno_dias").eq("id", clienteId).single(),
+        supabase.from("servicos").select("intervalo_retorno_dias").eq("id", servicoId).single(),
+      ]);
+
+      const intervalo =
+        (cliente as { intervalo_retorno_dias: number | null } | null)?.intervalo_retorno_dias ||
+        (servico as { intervalo_retorno_dias: number | null } | null)?.intervalo_retorno_dias;
 
       if (intervalo && intervalo > 0) {
         const proximoRetorno = new Date();
