@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -15,10 +15,10 @@ import {
   updateAgendamento,
   cancelAgendamento,
 } from "@/app/actions/agendamentos";
-import { Clock, User, Scissors, Calendar, FileText, Pencil, MessageCircle, CheckCircle2 } from "lucide-react";
+import { Clock, User, Scissors, Calendar, FileText, Pencil, MessageCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
-import { buildBookingWhatsAppLink } from "@/lib/whatsapp-link";
+import { buildWhatsAppLink } from "@/lib/whatsapp-link";
 import { toMadridDatetimeLocal, SALON_TZ } from "@/lib/timezone";
 import { PaymentModal } from "./payment-modal";
 
@@ -93,8 +93,6 @@ export function AgendamentoDetail({
   const [editError, setEditError] = useState<string | null>(null);
   const [conflictMessage, setConflictMessage] = useState<string | null>(null);
   const [pendingFormData, setPendingFormData] = useState<FormData | null>(null);
-  const [showConfirmedWhatsApp, setShowConfirmedWhatsApp] = useState(false);
-  const confirmedWhatsAppLinkRef = useRef("");
   const [clientePhone, setClientePhone] = useState<string | null>(null);
   const [clienteIdioma, setClienteIdioma] = useState<"pt" | "es" | "en" | "ru">("es");
   const [salonName, setSalonName] = useState("");
@@ -160,21 +158,10 @@ export function AgendamentoDetail({
   const selectedServico = servicos.find((s) => s.id === editServico);
 
   async function handleStatusChange(newStatus: string) {
-    // Pre-compute WhatsApp link BEFORE server action (state may shift after)
-    if (newStatus === "confirmado") {
-      confirmedWhatsAppLinkRef.current = clientePhone ? getWhatsAppLink() : "";
-    }
-
     setIsLoading(true);
     await updateAgendamentoStatus(agendamento.id, newStatus);
     setIsLoading(false);
-
-    // After confirming, always show WhatsApp prompt
-    if (newStatus === "confirmado") {
-      setShowConfirmedWhatsApp(true);
-    } else {
-      onOpenChange(false);
-    }
+    onOpenChange(false);
   }
 
   async function handleCancel() {
@@ -247,7 +234,6 @@ export function AgendamentoDetail({
       setIsEditing(false);
       setShowCancelConfirm(false);
       setShowReopenConfirm(false);
-      setShowConfirmedWhatsApp(false);
       setEditError(null);
       setConflictMessage(null);
       setPendingFormData(null);
@@ -258,7 +244,7 @@ export function AgendamentoDetail({
   function getWhatsAppLink() {
     if (!clientePhone) return "";
     const ini = new Date(agendamento.data_hora_inicio);
-    return buildBookingWhatsAppLink({
+    return buildWhatsAppLink({
       telefone: clientePhone,
       nome_cliente: agendamento.cliente_nome ?? "",
       servico: agendamento.servico_nome ?? "",
@@ -287,39 +273,7 @@ export function AgendamentoDetail({
           </DialogTitle>
         </DialogHeader>
 
-        {showConfirmedWhatsApp ? (
-          /* ===== CONFIRMED — WHATSAPP PROMPT ===== */
-          <div className="space-y-4 text-center">
-            <div className="flex flex-col items-center gap-2">
-              <CheckCircle2 className="size-10 text-green-500" />
-              <p className="text-sm font-medium text-stone-700">Turno confirmado</p>
-              {confirmedWhatsAppLinkRef.current ? (
-                <p className="text-xs text-stone-500">¿Enviar confirmación al cliente por WhatsApp?</p>
-              ) : (
-                <p className="text-xs text-stone-400">Este cliente no tiene número de teléfono registrado.</p>
-              )}
-            </div>
-            {confirmedWhatsAppLinkRef.current && (
-              <Button
-                onClick={() => {
-                  window.open(confirmedWhatsAppLinkRef.current, "_blank");
-                  handleOpenChange(false);
-                }}
-                className="w-full gap-2 bg-green-600 hover:bg-green-700"
-              >
-                <MessageCircle className="size-4" />
-                Enviar por WhatsApp
-              </Button>
-            )}
-            <Button
-              variant="outline"
-              onClick={() => handleOpenChange(false)}
-              className="w-full"
-            >
-              Cerrar
-            </Button>
-          </div>
-        ) : isEditing ? (
+        {isEditing ? (
           /* ===== EDIT MODE ===== */
           <div className="space-y-4">
             {editError && (

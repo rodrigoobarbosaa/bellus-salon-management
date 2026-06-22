@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useTranslations } from "next-intl";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -12,7 +12,10 @@ import {
   DialogFooter,
 } from "@/components/ui/dialog";
 import { createAgendamento } from "@/app/actions/agendamentos";
-import { toMadridDatetimeLocal, madridToISO } from "@/lib/timezone";
+import { toMadridDatetimeLocal, madridToISO, SALON_TZ } from "@/lib/timezone";
+import { buildBookingWhatsAppLink } from "@/lib/whatsapp-link";
+import { MessageCircle, CheckCircle2 } from "lucide-react";
+import { createClient } from "@/lib/supabase/client";
 
 interface Profissional {
   id: string;
@@ -51,8 +54,12 @@ export function AgendamentoForm({
   const [conflictMessage, setConflictMessage] = useState<string | null>(null);
   const [pendingFormData, setPendingFormData] = useState<FormData | null>(null);
   const [clienteSearch, setClienteSearch] = useState("");
-  const [clientes, setClientes] = useState<Array<{ id: string; nome: string; telefone: string | null }>>([]);
-  const [selectedCliente, setSelectedCliente] = useState<{ id: string; nome: string } | null>(null);
+  const [clientes, setClientes] = useState<Array<{ id: string; nome: string; telefone: string | null; idioma_preferido: string }>>([]);
+  const [selectedCliente, setSelectedCliente] = useState<{ id: string; nome: string; telefone: string | null; idioma_preferido: string } | null>(null);
+  const [showCreatedWhatsApp, setShowCreatedWhatsApp] = useState(false);
+  const createdWhatsAppLinkRef = useRef("");
+  const [salonName, setSalonName] = useState("");
+  const [salonEndereco, setSalonEndereco] = useState("");
   const [showNewCliente, setShowNewCliente] = useState(false);
   const [selectedServico, setSelectedServico] = useState("");
   const [servicosExtras, setServicosExtras] = useState<string[]>([]);
@@ -75,6 +82,21 @@ export function AgendamentoForm({
   const duracao = duracaoPrincipal + duracaoExtras;
   const hasPausa = !!(selectedServicoObj?.tempo_pausa_minutos && selectedServicoObj?.duracao_pos_pausa_minutos);
 
+  // Fetch salon info once on open
+  useEffect(() => {
+    if (!open) return;
+    const supabase = createClient();
+    supabase
+      .from("saloes")
+      .select("nome, endereco")
+      .limit(1)
+      .single()
+      .then(({ data }) => {
+        setSalonName(data?.nome ?? "");
+        setSalonEndereco(data?.endereco ?? "");
+      });
+  }, [open]);
+
   // Buscar clientes com debounce
   useEffect(() => {
     if (clienteSearch.length < 2) {
@@ -85,16 +107,15 @@ export function AgendamentoForm({
     if (searchTimeout) clearTimeout(searchTimeout);
 
     const timeout = setTimeout(async () => {
-      const { createClient } = await import("@/lib/supabase/client");
       const supabase = createClient();
       const { data } = await supabase
         .from("clientes")
-        .select("id, nome, telefone")
+        .select("id, nome, telefone, idioma_preferido")
         .ilike("nome", `%${clienteSearch}%`)
         .limit(5);
 
       if (data) {
-        setClientes(data);
+        setClientes(data as Array<{ id: string; nome: string; telefone: string | null; idioma_preferido: string }>);
       }
     }, 300);
 
@@ -107,6 +128,30 @@ export function AgendamentoForm({
   }, [clienteSearch]);
 
   async function submitForm(formData: FormData) {
+    // Pre-compute WhatsApp link BEFORE server action
+    if (selectedCliente?.telefone && selectedServico) {
+      const svc = servicos.find((s) => s.id === selectedServico);
+      const profId = formData.get("profissional_id") as string;
+      const prof = profissionais.find((p) => p.id === profId);
+      const dtValue = formData.get("data_hora_inicio") as string;
+      const idioma = (selectedCliente.idioma_preferido ?? "es") as "pt" | "es" | "en" | "ru";
+      const ini = dtValue ? new Date(madridToISO(dtValue)) : new Date();
+
+      createdWhatsAppLinkRef.current = buildBookingWhatsAppLink({
+        telefone: selectedCliente.telefone,
+        nome_cliente: selectedCliente.nome,
+        servico: svc?.nome ?? "",
+        profissional: prof?.nome ?? "",
+        data: ini.toLocaleDateString(idioma === "en" ? "en-US" : idioma === "ru" ? "ru-RU" : idioma === "pt" ? "pt-BR" : "es-ES", { weekday: "long", day: "numeric", month: "long", timeZone: SALON_TZ }),
+        hora: ini.toLocaleTimeString(idioma === "en" ? "en-US" : "es-ES", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: SALON_TZ }),
+        salao: salonName,
+        endereco: salonEndereco,
+        idioma,
+      });
+    } else {
+      createdWhatsAppLinkRef.current = "";
+    }
+
     setIsLoading(true);
     const result = await createAgendamento(formData);
 
@@ -123,18 +168,12 @@ export function AgendamentoForm({
       return;
     }
 
-    // Reset e fechar
     setIsLoading(false);
-    setSelectedCliente(null);
-    setClienteSearch("");
-    setShowNewCliente(false);
-    setSelectedServico("");
-    setServicosExtras([]);
-    setAddSecado(false);
-    setSecadoHorario("");
     setConflictMessage(null);
     setPendingFormData(null);
-    onOpenChange(false);
+
+    // Show WhatsApp prompt instead of closing
+    setShowCreatedWhatsApp(true);
   }
 
   async function handleSubmit(event: React.FormEvent<HTMLFormElement>) {
@@ -187,6 +226,8 @@ export function AgendamentoForm({
       setServicosExtras([]);
       setAddSecado(false);
       setSecadoHorario("");
+      setShowCreatedWhatsApp(false);
+      createdWhatsAppLinkRef.current = "";
     }
     onOpenChange(open);
   }
@@ -198,6 +239,38 @@ export function AgendamentoForm({
           <DialogTitle>{t("newShift")}</DialogTitle>
         </DialogHeader>
 
+        {showCreatedWhatsApp ? (
+          <div className="space-y-4 text-center">
+            <div className="flex flex-col items-center gap-2">
+              <CheckCircle2 className="size-10 text-green-500" />
+              <p className="text-sm font-medium text-stone-700">Turno creado</p>
+              {createdWhatsAppLinkRef.current ? (
+                <p className="text-xs text-stone-500">¿Enviar confirmación de reserva al cliente por WhatsApp?</p>
+              ) : (
+                <p className="text-xs text-stone-400">Este cliente no tiene número de teléfono registrado.</p>
+              )}
+            </div>
+            {createdWhatsAppLinkRef.current && (
+              <Button
+                onClick={() => {
+                  window.open(createdWhatsAppLinkRef.current, "_blank");
+                  handleOpenChange(false);
+                }}
+                className="w-full gap-2 bg-green-600 hover:bg-green-700"
+              >
+                <MessageCircle className="size-4" />
+                Enviar por WhatsApp
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              onClick={() => handleOpenChange(false)}
+              className="w-full"
+            >
+              Cerrar
+            </Button>
+          </div>
+        ) : (
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <div className="rounded-md bg-red-50 p-3 text-sm text-red-600">{error}</div>
@@ -260,7 +333,7 @@ export function AgendamentoForm({
                             key={c.id}
                             type="button"
                             onClick={() => {
-                              setSelectedCliente({ id: c.id, nome: c.nome });
+                              setSelectedCliente({ id: c.id, nome: c.nome, telefone: c.telefone, idioma_preferido: c.idioma_preferido });
                               setClienteSearch("");
                               setClientes([]);
                             }}
@@ -495,6 +568,7 @@ export function AgendamentoForm({
             </Button>
           </DialogFooter>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   );
