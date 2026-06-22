@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { createServiceClient } from "@/lib/supabase/service";
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { getReviewRequestTemplate, renderTemplate } from "@/lib/notifications/templates";
+import { sendWhatsAppTemplate, isMetaWhatsAppConfigured } from "@/lib/meta/send-message";
 
 async function getUserSalaoId(supabase: SupabaseClient) {
   const {
@@ -408,6 +408,11 @@ async function sendReviewRequestAfterComanda(
   if (!cl.telefone) { console.log("[Reviews] No phone, skip"); return; }
   if (!s.link_google_reviews) { console.log("[Reviews] No review link configured, skip"); return; }
 
+  if (!isMetaWhatsAppConfigured()) {
+    console.log("[Reviews] WhatsApp Meta API not configured, skip");
+    return;
+  }
+
   // Check already sent
   const { data: alreadySent } = await svc
     .from("notificacoes_log")
@@ -421,59 +426,35 @@ async function sendReviewRequestAfterComanda(
     return;
   }
 
-  const idioma = cl.idioma_preferido || "es";
-  const template = getReviewRequestTemplate(idioma);
-  const message = renderTemplate(template, {
-    nome_cliente: cl.nome,
-    salao: s.nome,
-    link_reviews: s.link_google_reviews,
-  });
+  console.log(`[Reviews] Sending to ${cl.nome} (${cl.telefone})...`);
 
-  // Send directly via Evolution API (bypass sendNotification to avoid any import issues)
-  const apiUrl = (process.env.EVOLUTION_API_URL ?? "").trim();
-  const apiKey = (process.env.EVOLUTION_API_KEY ?? "").trim();
-  const instance = (process.env.EVOLUTION_INSTANCE_NAME ?? "Bellus").trim();
+  // Send via Meta Cloud API template
+  const waResult = await sendWhatsAppTemplate(
+    cl.telefone,
+    "solicitud_resena",
+    "es",
+    [cl.nome, s.nome, s.link_google_reviews]
+  );
 
-  console.log(`[Reviews] Evolution config: url=${apiUrl ? "SET" : "EMPTY"}, key=${apiKey ? "SET" : "EMPTY"}, instance=${instance}`);
-
-  if (!apiUrl || !apiKey) {
-    console.error("[Reviews] Evolution API not configured!");
-    return;
-  }
-
-  const phone = cl.telefone.replace(/[^0-9]/g, "");
-  console.log(`[Reviews] Sending to ${cl.nome} (${phone})...`);
-
-  const waRes = await fetch(`${apiUrl}/message/sendText/${instance}`, {
-    method: "POST",
-    headers: { apikey: apiKey, "Content-Type": "application/json" },
-    body: JSON.stringify({ number: phone, text: message }),
-  });
-
-  const waStatus = waRes.status;
-  console.log(`[Reviews] Evolution API response: ${waStatus}`);
-
-  if (waStatus === 200 || waStatus === 201) {
-    // Log success
+  if (waResult.success) {
     await svc.from("notificacoes_log").insert({
       salao_id: salaoId,
       cliente_id: clienteId,
       agendamento_id: agendamentoId,
       tipo: "review_request",
-      mensagem: message,
+      mensagem: `[Template: solicitud_resena] ${cl.nome}, ${s.nome}, ${s.link_google_reviews}`,
       status: "enviado",
       enviado_em: new Date().toISOString(),
     });
     console.log(`[Reviews] SUCCESS — review sent to ${cl.nome}`);
   } else {
-    const errBody = await waRes.text().catch(() => "");
-    console.error(`[Reviews] FAILED — HTTP ${waStatus}: ${errBody.slice(0, 200)}`);
+    console.error(`[Reviews] FAILED: ${waResult.error}`);
     await svc.from("notificacoes_log").insert({
       salao_id: salaoId,
       cliente_id: clienteId,
       agendamento_id: agendamentoId,
       tipo: "review_request",
-      mensagem: message,
+      mensagem: `[Template: solicitud_resena] ${cl.nome}, ${s.nome}`,
       status: "falhou",
     });
   }

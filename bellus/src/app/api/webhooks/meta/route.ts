@@ -3,7 +3,7 @@ import { createServiceClient } from "@/lib/supabase/service";
 import { verifyMetaSignature } from "@/lib/meta/verify-signature";
 import { parseMetaWebhook } from "@/lib/meta/parse-webhook";
 import { handleIncomingMessage, handleStatusUpdate } from "@/lib/meta/handle-webhook";
-import { processWithAI } from "@/lib/chatbot/engine";
+import { handleConfirmationResponse } from "@/lib/notifications/handle-confirmation";
 
 /**
  * GET /api/webhooks/meta — Webhook verification (Meta challenge).
@@ -71,8 +71,15 @@ export async function POST(request: NextRequest) {
         const result = await handleIncomingMessage(supabase, salaoId, event.data);
         console.log(`[Meta Webhook] Message received: ${result.canal} ${result.externalId} → conversa ${result.conversaId}`);
 
-        // Processar com IA (Claude) e responder ao cliente
-        await processWithAI(supabase, salaoId, result);
+        // Check if this is a confirmation response (SI/NO)
+        if (result.contexto?.awaiting_confirmation) {
+          const handled = await handleConfirmationResponse(supabase, salaoId, result);
+          if (handled) {
+            console.log(`[Meta Webhook] Confirmation response handled for ${result.externalId}`);
+          }
+        } else {
+          console.log(`[Meta Webhook] Non-confirmation message from ${result.externalId}, ignored (no AI chatbot)`);
+        }
       } else if (event.type === "status") {
         await handleStatusUpdate(supabase, event.data);
       }

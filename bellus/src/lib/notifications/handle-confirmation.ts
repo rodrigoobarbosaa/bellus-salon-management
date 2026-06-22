@@ -1,5 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { sendWhatsAppMessage } from "@/lib/evolution/send-message";
+import { sendWhatsAppMessage } from "@/lib/meta/send-message";
 import { sendStaffNotification } from "./send-notification";
 
 interface ConfirmationContext {

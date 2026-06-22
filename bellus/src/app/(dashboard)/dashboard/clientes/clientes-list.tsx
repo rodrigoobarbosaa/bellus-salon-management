@@ -6,7 +6,8 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Card, CardContent } from "@/components/ui/card";
-import { Search, Plus, Users, AlertCircle, TrendingUp, Phone, Mail, ChevronRight } from "lucide-react";
+import { Search, Plus, Users, AlertCircle, TrendingUp, Phone, Mail, ChevronRight, MessageCircle } from "lucide-react";
+import { buildReturnReminderWhatsAppLink } from "@/lib/whatsapp-link";
 import { EmptyState } from "@/components/ui/empty-state";
 import { ClienteForm } from "./cliente-form";
 
@@ -28,16 +29,38 @@ interface ReturnNotif {
   cliente_id: string;
 }
 
+interface LastServiceInfo {
+  servico_nome: string;
+  data_hora_inicio: string;
+}
+
 interface ClientesListProps {
   clientes: Cliente[];
   totalClientes: number;
   pendingReturn: number;
   returnNotifs: ReturnNotif[];
+  salonName: string;
+  salonEndereco: string;
+  lastServices: Record<string, LastServiceInfo>;
 }
 
 const IDIOMA_LABELS: Record<string, string> = { es: "ES", pt: "PT", en: "EN", ru: "RU" };
 
-export function ClientesList({ clientes, totalClientes, pendingReturn, returnNotifs }: ClientesListProps) {
+function getTimeSince(dateStr: string, locale: string): string {
+  const then = new Date(dateStr);
+  const now = new Date();
+  const diffMs = now.getTime() - then.getTime();
+  const days = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+  const months = Math.floor(days / 30);
+
+  if (locale === "es") return months >= 2 ? `${months} meses` : days >= 30 ? "1 mes" : `${days} días`;
+  if (locale === "pt") return months >= 2 ? `${months} meses` : days >= 30 ? "1 mês" : `${days} dias`;
+  if (locale === "en") return months >= 2 ? `${months} months` : days >= 30 ? "1 month" : `${days} days`;
+  if (locale === "ru") return months >= 2 ? `${months} месяцев` : days >= 30 ? "1 месяц" : `${days} дней`;
+  return `${days} días`;
+}
+
+export function ClientesList({ clientes, totalClientes, pendingReturn, returnNotifs, salonName, salonEndereco, lastServices }: ClientesListProps) {
   const t = useTranslations("clients");
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
@@ -236,7 +259,31 @@ export function ClientesList({ clientes, totalClientes, pendingReturn, returnNot
                     </div>
                   </div>
                 </div>
-                <ChevronRight className="h-4 w-4 shrink-0 text-stone-300" />
+                <div className="flex items-center gap-1 shrink-0">
+                  {isOverdue && c.telefone && lastServices[c.id] && (
+                    <button
+                      onClick={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const svc = lastServices[c.id];
+                        const link = buildReturnReminderWhatsAppLink({
+                          telefone: c.telefone,
+                          nome_cliente: c.nome,
+                          servico: svc.servico_nome,
+                          intervalo_tempo: getTimeSince(svc.data_hora_inicio, c.idioma_preferido),
+                          salao: salonName,
+                          idioma: c.idioma_preferido as "pt" | "es" | "en" | "ru",
+                        });
+                        window.open(link, "_blank");
+                      }}
+                      className="flex h-8 w-8 items-center justify-center rounded-full text-green-600 hover:bg-green-50 transition-colors"
+                      title="WhatsApp"
+                    >
+                      <MessageCircle className="h-4 w-4" />
+                    </button>
+                  )}
+                  <ChevronRight className="h-4 w-4 text-stone-300" />
+                </div>
               </Link>
             );
           })

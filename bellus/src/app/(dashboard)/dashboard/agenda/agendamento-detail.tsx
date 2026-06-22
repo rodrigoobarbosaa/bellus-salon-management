@@ -18,7 +18,7 @@ import {
 import { Clock, User, Scissors, Calendar, FileText, Pencil, MessageCircle } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { createClient } from "@/lib/supabase/client";
-import { buildWhatsAppLink } from "@/lib/whatsapp-link";
+import { buildBookingWhatsAppLink } from "@/lib/whatsapp-link";
 import { toMadridDatetimeLocal, SALON_TZ } from "@/lib/timezone";
 import { PaymentModal } from "./payment-modal";
 
@@ -96,6 +96,7 @@ export function AgendamentoDetail({
   const [clientePhone, setClientePhone] = useState<string | null>(null);
   const [clienteIdioma, setClienteIdioma] = useState<"pt" | "es" | "en" | "ru">("es");
   const [salonName, setSalonName] = useState("");
+  const [salonEndereco, setSalonEndereco] = useState("");
 
   useEffect(() => {
     if (!open) return;
@@ -110,13 +111,14 @@ export function AgendamentoDetail({
           .single(),
         supabase
           .from("saloes")
-          .select("nome")
+          .select("nome, endereco")
           .limit(1)
           .single(),
       ]);
       setClientePhone(cliente?.telefone ?? null);
       setClienteIdioma(cliente?.idioma_preferido ?? "es");
       setSalonName(salao?.nome ?? "");
+      setSalonEndereco(salao?.endereco ?? "");
     }
 
     fetchClientAndSalon();
@@ -537,7 +539,7 @@ export function AgendamentoDetail({
                   variant="outline"
                   onClick={() => {
                     const inicio = new Date(agendamento.data_hora_inicio);
-                    const link = buildWhatsAppLink({
+                    const link = buildBookingWhatsAppLink({
                       telefone: clientePhone,
                       nome_cliente: agendamento.cliente_nome ?? "",
                       servico: agendamento.servico_nome ?? "",
@@ -545,6 +547,7 @@ export function AgendamentoDetail({
                       data: inicio.toLocaleDateString(clienteIdioma === "en" ? "en-US" : clienteIdioma === "ru" ? "ru-RU" : clienteIdioma === "pt" ? "pt-BR" : "es-ES", { weekday: "long", day: "numeric", month: "long", timeZone: SALON_TZ }),
                       hora: inicio.toLocaleTimeString(clienteIdioma === "en" ? "en-US" : "es-ES", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: SALON_TZ }),
                       salao: salonName,
+                      endereco: salonEndereco,
                       idioma: clienteIdioma,
                     });
                     window.open(link, "_blank");
