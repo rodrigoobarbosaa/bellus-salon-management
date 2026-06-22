@@ -13,6 +13,20 @@ export function normalizePhone(phone: string): string {
   return phone.replace(/[\s\-()+ ]/g, "");
 }
 
+/**
+ * Strip emojis from text to avoid encoding issues in wa.me URLs.
+ * Some browsers/devices corrupt emojis when passing them via window.open().
+ */
+function stripEmojis(text: string): string {
+  return text
+    .replace(/[\u{1F000}-\u{1FFFF}]/gu, "")
+    .replace(/[\u{2600}-\u{27BF}]/gu, "")
+    .replace(/[\u{FE00}-\u{FEFF}]/gu, "")
+    .replace(/[\u{200D}]/gu, "")
+    .replace(/  +/g, " ")
+    .replace(/^ /gm, "");
+}
+
 interface WhatsAppLinkParams {
   telefone: string;
   nome_cliente: string;
@@ -47,7 +61,7 @@ export function buildWhatsAppLink(params: WhatsAppLinkParams): string {
   });
 
   const phone = normalizePhone(params.telefone);
-  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  return `https://wa.me/${phone}?text=${encodeURIComponent(stripEmojis(message))}`;
 }
 
 /**
@@ -68,7 +82,7 @@ export function buildBookingWhatsAppLink(params: WhatsAppLinkParams): string {
   });
 
   const phone = normalizePhone(params.telefone);
-  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  return `https://wa.me/${phone}?text=${encodeURIComponent(stripEmojis(message))}`;
 }
 
 interface ReturnReminderLinkParams {
@@ -95,5 +109,5 @@ export function buildReturnReminderWhatsAppLink(params: ReturnReminderLinkParams
   });
 
   const phone = normalizePhone(params.telefone);
-  return `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
+  return `https://wa.me/${phone}?text=${encodeURIComponent(stripEmojis(message))}`;
 }
