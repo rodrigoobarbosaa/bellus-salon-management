@@ -129,24 +129,30 @@ export function AgendamentoForm({
 
   async function submitForm(formData: FormData) {
     // Pre-compute WhatsApp link BEFORE server action
-    if (selectedCliente?.telefone && selectedServico) {
+    // Support both existing clients and new clients (phone from form field)
+    const clientPhone = selectedCliente?.telefone
+      || (showNewCliente ? (formData.get("new_cliente_telefone") as string) : null);
+    const clientName = selectedCliente?.nome
+      || (showNewCliente ? (formData.get("new_cliente_nome") as string) : null);
+    const clientIdioma = (selectedCliente?.idioma_preferido ?? "es") as "pt" | "es" | "en" | "ru";
+
+    if (clientPhone && clientName && selectedServico) {
       const svc = servicos.find((s) => s.id === selectedServico);
       const profId = formData.get("profissional_id") as string;
       const prof = profissionais.find((p) => p.id === profId);
       const dtValue = formData.get("data_hora_inicio") as string;
-      const idioma = (selectedCliente.idioma_preferido ?? "es") as "pt" | "es" | "en" | "ru";
       const ini = dtValue ? new Date(madridToISO(dtValue)) : new Date();
 
       createdWhatsAppLinkRef.current = buildBookingWhatsAppLink({
-        telefone: selectedCliente.telefone,
-        nome_cliente: selectedCliente.nome,
+        telefone: clientPhone,
+        nome_cliente: clientName,
         servico: svc?.nome ?? "",
         profissional: prof?.nome ?? "",
-        data: ini.toLocaleDateString(idioma === "en" ? "en-US" : idioma === "ru" ? "ru-RU" : idioma === "pt" ? "pt-BR" : "es-ES", { weekday: "long", day: "numeric", month: "long", timeZone: SALON_TZ }),
-        hora: ini.toLocaleTimeString(idioma === "en" ? "en-US" : "es-ES", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: SALON_TZ }),
+        data: ini.toLocaleDateString(clientIdioma === "en" ? "en-US" : clientIdioma === "ru" ? "ru-RU" : clientIdioma === "pt" ? "pt-BR" : "es-ES", { weekday: "long", day: "numeric", month: "long", timeZone: SALON_TZ }),
+        hora: ini.toLocaleTimeString(clientIdioma === "en" ? "en-US" : "es-ES", { hour: "2-digit", minute: "2-digit", hour12: false, timeZone: SALON_TZ }),
         salao: salonName,
         endereco: salonEndereco,
-        idioma,
+        idioma: clientIdioma,
       });
     } else {
       createdWhatsAppLinkRef.current = "";
