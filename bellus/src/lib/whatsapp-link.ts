@@ -2,6 +2,7 @@ import {
   REMINDER_24H_TEMPLATES,
   CONFIRMATION_TEMPLATES,
   RETURN_REMINDER_TEMPLATES,
+  REVIEW_REQUEST_TEMPLATES,
   renderTemplate,
 } from "@/lib/notifications/templates";
 
@@ -106,6 +107,31 @@ export function buildReturnReminderWhatsAppLink(params: ReturnReminderLinkParams
     servico: params.servico,
     intervalo_tempo: params.intervalo_tempo,
     salao: params.salao,
+  });
+
+  const phone = normalizePhone(params.telefone);
+  return `https://wa.me/${phone}?text=${encodeURIComponent(stripEmojis(message))}`;
+}
+
+interface ReviewRequestLinkParams {
+  telefone: string;
+  nome_cliente: string;
+  salao: string;
+  link_reviews: string;
+  idioma?: "pt" | "es" | "en" | "ru";
+}
+
+/**
+ * Build a wa.me link with a review request message.
+ */
+export function buildReviewRequestWhatsAppLink(params: ReviewRequestLinkParams): string {
+  const locale = params.idioma ?? "es";
+  const template = REVIEW_REQUEST_TEMPLATES[locale] ?? REVIEW_REQUEST_TEMPLATES.es;
+
+  const message = renderTemplate(template, {
+    nome_cliente: params.nome_cliente,
+    salao: params.salao,
+    link_reviews: params.link_reviews,
   });
 
   const phone = normalizePhone(params.telefone);

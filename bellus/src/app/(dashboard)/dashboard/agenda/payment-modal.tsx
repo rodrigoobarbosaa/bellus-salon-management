@@ -12,6 +12,7 @@ import {
 import { createComandaTransacoes } from "@/app/actions/transacoes";
 import { createFacturaFromComanda } from "@/app/actions/facturas";
 import { getOrCreateConfigFiscal } from "@/app/actions/fiscal";
+import { buildReviewRequestWhatsAppLink } from "@/lib/whatsapp-link";
 import Link from "next/link";
 import {
   Banknote,
@@ -53,6 +54,10 @@ interface PaymentModalProps {
   onOpenChange: (open: boolean) => void;
   agendamento: Agendamento;
   servicos: Servico[];
+  clientePhone?: string | null;
+  clienteIdioma?: "pt" | "es" | "en" | "ru";
+  salonName?: string;
+  googleReviewsLink?: string | null;
 }
 
 const FORMAS_PAGAMENTO = [
@@ -73,6 +78,10 @@ export function PaymentModal({
   onOpenChange,
   agendamento,
   servicos,
+  clientePhone,
+  clienteIdioma = "es",
+  salonName = "",
+  googleReviewsLink,
 }: PaymentModalProps) {
   const servico = servicos.find((s) => s.id === agendamento.servico_id);
   const precoBase = servico?.preco_base ?? 0;
@@ -460,7 +469,7 @@ export function PaymentModal({
                 <p className="text-xs text-amber-800">{facturaWarning}</p>
               </div>
             )}
-            <div className="flex gap-2">
+            <div className="flex flex-wrap gap-2">
               {modo !== "cortesia" && !facturaInfo && (
                 <Button
                   variant="outline"
@@ -469,6 +478,25 @@ export function PaymentModal({
                 >
                   <Download className="h-4 w-4" />
                   Descargar recibo
+                </Button>
+              )}
+              {googleReviewsLink && clientePhone && (
+                <Button
+                  variant="outline"
+                  onClick={() => {
+                    const link = buildReviewRequestWhatsAppLink({
+                      telefone: clientePhone,
+                      nome_cliente: agendamento.cliente_nome ?? "",
+                      salao: salonName,
+                      link_reviews: googleReviewsLink,
+                      idioma: clienteIdioma,
+                    });
+                    window.open(link, "_blank");
+                  }}
+                  className="gap-2 border-amber-300 text-amber-700 hover:bg-amber-50 hover:text-amber-800"
+                >
+                  <Star className="h-4 w-4 fill-amber-400 text-amber-400" />
+                  Enviar review
                 </Button>
               )}
               <Button onClick={handleClose}>Cerrar</Button>

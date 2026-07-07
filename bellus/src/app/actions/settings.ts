@@ -70,6 +70,7 @@ export async function updateSalonSettings(formData: FormData) {
       cor_primaria: formData.get("cor_primaria") as string,
       instagram_url: formData.get("instagram_url") as string,
       google_maps_url: formData.get("google_maps_url") as string,
+      link_google_reviews: (formData.get("link_google_reviews") as string) || null,
       moeda: formData.get("moeda") as string,
       timezone: formData.get("timezone") as string,
     })

@@ -20,6 +20,7 @@ interface SalonSettings {
   cor_primaria: string;
   instagram_url: string;
   google_maps_url: string;
+  link_google_reviews: string;
   moeda: string;
   timezone: string;
   logo_url: string | null;
@@ -34,6 +35,7 @@ const defaultSettings: SalonSettings = {
   cor_primaria: "#c9a96e",
   instagram_url: "",
   google_maps_url: "",
+  link_google_reviews: "",
   moeda: "EUR",
   timezone: "Europe/Madrid",
   logo_url: null,
@@ -61,6 +63,7 @@ export default function ConfiguracoesPage() {
           cor_primaria: d.cor_primaria ?? "#c9a96e",
           instagram_url: d.instagram_url ?? "",
           google_maps_url: d.google_maps_url ?? "",
+          link_google_reviews: d.link_google_reviews ?? "",
           moeda: d.moeda ?? "EUR",
           timezone: d.timezone ?? "Europe/Madrid",
           logo_url: d.logo_url ?? null,
@@ -272,6 +275,19 @@ export default function ConfiguracoesPage() {
                   placeholder="https://maps.google.com/..."
                 />
               </div>
+            </div>
+
+            <div className="space-y-2">
+              <label htmlFor="link_google_reviews" className="text-sm font-medium text-stone-700">
+                {t("googleReviews")}
+              </label>
+              <Input
+                id="link_google_reviews"
+                name="link_google_reviews"
+                value={settings.link_google_reviews}
+                onChange={(e) => setSettings((p) => ({ ...p, link_google_reviews: e.target.value }))}
+                placeholder={t("googleReviewsPlaceholder")}
+              />
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

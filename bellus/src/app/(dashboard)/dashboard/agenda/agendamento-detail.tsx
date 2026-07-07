@@ -97,6 +97,7 @@ export function AgendamentoDetail({
   const [clienteIdioma, setClienteIdioma] = useState<"pt" | "es" | "en" | "ru">("es");
   const [salonName, setSalonName] = useState("");
   const [salonEndereco, setSalonEndereco] = useState("");
+  const [googleReviewsLink, setGoogleReviewsLink] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) return;
@@ -111,7 +112,7 @@ export function AgendamentoDetail({
           .single(),
         supabase
           .from("saloes")
-          .select("nome, endereco")
+          .select("nome, endereco, link_google_reviews")
           .limit(1)
           .single(),
       ]);
@@ -119,6 +120,7 @@ export function AgendamentoDetail({
       setClienteIdioma(cliente?.idioma_preferido ?? "es");
       setSalonName(salao?.nome ?? "");
       setSalonEndereco(salao?.endereco ?? "");
+      setGoogleReviewsLink(salao?.link_google_reviews ?? null);
     }
 
     fetchClientAndSalon();
@@ -588,6 +590,10 @@ export function AgendamentoDetail({
         }}
         agendamento={agendamento}
         servicos={servicos}
+        clientePhone={clientePhone}
+        clienteIdioma={clienteIdioma}
+        salonName={salonName}
+        googleReviewsLink={googleReviewsLink}
       />
     </Dialog>
   );
