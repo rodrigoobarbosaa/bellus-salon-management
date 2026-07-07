@@ -177,7 +177,14 @@ export function ClienteFicha({
           <ArrowLeft className="h-5 w-5" />
         </Link>
         <div className="flex-1">
-          <h1 className="text-2xl font-bold">{cliente.nome}</h1>
+          <div className="flex items-center gap-2">
+            <h1 className="text-2xl font-bold">{cliente.nome}</h1>
+            {totalVisitas === 0 && (
+              <span className="rounded-full bg-purple-100 px-2 py-0.5 text-xs font-medium text-purple-700">
+                {t("firstVisit")}
+              </span>
+            )}
+          </div>
           <p className="text-sm text-muted-foreground">
             {t("clientSince")} {formatDate(cliente.created_at)}
           </p>
@@ -410,13 +417,16 @@ export function ClienteFicha({
           </p>
         ) : (
           <div className="space-y-3">
-            {visitas.map((v) => (
+            {visitas.map((v, idx) => (
               <div
                 key={v.id}
                 className="flex items-center justify-between p-3 border rounded-lg hover:bg-gray-50 transition-colors"
               >
                 <div className="flex-1">
                   <div className="flex items-center gap-2">
+                    <span className="text-xs text-muted-foreground tabular-nums">
+                      {t("visitNumber", { number: visitas.length - idx })}
+                    </span>
                     <span className="font-medium">{v.servico_nome}</span>
                     <span
                       className={`text-xs px-2 py-0.5 rounded-full ${statusColors[v.status] ?? "bg-gray-100 text-gray-800"}`}

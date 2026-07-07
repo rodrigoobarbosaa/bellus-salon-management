@@ -21,8 +21,8 @@ export default async function ClientesPage() {
 
   const salaoId = (usuario as { salao_id: string }).salao_id;
 
-  // Fetch all clients and salon info in parallel
-  const [{ data: clientes }, { data: salao }, { data: notifStats }] = await Promise.all([
+  // Fetch all clients, salon info, and completed visit counts in parallel
+  const [{ data: clientes }, { data: salao }, { data: notifStats }, { data: completedAppts }] = await Promise.all([
     supabase
       .from("clientes")
       .select("id, nome, telefone, email, idioma_preferido, opt_out_notificacoes, proximo_retorno, created_at")
@@ -38,6 +38,11 @@ export default async function ClientesPage() {
       .select("id, tipo, status, cliente_id")
       .eq("salao_id", salaoId)
       .eq("tipo", "lembrete_retorno"),
+    supabase
+      .from("agendamentos")
+      .select("cliente_id")
+      .eq("salao_id", salaoId)
+      .eq("status", "concluido"),
   ]);
 
   const clientesList = (clientes ?? []) as Array<{
@@ -50,6 +55,12 @@ export default async function ClientesPage() {
     proximo_retorno: string | null;
     created_at: string;
   }>;
+
+  // Count completed visits per client
+  const visitCounts: Record<string, number> = {};
+  for (const apt of (completedAppts ?? []) as Array<{ cliente_id: string }>) {
+    visitCounts[apt.cliente_id] = (visitCounts[apt.cliente_id] ?? 0) + 1;
+  }
 
   const today = new Date().toISOString().slice(0, 10);
   const overdueClientIds = clientesList
@@ -121,6 +132,7 @@ export default async function ClientesPage() {
       salonName={salonName}
       salonEndereco={salonEndereco}
       lastServices={lastServices}
+      visitCounts={visitCounts}
     />
   );
 }

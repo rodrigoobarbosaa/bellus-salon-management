@@ -79,6 +79,8 @@
     "primaryColor": "Основной цвет салона",
     "instagram": "Instagram",
     "googleMaps": "Google Maps",
+    "googleReviews": "Ссылка Google Reviews",
+    "googleReviewsPlaceholder": "https://g.page/r/...",
     "currency": "Валюта",
     "timezone": "Часовой пояс",
     "save": "Сохранить настройки",
@@ -185,7 +187,10 @@
     "visitHistory": "История визитов",
     "noVisits": "Визитов не зарегистрировано",
     "clientSince": "Клиент с",
-    "saving": "Сохранение..."
+    "saving": "Сохранение...",
+    "newClientBadge": "Новая",
+    "firstVisit": "Первый визит",
+    "visitNumber": "Визит #{number}"
   },
   "services": {
     "title": "Услуги",

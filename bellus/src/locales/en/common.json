@@ -79,6 +79,8 @@
     "primaryColor": "Primary color",
     "instagram": "Instagram",
     "googleMaps": "Google Maps",
+    "googleReviews": "Google Reviews Link",
+    "googleReviewsPlaceholder": "https://g.page/r/...",
     "currency": "Currency",
     "timezone": "Timezone",
     "save": "Save settings",
@@ -185,7 +187,10 @@
     "visitHistory": "Visit history",
     "noVisits": "No visits recorded",
     "clientSince": "Client since",
-    "saving": "Saving..."
+    "saving": "Saving...",
+    "newClientBadge": "New",
+    "firstVisit": "First visit",
+    "visitNumber": "Visit #{number}"
   },
   "services": {
     "title": "Services",

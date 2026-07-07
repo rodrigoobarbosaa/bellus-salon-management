@@ -42,6 +42,7 @@ interface ClientesListProps {
   salonName: string;
   salonEndereco: string;
   lastServices: Record<string, LastServiceInfo>;
+  visitCounts: Record<string, number>;
 }
 
 const IDIOMA_LABELS: Record<string, string> = { es: "ES", pt: "PT", en: "EN", ru: "RU" };
@@ -60,13 +61,14 @@ function getTimeSince(dateStr: string, locale: string): string {
   return `${days} días`;
 }
 
-export function ClientesList({ clientes, totalClientes, pendingReturn, returnNotifs, salonName, salonEndereco, lastServices }: ClientesListProps) {
+export function ClientesList({ clientes, totalClientes, pendingReturn, returnNotifs, salonName, salonEndereco, lastServices, visitCounts }: ClientesListProps) {
   const t = useTranslations("clients");
   const [search, setSearch] = useState("");
   const [showForm, setShowForm] = useState(false);
   const [filtroIdioma, setFiltroIdioma] = useState<string | null>(null);
   const [filtroOptOut, setFiltroOptOut] = useState<boolean | null>(null);
   const [filtroRetorno, setFiltroRetorno] = useState(false);
+  const [filtroNueva, setFiltroNueva] = useState(false);
 
   const today = new Date().toISOString().slice(0, 10);
 
@@ -90,8 +92,11 @@ export function ClientesList({ clientes, totalClientes, pendingReturn, returnNot
     if (filtroRetorno) {
       result = result.filter((c) => c.proximo_retorno && c.proximo_retorno <= today);
     }
+    if (filtroNueva) {
+      result = result.filter((c) => (visitCounts[c.id] ?? 0) === 0);
+    }
     return result;
-  }, [clientes, search, filtroIdioma, filtroOptOut, filtroRetorno, today]);
+  }, [clientes, search, filtroIdioma, filtroOptOut, filtroRetorno, filtroNueva, visitCounts, today]);
 
   // Conversion stats
   const totalSent = returnNotifs.length;
@@ -197,10 +202,21 @@ export function ClientesList({ clientes, totalClientes, pendingReturn, returnNot
         >
           {t("pendingReturn")}
         </button>
+        {/* Nueva filter */}
+        <button
+          onClick={() => setFiltroNueva(!filtroNueva)}
+          className={`rounded-full px-3 py-1 text-xs font-medium transition-colors ${
+            filtroNueva
+              ? "bg-purple-600 text-white"
+              : "bg-stone-100 text-stone-500 hover:bg-stone-200"
+          }`}
+        >
+          {t("newClientBadge")}
+        </button>
         {/* Clear filters */}
-        {(filtroIdioma || filtroOptOut !== null || filtroRetorno) && (
+        {(filtroIdioma || filtroOptOut !== null || filtroRetorno || filtroNueva) && (
           <button
-            onClick={() => { setFiltroIdioma(null); setFiltroOptOut(null); setFiltroRetorno(false); }}
+            onClick={() => { setFiltroIdioma(null); setFiltroOptOut(null); setFiltroRetorno(false); setFiltroNueva(false); }}
             className="rounded-full px-3 py-1 text-xs font-medium text-stone-400 hover:text-stone-600"
           >
             {t("clearFilters")}
@@ -236,6 +252,11 @@ export function ClientesList({ clientes, totalClientes, pendingReturn, returnNot
                       <span className="rounded-full bg-stone-100 px-1.5 py-0.5 text-[10px] font-medium text-stone-500">
                         {IDIOMA_LABELS[c.idioma_preferido] ?? c.idioma_preferido}
                       </span>
+                      {(visitCounts[c.id] ?? 0) === 0 && (
+                        <span className="rounded-full bg-purple-100 px-1.5 py-0.5 text-[10px] font-medium text-purple-700">
+                          {t("newClientBadge")}
+                        </span>
+                      )}
                       {isOverdue && (
                         <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-700">
                           {t("return")}

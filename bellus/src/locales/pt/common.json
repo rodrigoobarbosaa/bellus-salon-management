@@ -79,6 +79,8 @@
     "primaryColor": "Cor primária do salão",
     "instagram": "Instagram",
     "googleMaps": "Google Maps",
+    "googleReviews": "Link Google Reviews",
+    "googleReviewsPlaceholder": "https://g.page/r/...",
     "currency": "Moeda",
     "timezone": "Fuso horário",
     "save": "Salvar configurações",
@@ -185,7 +187,10 @@
     "visitHistory": "Histórico de visitas",
     "noVisits": "Sem visitas registradas",
     "clientSince": "Cliente desde",
-    "saving": "Salvando..."
+    "saving": "Salvando...",
+    "newClientBadge": "Nova",
+    "firstVisit": "Primeira visita",
+    "visitNumber": "Visita #{number}"
   },
   "services": {
     "title": "Serviços",
